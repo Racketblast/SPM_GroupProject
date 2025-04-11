@@ -9,7 +9,10 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "PlayerStats.h"
 #include "Engine/LocalPlayer.h"
+#include "Kismet/GameplayStatics.h"
+#include "Teleporter.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -18,6 +21,7 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 ASPM_GroupProjectCharacter::ASPM_GroupProjectCharacter()
 {
+	PrimaryActorTick.bCanEverTick = true;
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 		
@@ -67,6 +71,9 @@ void ASPM_GroupProjectCharacter::SetupPlayerInputComponent(UInputComponent* Play
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASPM_GroupProjectCharacter::Look);
+
+		// Using
+		EnhancedInputComponent->BindAction(UseAction, ETriggerEvent::Started, this, &ASPM_GroupProjectCharacter::Use);
 	}
 	else
 	{
@@ -74,6 +81,26 @@ void ASPM_GroupProjectCharacter::SetupPlayerInputComponent(UInputComponent* Play
 	}
 }
 
+void ASPM_GroupProjectCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+	FVector End = Start + (FirstPersonCameraComponent->GetForwardVector() * 1000.0f);
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		TargetActor = HitResult.GetActor();
+	}
+	else
+	{
+		TargetActor = nullptr;
+	}
+}
 
 void ASPM_GroupProjectCharacter::Move(const FInputActionValue& Value)
 {
@@ -98,5 +125,30 @@ void ASPM_GroupProjectCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void ASPM_GroupProjectCharacter::Use()
+{
+	if (TargetActor)
+	{
+		if (ATeleporter* Teleporter = Cast<ATeleporter>(TargetActor))
+		{
+			UPlayerStats* GI = Cast<UPlayerStats>(UGameplayStatics::GetGameInstance(GetWorld()));
+			if (GI)
+			{
+				if (Teleporter->TargetLevelName != "Hub")
+				{
+					GI->Level += 1;
+				}
+				else
+				{
+					GI->Money += 20;
+				}
+			}
+			UE_LOG(LogTemplateCharacter, Warning, TEXT("Level: %d"), GI->Level);
+			UE_LOG(LogTemplateCharacter, Warning, TEXT("Money: %d"), GI->Money);
+			UGameplayStatics::OpenLevel(this, Teleporter->TargetLevelName);
+		}
 	}
 }

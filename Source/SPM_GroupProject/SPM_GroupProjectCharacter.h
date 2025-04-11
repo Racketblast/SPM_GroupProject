@@ -20,7 +20,7 @@ UCLASS(config=Game)
 class ASPM_GroupProjectCharacter : public ACharacter
 {
 	GENERATED_BODY()
-
+	virtual void Tick(float DeltaTime) override;
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Mesh, meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* Mesh1P;
@@ -43,7 +43,10 @@ class ASPM_GroupProjectCharacter : public ACharacter
 
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* LookAction;
+	UInputAction* LookAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* UseAction;
 	
 public:
 	ASPM_GroupProjectCharacter();
@@ -54,6 +57,10 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+private:
+	void Use();
+	AActor* TargetActor;
 
 protected:
 	// APawn interface
