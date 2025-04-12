@@ -1,6 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "SPM_GroupProjectCharacter.h"
+
+#include "BuyBox.h"
 #include "SPM_GroupProjectProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
@@ -149,6 +151,27 @@ void ASPM_GroupProjectCharacter::Use()
 			UE_LOG(LogTemplateCharacter, Warning, TEXT("Level: %d"), GI->Level);
 			UE_LOG(LogTemplateCharacter, Warning, TEXT("Money: %d"), GI->Money);
 			UGameplayStatics::OpenLevel(this, Teleporter->TargetLevelName);
+		}
+
+		if (ABuyBox* BuyBox = Cast<ABuyBox>(TargetActor))
+		{
+			UPlayerStats* GI = Cast<UPlayerStats>(UGameplayStatics::GetGameInstance(GetWorld()));
+			if (GI)
+			{
+				if (!GI->HasBought(BuyBox->TargetUpgradeName))
+				{
+					if (BuyBox->TargetUpgradeCost <= GI->Money)
+					{
+						GI->Money -= BuyBox->TargetUpgradeCost;
+						GI->UpgradeArray.Add(BuyBox->TargetUpgradeName);
+						GI->CurrentWeapon = BuyBox->TargetUpgradeName;
+					}
+				}
+				else
+				{
+					GI->CurrentWeapon = BuyBox->TargetUpgradeName;
+				}
+			}
 		}
 	}
 }

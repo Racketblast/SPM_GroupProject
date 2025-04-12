@@ -18,4 +18,10 @@ public:
     int32 Money = 0;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	int32 Level = 0;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	FName CurrentWeapon;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TArray<FName> UpgradeArray;
+
+	bool HasBought(FName Upgrade);
 };
