@@ -20,14 +20,14 @@ AProjectile::AProjectile()
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	SetLifeSpan(TCount);
 }
 
 // Called every frame
 void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (bCount <= 0 )
+	if (TCount <= 0 )
 	{
 		Destroy();
 	}

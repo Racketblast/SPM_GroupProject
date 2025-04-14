@@ -13,8 +13,8 @@ class SPM_GROUPPROJECT_API AProjectile : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AProjectile();
-	UPROPERTY()
-	int32 bCount = 3;
+	UPROPERTY(EditAnywhere)
+	float TCount = 3;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

@@ -24,7 +24,17 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	UE_LOG(LogTemp, Warning, TEXT("Hello"));
+	if (PC)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Hello"));
+
+		FInputModeGameOnly InputMode;
+		PC->SetInputMode(InputMode);
+		PC->bShowMouseCursor = false;
+	}
+
 }
 
 // Called every frame
@@ -58,6 +68,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::Jump);
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &APlayerCharacter::Shoot);
 	PlayerInputComponent->BindAction("Use", IE_Pressed,this, &APlayerCharacter::Use);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed,this, &APlayerCharacter::Reload);
+	PlayerInputComponent->BindAction("SelectWeapon1", IE_Pressed,this, &APlayerCharacter::SelectWeapon1);
+	PlayerInputComponent->BindAction("SelectWeapon2", IE_Pressed,this, &APlayerCharacter::SelectWeapon2);
 	PlayerInputComponent->BindAxis("MoveForward",this, &APlayerCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight",this, &APlayerCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Yaw",this, &APlayerCharacter::Yaw);
@@ -89,8 +102,64 @@ void APlayerCharacter::Pitch(float Value)
 }
 void APlayerCharacter::Shoot()
 {
-	GetWorld()->SpawnActor<AProjectile>(ProjectileActor, GetActorLocation(), GetActorRotation());
+	if (Weapon1Equipped)
+	{
+		if (Ammo1 > 0)
+		{
+			GetWorld()->SpawnActor<AProjectile>(Weapon1, GetActorLocation(), GetActorRotation());
+			Ammo1--;
+		}
+	}
+	if (Weapon2Equipped)
+	{
+		if (Ammo2 > 0)
+		{
+			GetWorld()->SpawnActor<AProjectile>(Weapon2, GetActorLocation(), GetActorRotation());
+			Ammo2--;
+		}
+	}
 	
+	
+	
+}
+void APlayerCharacter::Reload()
+{
+	if (Weapon1Equipped)
+    {
+	Ammo1 = MaxAmmo1;
+    }
+	if (Weapon2Equipped)
+	{
+		Ammo2 = MaxAmmo2;
+	}
+	
+	
+	
+}
+void APlayerCharacter::SelectWeapon1()
+{
+	if (!Weapon1Equipped)
+	{
+		Weapon1Equipped = true;
+		Weapon2Equipped = false;
+		
+		GetWorld()->SpawnActor<AProjectile>(GWeapon1, GetActorLocation(), GetActorRotation());
+		//GWeapon1->SetupAttachment(RootComponent);
+	}
+	
+	
+}
+void APlayerCharacter::SelectWeapon2()
+{
+
+	if (!Weapon2Equipped)
+	{
+		Weapon2Equipped = true;
+		Weapon1Equipped = false;
+		GetWorld()->SpawnActor<AProjectile>(GWeapon2, GetActorLocation(), GetActorRotation());
+		
+	}
+		
 }
 
 void APlayerCharacter::Use()

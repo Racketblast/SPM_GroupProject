@@ -21,8 +21,8 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	//UPROPERTY(EditAnywhere)
-	//USceneComponent* Hand;
+	UPROPERTY(EditAnywhere)
+	USceneComponent* Hand;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -41,12 +41,31 @@ protected:
 	void Pitch(float InputVector);
 	void Shoot();
 	void Use();
+	void Reload();
+	void SelectWeapon1();
+	void SelectWeapon2();
+	bool Weapon1Equipped;
+	bool Weapon2Equipped;
+	
 
 	
 private:
+int32 MaxAmmo1 = 9;
+	int32 MaxAmmo2 = 30;
+	int32 Ammo1 = MaxAmmo1;
+	int32 Ammo2 = MaxAmmo2;
+	
 	
 	AActor* TargetActor;
 	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> ProjectileActor;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectile> Weapon1;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectile> Weapon2;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectile> GWeapon1;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectile> GWeapon2;
 };
