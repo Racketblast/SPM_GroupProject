@@ -19,9 +19,10 @@ struct FWaveData
 	float TimeBetweenSpawns;
 };
 
+//SPM_GROUPPROJECT_API
 
 UCLASS()
-class SPM_GROUPPROJECT_API AWaveManager : public AActor
+class AWaveManager : public AActor
 {
 	GENERATED_BODY()
 

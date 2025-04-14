@@ -54,17 +54,39 @@ void AWaveManager::SpawnEnemy()
 		return;
 	}
 
-	if (EnemyClass && SpawnPoints.Num() > 0)
+	if (!EnemyClass || SpawnPoints.Num() == 0) return;
+
+	const int32 MaxAttempts = 5;
+	bool bSpawned = false;
+	for (int32 Attempt = 0; Attempt < MaxAttempts; ++Attempt)
 	{
 		int32 RandomIndex = FMath::RandRange(0, SpawnPoints.Num() - 1);
-		FVector RandomSpawnLocation = SpawnPoints[RandomIndex]->GetActorLocation();
+		FVector SpawnLocation = SpawnPoints[RandomIndex]->GetActorLocation();
+		FRotator SpawnRotation = FRotator::ZeroRotator;
 
 		FActorSpawnParameters SpawnParams;
-		GetWorld()->SpawnActor<AActor>(EnemyClass, RandomSpawnLocation, FRotator::ZeroRotator, SpawnParams);
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn; 
 
-		EnemiesSpawnedInCurrentWave++;
+		AActor* SpawnedEnemy = GetWorld()->SpawnActor<AActor>(EnemyClass, SpawnLocation, SpawnRotation, SpawnParams);
+
+		if (SpawnedEnemy)
+		{
+			bSpawned = true;
+			EnemiesSpawnedInCurrentWave++;
+			UE_LOG(LogTemp, Warning, TEXT("Spawned enemy: %i"), EnemiesSpawnedInCurrentWave);
+			break;
+		}
+	}
+
+	if (!bSpawned)
+	{
+		// retry again after short delay, might want to delete this part
+		UE_LOG(LogTemp, Warning, TEXT("Failed to spawn enemy after several attempts. Retrying..."));
+
+		GetWorldTimerManager().SetTimerForNextTick(this, &AWaveManager::SpawnEnemy);
 	}
 }
+
 
 void AWaveManager::OnEnemyKilled()
 {
