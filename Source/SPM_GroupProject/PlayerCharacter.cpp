@@ -5,7 +5,7 @@
 #include "PlayerGameInstance.h"
 #include "BuyBox.h"
 #include "Teleporter.h"
-//#include "Projectile.h"
+#include "Projectile.h"
 //#include "ProjectileSpawner.h"
 #include "Engine/StaticMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
@@ -89,7 +89,7 @@ void APlayerCharacter::Pitch(float Value)
 }
 void APlayerCharacter::Shoot()
 {
-	//GetWorld()->SpawnActor<AProjectile>(ProjectileActor, GetActorLocation(), GetActorRotation());
+	GetWorld()->SpawnActor<AProjectile>(ProjectileActor, GetActorLocation(), GetActorRotation());
 	
 }
 

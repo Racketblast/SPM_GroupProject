@@ -47,6 +47,6 @@ private:
 	
 	AActor* TargetActor;
 	
-	//UPROPERTY(EditAnywhere)
-	//TSubclassOf<class AProjectile> ProjectileActor;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AProjectile> ProjectileActor;
 };
