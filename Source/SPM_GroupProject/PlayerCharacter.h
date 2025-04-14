@@ -28,7 +28,10 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
 
+	UPROPERTY(EditAnywhere)
+	int32 UseDistance = 300;
 protected:
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* PlayerCamera;
@@ -37,8 +40,12 @@ protected:
 	void Yaw(float InputVector);
 	void Pitch(float InputVector);
 	void Shoot();
-	
+	void Use();
 
+	
+private:
+	
+	AActor* TargetActor;
 	
 	//UPROPERTY(EditAnywhere)
 	//TSubclassOf<class AProjectile> ProjectileActor;
