@@ -32,6 +32,7 @@ class AWaveManager : public AActor
 
 public:
 	AWaveManager();
+	UFUNCTION(BlueprintCallable)
 	void OnEnemyKilled(); // Måste kalla på detta från enemy klassen, när enemy dör
 
 protected:

@@ -34,7 +34,7 @@ void AWaveManager::StartNextWave()
 		ActiveWaveData = DefaultWave;
 
 		// Här skrivs koden som bestämmer hur svårt default wavesen ska vara. Den utgår från det som skrivs in i unreal engine, och sedan adderas det med CurrentWaveIndex * 2, detta kan dock ändras för balancing
-		ActiveWaveData.NumEnemies += CurrentWaveIndex * 2;
+		ActiveWaveData.NumEnemies += (CurrentWaveIndex + 1) * 2;
 	}
 
 	EnemiesSpawnedInCurrentWave = 0;
@@ -153,7 +153,7 @@ int32 AWaveManager::GetCurrentWaveNumber() const
 
 int32 AWaveManager::GetEnemiesRemaining() const
 {
-	return Waves[CurrentWaveIndex].NumEnemies - EnemiesKilledThisWave;
+	return ActiveWaveData.NumEnemies - EnemiesKilledThisWave;
 }
 
 
