@@ -28,7 +28,7 @@ void ALaunchPad::BeginPlay()
 	Super::BeginPlay();
 
 	//Debug line
-	FVector Start = GetActorLocation();
+	/*FVector Start = GetActorLocation();
 	FVector End = Start + LaunchVector;
 	DrawDebugLine(
 		GetWorld(),
@@ -39,7 +39,7 @@ void ALaunchPad::BeginPlay()
 		0,
 		0,
 		3.0f
-	);
+	);*/
 }
 
 // Called every frame
