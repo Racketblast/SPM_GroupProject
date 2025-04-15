@@ -16,6 +16,7 @@ APlayerCharacter::APlayerCharacter()
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("PlayerCamera"));
 	PlayerCamera->SetupAttachment(RootComponent);
 	PlayerCamera->bUsePawnControlRotation = true;
+	GetMesh()->SetupAttachment(PlayerCamera);
 }
 
 // Called when the game starts or when spawned
@@ -114,13 +115,19 @@ void APlayerCharacter::Shoot()
 {
 	if (CurrentAmmo > 0)
 	{
+		
 		if (Weapon1Equipped)
-		{
-			GetWorld()->SpawnActor<AProjectile>(Weapon1, GetActorLocation(), GetActorRotation());
+		{const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
+			FRotator SocketRot = SocketTransform.GetRotation().Rotator();
+			FRotator SpawnRotation( SocketRot.Pitch, GetActorRotation().Yaw,  GetActorRotation().Roll);
+			GetWorld()->SpawnActor<AProjectile>(Projectile1, SocketTransform.GetLocation(), SpawnRotation);
 		}
 		if (Weapon2Equipped)
 		{
-			GetWorld()->SpawnActor<AProjectile>(Weapon2, GetActorLocation(), GetActorRotation());
+			const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
+			FRotator SocketRot = SocketTransform.GetRotation().Rotator();
+			FRotator SpawnRotation( SocketRot.Pitch, GetActorRotation().Yaw,  GetActorRotation().Roll);
+			GetWorld()->SpawnActor<AProjectile>(Projectile2, SocketTransform.GetLocation(), SpawnRotation);
 		}
 		CurrentAmmo--;
 	}
