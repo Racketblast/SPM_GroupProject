@@ -44,8 +44,8 @@ protected:
 	void Reload();
 	void SelectWeapon1();
 	void SelectWeapon2();
-	bool Weapon1Equipped;
-	bool Weapon2Equipped;
+	bool Weapon1Equipped = false;
+	bool Weapon2Equipped = false;
 	
 	UPROPERTY(BlueprintReadWrite)
 	int32 CurrentMaxAmmo;
@@ -63,14 +63,15 @@ private:
 	
 	AActor* TargetActor;
 	
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AProjectile> ProjectileActor;
+
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> Weapon1;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AProjectile> Weapon2;
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AProjectile> GWeapon1;
+	TSubclassOf<class AGun> GWeapon1;
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AProjectile> GWeapon2;
+	TSubclassOf<class AGun> GWeapon2;
+	UPROPERTY()
+	AGun* CurrentGun;
 };

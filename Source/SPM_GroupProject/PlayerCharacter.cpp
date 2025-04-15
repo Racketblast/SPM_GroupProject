@@ -1,12 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "PlayerCharacter.h"
 #include "PlayerGameInstance.h"
 #include "BuyBox.h"
 #include "Teleporter.h"
 #include "Projectile.h"
 //#include "ProjectileSpawner.h"
+#include "Gun.h"
 #include "Engine/StaticMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -139,6 +137,11 @@ void APlayerCharacter::SelectWeapon1()
 	{
 		if (!Weapon1Equipped && PlayerGameInstance->HasBought(WeaponName1))
 		{
+			if (Weapon2Equipped)
+			{
+				CurrentGun->Destroy();
+				UE_LOG(LogTemp, Warning, TEXT("Gun Destroyed"));
+			}
 			PlayerGameInstance->CurrentWeapon = WeaponName1;
      
 			if (CurrentMaxAmmo > 0)
@@ -152,7 +155,20 @@ void APlayerCharacter::SelectWeapon1()
 			CurrentAmmo = Ammo1;
 			CurrentMaxAmmo = MaxAmmo1;
      
-			GetWorld()->SpawnActor<AProjectile>(GWeapon1, GetActorLocation(), GetActorRotation());
+			if (!GetMesh()->DoesSocketExist(TEXT("hand_lSocket")))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("hand_lSocket not found on mesh."));
+				return;
+			}
+
+			// Get the socket transform from the mesh
+			const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
+			AGun* SpawnedGun = GetWorld()->SpawnActor<AGun>(GWeapon1);
+			if (SpawnedGun)
+			{
+				SpawnedGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
+				CurrentGun = SpawnedGun;
+			}
 		}
 	}
 }
@@ -162,7 +178,11 @@ void APlayerCharacter::SelectWeapon2()
 	if (UPlayerGameInstance* PlayerGameInstance = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
 		if (!Weapon2Equipped && PlayerGameInstance->HasBought(WeaponName2))
+		{if (Weapon1Equipped)
 		{
+			CurrentGun->Destroy();
+			UE_LOG(LogTemp, Warning, TEXT("Gun Destroyed"));
+		}
 			PlayerGameInstance->CurrentWeapon = WeaponName2;
      
 			if (CurrentMaxAmmo > 0)
@@ -176,7 +196,20 @@ void APlayerCharacter::SelectWeapon2()
 			CurrentAmmo = Ammo2;
 			CurrentMaxAmmo = MaxAmmo2;
      
-			GetWorld()->SpawnActor<AProjectile>(GWeapon2, GetActorLocation(), GetActorRotation());
+			if (!GetMesh()->DoesSocketExist(TEXT("hand_lSocket")))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("hand_lSocket not found on mesh."));
+				return;
+			}
+
+			// Get the socket transform from the mesh
+			const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
+			AGun* SpawnedGun = GetWorld()->SpawnActor<AGun>(GWeapon2);
+			if (SpawnedGun)
+			{
+				SpawnedGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
+				CurrentGun = SpawnedGun;
+			}
 		}
 	}
 }
