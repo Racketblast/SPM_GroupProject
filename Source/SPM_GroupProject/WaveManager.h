@@ -5,8 +5,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Engine/TargetPoint.h"
+#include "Blueprint/UserWidget.h"
 #include "WaveManager.generated.h"
 
+// Detta är en struct som har data över hur en wave ser ut, man kan fylla i denna data i Unreal eller bara låta default waven ta hand om det.
+//Då denna strcut låtter en customize en wave, kan man göra waves manuelt, med egna siffror upp till kanske wave 10, och sedan låta default waven ta hand om resten.
+// Default waven SKA fyllas i! Annars blir spelet inte endless.
 USTRUCT(BlueprintType)
 struct FWaveData
 {
@@ -19,8 +23,8 @@ struct FWaveData
 	float TimeBetweenSpawns;
 };
 
-//SPM_GROUPPROJECT_API
-
+// Det finns viss data som måste fyllas i för att wave managern ska fungera. Detta kan du göra i unreal egine, där du behöver lägga till spawn points för fienderna att spawna på, samt se till att enemy class är i fylld med klassen som ska spawnas in.
+// Default waven behöver också fyllas i. 
 UCLASS()
 class AWaveManager : public AActor
 {
@@ -28,17 +32,24 @@ class AWaveManager : public AActor
 
 public:
 	AWaveManager();
-	void TickGracePeriod();
+	void OnEnemyKilled(); // Måste kalla på detta från enemy klassen, när enemy dör
 
 protected:
 	virtual void BeginPlay() override;
 
 	void StartNextWave();
 	void SpawnEnemy();
-	void OnEnemyKilled(); // Call this from enemy class, when enemy dies
-
+	void TickGracePeriod();
 	void EndWave();
 
+	//Widget
+	UFUNCTION(BlueprintCallable)
+	int32 GetCurrentWaveNumber() const;
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetEnemiesRemaining() const;
+
+	// other
 	UPROPERTY(EditAnywhere, Category = "Wave Config")
 	TArray<FWaveData> Waves;
 
@@ -59,9 +70,9 @@ protected:
 
 	FTimerHandle EnemySpawnTimer;
 
-	// Grace period settings
+	// Settingsen för Grace period 
 	UPROPERTY(EditAnywhere, Category = "Wave Config")
-	float GracePeriodDuration = 60.0f; // in seconds
+	float GracePeriodDuration = 60.0f; // i sekunder
 
 	FTimerHandle GracePeriodTimer;
 	int32 GraceSecondsRemaining;
