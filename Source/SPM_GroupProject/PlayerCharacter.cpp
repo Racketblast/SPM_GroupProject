@@ -7,6 +7,7 @@
 #include "Teleporter.h"
 #include "Projectile.h"
 //#include "ProjectileSpawner.h"
+#include "Gun.h"
 #include "Engine/StaticMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -140,11 +141,28 @@ void APlayerCharacter::SelectWeapon1()
 {
 	if (!Weapon1Equipped)
 	{
+		if (Weapon2Equipped)
+		{
+			CurrentGun->Destroy();
+			UE_LOG(LogTemp, Warning, TEXT("Gun Destroyed"));
+		}
 		Weapon1Equipped = true;
 		Weapon2Equipped = false;
-		
-		GetWorld()->SpawnActor<AProjectile>(GWeapon1, GetActorLocation(), GetActorRotation());
-		//GWeapon1->SetupAttachment(RootComponent);
+		// Make sure the skeletal mesh has the socket
+		if (!GetMesh()->DoesSocketExist(TEXT("hand_lSocket")))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("hand_lSocket not found on mesh."));
+			return;
+		}
+
+		// Get the socket transform from the mesh
+		const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
+		AGun* SpawnedGun = GetWorld()->SpawnActor<AGun>(GWeapon1);
+		if (SpawnedGun)
+		{
+			SpawnedGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
+			CurrentGun = SpawnedGun;
+		}
 	}
 	
 	
@@ -154,10 +172,28 @@ void APlayerCharacter::SelectWeapon2()
 
 	if (!Weapon2Equipped)
 	{
+		if (Weapon1Equipped)
+		{
+			CurrentGun->Destroy();
+			UE_LOG(LogTemp, Warning, TEXT("Gun Destroyed"));
+		}
 		Weapon2Equipped = true;
 		Weapon1Equipped = false;
-		GetWorld()->SpawnActor<AProjectile>(GWeapon2, GetActorLocation(), GetActorRotation());
-		
+		// Make sure the skeletal mesh has the socket
+		if (!GetMesh()->DoesSocketExist(TEXT("hand_lSocket")))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("hand_lSocket not found on mesh."));
+			return;
+		}
+
+		// Get the socket transform from the mesh
+		const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
+		AGun* SpawnedGun = GetWorld()->SpawnActor<AGun>(GWeapon2);
+		if (SpawnedGun)
+		{
+			SpawnedGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
+			CurrentGun = SpawnedGun;
+		}
 	}
 		
 }
