@@ -7,7 +7,6 @@
 #include "Teleporter.h"
 #include "Projectile.h"
 //#include "ProjectileSpawner.h"
-#include "Gun.h"
 #include "Engine/StaticMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -31,12 +30,24 @@ void APlayerCharacter::BeginPlay()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Hello"));
 
+
 		FInputModeGameOnly InputMode;
 		PC->SetInputMode(InputMode);
 		PC->bShowMouseCursor = false;
 	}
-
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		if (GI->CurrentWeapon == WeaponName1)
+		{
+			APlayerCharacter::SelectWeapon1();
+		}
+		else if (GI->CurrentWeapon == WeaponName2)
+		{
+			APlayerCharacter::SelectWeapon2();
+		}
+	}
 }
+
 
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
@@ -103,100 +114,73 @@ void APlayerCharacter::Pitch(float Value)
 }
 void APlayerCharacter::Shoot()
 {
-	if (Weapon1Equipped)
-	{
-		if (Ammo1 > 0)
-		{
-			GetWorld()->SpawnActor<AProjectile>(Weapon1, GetActorLocation(), GetActorRotation());
-			Ammo1--;
-		}
-	}
-	if (Weapon2Equipped)
-	{
-		if (Ammo2 > 0)
-		{
-			GetWorld()->SpawnActor<AProjectile>(Weapon2, GetActorLocation(), GetActorRotation());
-			Ammo2--;
-		}
-	}
-	
-	
-	
-}
-void APlayerCharacter::Reload()
-{
-	if (Weapon1Equipped)
-    {
-	Ammo1 = MaxAmmo1;
-    }
-	if (Weapon2Equipped)
-	{
-		Ammo2 = MaxAmmo2;
-	}
-	
-	
-	
-}
-void APlayerCharacter::SelectWeapon1()
-{
-	if (!Weapon1Equipped)
-	{
-		if (Weapon2Equipped)
-		{
-			CurrentGun->Destroy();
-			UE_LOG(LogTemp, Warning, TEXT("Gun Destroyed"));
-		}
-		Weapon1Equipped = true;
-		Weapon2Equipped = false;
-		// Make sure the skeletal mesh has the socket
-		if (!GetMesh()->DoesSocketExist(TEXT("hand_lSocket")))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("hand_lSocket not found on mesh."));
-			return;
-		}
-
-		// Get the socket transform from the mesh
-		const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
-		AGun* SpawnedGun = GetWorld()->SpawnActor<AGun>(GWeapon1);
-		if (SpawnedGun)
-		{
-			SpawnedGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
-			CurrentGun = SpawnedGun;
-		}
-	}
-	
-	
-}
-void APlayerCharacter::SelectWeapon2()
-{
-
-	if (!Weapon2Equipped)
+	if (CurrentAmmo > 0)
 	{
 		if (Weapon1Equipped)
 		{
-			CurrentGun->Destroy();
-			UE_LOG(LogTemp, Warning, TEXT("Gun Destroyed"));
+			GetWorld()->SpawnActor<AProjectile>(Weapon1, GetActorLocation(), GetActorRotation());
 		}
-		Weapon2Equipped = true;
-		Weapon1Equipped = false;
-		// Make sure the skeletal mesh has the socket
-		if (!GetMesh()->DoesSocketExist(TEXT("hand_lSocket")))
+		if (Weapon2Equipped)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("hand_lSocket not found on mesh."));
-			return;
+			GetWorld()->SpawnActor<AProjectile>(Weapon2, GetActorLocation(), GetActorRotation());
 		}
+		CurrentAmmo--;
+	}
+}
 
-		// Get the socket transform from the mesh
-		const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
-		AGun* SpawnedGun = GetWorld()->SpawnActor<AGun>(GWeapon2);
-		if (SpawnedGun)
+void APlayerCharacter::Reload()
+{
+	CurrentAmmo = CurrentMaxAmmo;
+}
+
+void APlayerCharacter::SelectWeapon1()
+{
+	if (UPlayerGameInstance* PlayerGameInstance = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (!Weapon1Equipped && PlayerGameInstance->HasBought(WeaponName1))
 		{
-			SpawnedGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
-			CurrentGun = SpawnedGun;
+			PlayerGameInstance->CurrentWeapon = WeaponName1;
+     
+			if (CurrentMaxAmmo > 0)
+			{
+				Ammo2 = CurrentAmmo;
+			}
+     
+			Weapon1Equipped = true;
+			Weapon2Equipped = false;
+
+			CurrentAmmo = Ammo1;
+			CurrentMaxAmmo = MaxAmmo1;
+     
+			GetWorld()->SpawnActor<AProjectile>(GWeapon1, GetActorLocation(), GetActorRotation());
 		}
 	}
-		
 }
+
+void APlayerCharacter::SelectWeapon2()
+{
+	if (UPlayerGameInstance* PlayerGameInstance = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (!Weapon2Equipped && PlayerGameInstance->HasBought(WeaponName2))
+		{
+			PlayerGameInstance->CurrentWeapon = WeaponName2;
+     
+			if (CurrentMaxAmmo > 0)
+			{
+				Ammo1 = CurrentAmmo;
+			}
+     
+			Weapon2Equipped = true;
+			Weapon1Equipped = false;
+
+			CurrentAmmo = Ammo2;
+			CurrentMaxAmmo = MaxAmmo2;
+     
+			GetWorld()->SpawnActor<AProjectile>(GWeapon2, GetActorLocation(), GetActorRotation());
+		}
+	}
+}
+
 
 void APlayerCharacter::Use()
 {
@@ -216,7 +200,7 @@ void APlayerCharacter::Use()
 				{
 					GI->Money += 20;
 				}
-			
+        
 				UE_LOG(LogTemp, Warning, TEXT("Level: %d"), GI->Level);
 				UE_LOG(LogTemp, Warning, TEXT("Money: %d"), GI->Money);
 				UGameplayStatics::OpenLevel(this, Teleporter->TargetLevelName);
@@ -234,12 +218,28 @@ void APlayerCharacter::Use()
 						GI->Money -= BuyBox->TargetUpgradeCost;
 						GI->UpgradeArray.Add(BuyBox->TargetUpgradeName);
 						GI->CurrentWeapon = BuyBox->TargetUpgradeName;
-						
+						if (GI->CurrentWeapon == WeaponName1)
+						{
+							APlayerCharacter::SelectWeapon1();
+						}
+						else if (GI->CurrentWeapon == WeaponName2)
+						{
+							APlayerCharacter::SelectWeapon2();
+						}
+                 
 					}
 				}
 				else
 				{
 					GI->CurrentWeapon = BuyBox->TargetUpgradeName;
+					if (GI->CurrentWeapon == WeaponName1)
+					{
+						APlayerCharacter::SelectWeapon1();
+					}
+					else if (GI->CurrentWeapon == WeaponName2)
+					{
+						APlayerCharacter::SelectWeapon2();
+					}
 				}
 			}
 		}

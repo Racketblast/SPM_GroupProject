@@ -47,10 +47,15 @@ protected:
 	bool Weapon1Equipped = false;
 	bool Weapon2Equipped = false;
 	
-
+	UPROPERTY(BlueprintReadWrite)
+	int32 CurrentMaxAmmo;
+	UPROPERTY(BlueprintReadWrite)
+	int32 CurrentAmmo;
 	
 private:
-int32 MaxAmmo1 = 9;
+	FName WeaponName1 = "Pistol";
+	FName WeaponName2 = "Rifle";
+	int32 MaxAmmo1 = 9;
 	int32 MaxAmmo2 = 30;
 	int32 Ammo1 = MaxAmmo1;
 	int32 Ammo2 = MaxAmmo2;
