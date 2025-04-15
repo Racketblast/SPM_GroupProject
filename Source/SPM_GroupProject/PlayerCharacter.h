@@ -65,9 +65,9 @@ private:
 	
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AProjectile> Weapon1;
+	TSubclassOf<class AProjectile> Projectile1;
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AProjectile> Weapon2;
+	TSubclassOf<class AProjectile> Projectile2;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AGun> GWeapon1;
 	UPROPERTY(EditAnywhere)
