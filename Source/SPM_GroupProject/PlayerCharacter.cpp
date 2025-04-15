@@ -30,12 +30,24 @@ void APlayerCharacter::BeginPlay()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Hello"));
 
+
 		FInputModeGameOnly InputMode;
 		PC->SetInputMode(InputMode);
 		PC->bShowMouseCursor = false;
 	}
-
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		if (GI->CurrentWeapon == WeaponName1)
+		{
+			APlayerCharacter::SelectWeapon1();
+		}
+		else if (GI->CurrentWeapon == WeaponName2)
+		{
+			APlayerCharacter::SelectWeapon2();
+		}
+	}
 }
+
 
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
@@ -102,65 +114,73 @@ void APlayerCharacter::Pitch(float Value)
 }
 void APlayerCharacter::Shoot()
 {
-	if (Weapon1Equipped)
+	if (CurrentAmmo > 0)
 	{
-		if (Ammo1 > 0)
+		if (Weapon1Equipped)
 		{
 			GetWorld()->SpawnActor<AProjectile>(Weapon1, GetActorLocation(), GetActorRotation());
-			Ammo1--;
 		}
-	}
-	if (Weapon2Equipped)
-	{
-		if (Ammo2 > 0)
+		if (Weapon2Equipped)
 		{
 			GetWorld()->SpawnActor<AProjectile>(Weapon2, GetActorLocation(), GetActorRotation());
-			Ammo2--;
 		}
+		CurrentAmmo--;
 	}
-	
-	
-	
 }
+
 void APlayerCharacter::Reload()
 {
-	if (Weapon1Equipped)
-    {
-	Ammo1 = MaxAmmo1;
-    }
-	if (Weapon2Equipped)
-	{
-		Ammo2 = MaxAmmo2;
-	}
-	
-	
-	
+	CurrentAmmo = CurrentMaxAmmo;
 }
+
 void APlayerCharacter::SelectWeapon1()
 {
-	if (!Weapon1Equipped)
+	if (UPlayerGameInstance* PlayerGameInstance = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
-		Weapon1Equipped = true;
-		Weapon2Equipped = false;
-		
-		GetWorld()->SpawnActor<AProjectile>(GWeapon1, GetActorLocation(), GetActorRotation());
-		//GWeapon1->SetupAttachment(RootComponent);
+		if (!Weapon1Equipped && PlayerGameInstance->HasBought(WeaponName1))
+		{
+			PlayerGameInstance->CurrentWeapon = WeaponName1;
+     
+			if (CurrentMaxAmmo > 0)
+			{
+				Ammo2 = CurrentAmmo;
+			}
+     
+			Weapon1Equipped = true;
+			Weapon2Equipped = false;
+
+			CurrentAmmo = Ammo1;
+			CurrentMaxAmmo = MaxAmmo1;
+     
+			GetWorld()->SpawnActor<AProjectile>(GWeapon1, GetActorLocation(), GetActorRotation());
+		}
 	}
-	
-	
 }
+
 void APlayerCharacter::SelectWeapon2()
 {
-
-	if (!Weapon2Equipped)
+	if (UPlayerGameInstance* PlayerGameInstance = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
-		Weapon2Equipped = true;
-		Weapon1Equipped = false;
-		GetWorld()->SpawnActor<AProjectile>(GWeapon2, GetActorLocation(), GetActorRotation());
-		
+		if (!Weapon2Equipped && PlayerGameInstance->HasBought(WeaponName2))
+		{
+			PlayerGameInstance->CurrentWeapon = WeaponName2;
+     
+			if (CurrentMaxAmmo > 0)
+			{
+				Ammo1 = CurrentAmmo;
+			}
+     
+			Weapon2Equipped = true;
+			Weapon1Equipped = false;
+
+			CurrentAmmo = Ammo2;
+			CurrentMaxAmmo = MaxAmmo2;
+     
+			GetWorld()->SpawnActor<AProjectile>(GWeapon2, GetActorLocation(), GetActorRotation());
+		}
 	}
-		
 }
+
 
 void APlayerCharacter::Use()
 {
@@ -180,7 +200,7 @@ void APlayerCharacter::Use()
 				{
 					GI->Money += 20;
 				}
-			
+        
 				UE_LOG(LogTemp, Warning, TEXT("Level: %d"), GI->Level);
 				UE_LOG(LogTemp, Warning, TEXT("Money: %d"), GI->Money);
 				UGameplayStatics::OpenLevel(this, Teleporter->TargetLevelName);
@@ -198,12 +218,28 @@ void APlayerCharacter::Use()
 						GI->Money -= BuyBox->TargetUpgradeCost;
 						GI->UpgradeArray.Add(BuyBox->TargetUpgradeName);
 						GI->CurrentWeapon = BuyBox->TargetUpgradeName;
-						
+						if (GI->CurrentWeapon == WeaponName1)
+						{
+							APlayerCharacter::SelectWeapon1();
+						}
+						else if (GI->CurrentWeapon == WeaponName2)
+						{
+							APlayerCharacter::SelectWeapon2();
+						}
+                 
 					}
 				}
 				else
 				{
 					GI->CurrentWeapon = BuyBox->TargetUpgradeName;
+					if (GI->CurrentWeapon == WeaponName1)
+					{
+						APlayerCharacter::SelectWeapon1();
+					}
+					else if (GI->CurrentWeapon == WeaponName2)
+					{
+						APlayerCharacter::SelectWeapon2();
+					}
 				}
 			}
 		}
