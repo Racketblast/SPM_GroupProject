@@ -50,6 +50,12 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	int32 GetEnemiesRemaining() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Wave")
+	float GetGraceSecondsRemaining() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Wave")
+	bool IsInGracePeriod() const;
+
 	// other
 	UPROPERTY(EditAnywhere, Category = "Wave Config")
 	TArray<FWaveData> Waves;

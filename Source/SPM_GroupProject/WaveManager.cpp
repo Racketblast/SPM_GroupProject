@@ -117,13 +117,13 @@ void AWaveManager::TickGracePeriod()
 		return;
 	}
 
-	// skriv ut direkt till skärmen
-	GEngine->AddOnScreenDebugMessage(
+	// Skriv ut GraceSecondsRemaining direkt till skärmen. Använder nu en Widget istället, dock är den 1 sekund fel, men tror det är ok
+	/*GEngine->AddOnScreenDebugMessage(
 		-1,
 		1.1f,
 		FColor::Green,
 		FString::Printf(TEXT("Next wave in: %d seconds"), GraceSecondsRemaining)
-	);
+	);*/
 
 	GraceSecondsRemaining--;
 }
@@ -156,6 +156,15 @@ int32 AWaveManager::GetEnemiesRemaining() const
 	return ActiveWaveData.NumEnemies - EnemiesKilledThisWave;
 }
 
+float AWaveManager::GetGraceSecondsRemaining() const
+{
+	return GraceSecondsRemaining;
+}
+
+bool AWaveManager::IsInGracePeriod() const
+{
+	return GraceSecondsRemaining > 0.0f;
+}
 
 
 
