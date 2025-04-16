@@ -29,7 +29,7 @@ void ALaunchPad::BeginPlay()
 
 	//Debug line
 	/*FVector Start = GetActorLocation();
-	FVector End = Start + LaunchVector;
+	FVector End = Start + LaunchPadMesh->GetComponentRotation().RotateVector(LaunchVector);
 	DrawDebugLine(
 		GetWorld(),
 		Start,
@@ -55,7 +55,7 @@ void ALaunchPad::LaunchPadTriggered(UPrimitiveComponent* OverlappedComponent, AA
 	{
 		if (Cast<UCapsuleComponent>(OtherComp) == Player->GetCapsuleComponent())
 		{
-			FVector Velocity = {LaunchVector.X, LaunchVector.Y,LaunchVector.Z};
+			FVector Velocity = LaunchPadMesh->GetComponentRotation().RotateVector(LaunchVector);
 			Player->LaunchCharacter(Velocity, bOverrideXY, bOverrideZ);
 			UE_LOG(LogTemp,Display,TEXT("LaunchPadTriggered"));
 		}

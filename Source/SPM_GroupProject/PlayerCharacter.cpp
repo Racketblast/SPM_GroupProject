@@ -247,14 +247,7 @@ void APlayerCharacter::Use()
 				{
 					GI->Level += 1;
 				}
-				else
-				{
-					GI->Money += 20;
-				}
-        
-				UE_LOG(LogTemp, Warning, TEXT("Level: %d"), GI->Level);
-				UE_LOG(LogTemp, Warning, TEXT("Money: %d"), GI->Money);
-				UGameplayStatics::OpenLevel(this, Teleporter->TargetLevelName);
+        		UGameplayStatics::OpenLevel(this, Teleporter->TargetLevelName);
 			}
 		}
 		//Buying function
