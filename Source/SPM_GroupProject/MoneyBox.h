@@ -57,4 +57,14 @@ private:
 	
 	bool ShouldBoxReturn() const;
 	float GetDistanceMoved() const;
+
+	UPROPERTY(EditAnywhere, Category = "Self Destruct")
+	float LifeTime = 5.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Self Destruct")
+	bool bShouldDestroy = true;
+	
+	FTimerHandle SelfDestructTimer;
+	
+	void SelfDestruct();
 };

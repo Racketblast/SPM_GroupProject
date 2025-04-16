@@ -37,6 +37,10 @@ void AMoneyBox::BeginPlay()
 	
 	StartVector = GetActorLocation();
 	
+	if (bShouldDestroy)
+	{
+		GetWorldTimerManager().SetTimer(SelfDestructTimer, this, &AMoneyBox::SelfDestruct, LifeTime, false);
+	}
 }
 
 // Called every frame
@@ -46,8 +50,8 @@ void AMoneyBox::Tick(float DeltaTime)
 
 	MoveBox(DeltaTime);
 	RotateBox(DeltaTime);
-
 }
+
 void AMoneyBox::MoneyBoxTriggered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -95,4 +99,9 @@ bool AMoneyBox::ShouldBoxReturn() const
 float AMoneyBox::GetDistanceMoved() const
 {
 	return FVector::Dist(StartVector, GetActorLocation());
+}
+
+void AMoneyBox::SelfDestruct()
+{
+	Destroy();
 }
