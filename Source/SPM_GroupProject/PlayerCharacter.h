@@ -59,7 +59,7 @@ private:
 	int32 MaxAmmo2 = 30;
 	int32 Ammo1 = MaxAmmo1;
 	int32 Ammo2 = MaxAmmo2;
-	
+	int32 ExtraMags = 2;
 	
 	AActor* TargetActor;
 	
