@@ -117,16 +117,17 @@ void APlayerCharacter::Shoot()
 	{
 		
 		if (Weapon1Equipped)
-		{const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
+		{
+			const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
 			FRotator SocketRot = SocketTransform.GetRotation().Rotator();
-			FRotator SpawnRotation( SocketRot.Pitch, GetActorRotation().Yaw,  GetActorRotation().Roll);
+			FRotator SpawnRotation( SocketRot.Pitch+12, GetActorRotation().Yaw,  SocketRot.Roll);
 			GetWorld()->SpawnActor<AProjectile>(Projectile1, SocketTransform.GetLocation(), SpawnRotation);
 		}
 		if (Weapon2Equipped)
 		{
 			const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
 			FRotator SocketRot = SocketTransform.GetRotation().Rotator();
-			FRotator SpawnRotation( SocketRot.Pitch, GetActorRotation().Yaw,  GetActorRotation().Roll);
+			FRotator SpawnRotation( SocketRot.Pitch+12, GetActorRotation().Yaw,  SocketRot.Roll);
 			GetWorld()->SpawnActor<AProjectile>(Projectile2, SocketTransform.GetLocation(), SpawnRotation);
 		}
 		CurrentAmmo--;
@@ -135,6 +136,16 @@ void APlayerCharacter::Shoot()
 
 void APlayerCharacter::Reload()
 {
+	if (Weapon2Equipped)
+	{
+		if (ExtraMags <= 0){
+			return;
+		}else
+		{
+			ExtraMags--;
+		}
+		
+	}
 	CurrentAmmo = CurrentMaxAmmo;
 }
 
