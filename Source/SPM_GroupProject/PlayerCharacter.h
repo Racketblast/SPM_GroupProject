@@ -32,6 +32,9 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	int32 UseDistance = 300;
+	
+	UPROPERTY(BlueprintReadWrite)
+	int32 ExtraMags = 2;
 protected:
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* PlayerCamera;
@@ -59,7 +62,6 @@ private:
 	int32 MaxAmmo2 = 30;
 	int32 Ammo1 = MaxAmmo1;
 	int32 Ammo2 = MaxAmmo2;
-	int32 ExtraMags = 2;
 	
 	AActor* TargetActor;
 	
