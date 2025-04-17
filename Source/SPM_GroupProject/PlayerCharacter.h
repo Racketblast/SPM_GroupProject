@@ -35,6 +35,9 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite)
 	int32 ExtraMags = 2;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int32 PlayerHealth = 100;
 protected:
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* PlayerCamera;
