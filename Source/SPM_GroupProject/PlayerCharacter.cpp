@@ -23,17 +23,6 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	UE_LOG(LogTemp, Warning, TEXT("Hello"));
-	if (PC)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Hello"));
-
-
-		FInputModeGameOnly InputMode;
-		PC->SetInputMode(InputMode);
-		PC->bShowMouseCursor = false;
-	}
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
 		if (GI->CurrentWeapon == WeaponName1)
@@ -52,15 +41,33 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
 	const FVector Start = PlayerCamera->GetComponentLocation();
 	const FVector End = Start + (PlayerCamera->GetForwardVector() * UseDistance);
+	//DrawDebugLine for use
+	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false);
 
+	//Drawdebugline for socket
+	/*const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
+	FRotator SocketRot = SocketTransform.GetRotation().Rotator();
+	FRotator SpawnRotation(SocketRot.Pitch + 12, GetActorRotation().Yaw, SocketRot.Roll);
+	FVector SpawnLocation = SocketTransform.GetLocation();
+
+	FVector EndLocation = SpawnLocation + SpawnRotation.Vector() * UseDistance;
+
+	// Draw the debug line
+	DrawDebugLine(
+		GetWorld(),
+		SpawnLocation,
+		EndLocation,
+		FColor::Green,
+		false     // Thickness
+	);*/
+	
 	FHitResult HitResult;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false);
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
 		TargetActor = HitResult.GetActor();
