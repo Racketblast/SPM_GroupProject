@@ -8,6 +8,18 @@
 #include "Blueprint/UserWidget.h"
 #include "WaveManager.generated.h"
 
+USTRUCT(BlueprintType)
+struct FEnemyTypeData
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<AActor> EnemyClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 MinCount = 0;
+};
+
 // Detta är en struct som har data över hur en wave ser ut, man kan fylla i denna data i Unreal eller bara låta default waven ta hand om det.
 //Då denna strcut låtter en customize en wave, kan man göra waves manuelt, med egna siffror upp till kanske wave 10, och sedan låta default waven ta hand om resten.
 // Default waven SKA fyllas i! Annars blir spelet inte endless.
@@ -17,10 +29,13 @@ struct FWaveData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 NumEnemies;
+	TArray<FEnemyTypeData> EnemyTypes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float TimeBetweenSpawns;
+	float TimeBetweenSpawns = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 MaxExtraCount = 0;
 };
 
 // Det finns viss data som måste fyllas i för att wave managern ska fungera. Detta kan du göra i unreal egine, där du behöver lägga till spawn points för fienderna att spawna på, samt se till att enemy class är i fylld med klassen som ska spawnas in.
@@ -32,6 +47,7 @@ class AWaveManager : public AActor
 
 public:
 	AWaveManager();
+	
 	UFUNCTION(BlueprintCallable)
 	void OnEnemyKilled(); // Måste kalla på detta från enemy klassen, när enemy dör
 
@@ -60,7 +76,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Wave Config")
 	TArray<FWaveData> Waves;
 
-	UPROPERTY(EditAnywhere, Category = "Wave Config")
+	UPROPERTY(EditAnywhere, Category = "Wave Config") // finns endast kvar för fallbacken i StartNextWave funktionen
 	TSubclassOf<AActor> EnemyClass;
 
 	UPROPERTY(EditAnywhere, Category = "Wave Config")
@@ -69,7 +85,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Wave Config")
 	FWaveData DefaultWave;
 
+	UPROPERTY(EditAnywhere, Category = "Wave Config")
+	int32 DefaultWaveDifficultyMultiplier = 2;
+
 	int32 CurrentWaveIndex;
+	
+	TMap<TSubclassOf<AActor>, int32> SpawnedCountPerType;
+	int32 TotalEnemiesToSpawn;
 	int32 EnemiesSpawnedInCurrentWave;
 	int32 EnemiesKilledThisWave;
 	

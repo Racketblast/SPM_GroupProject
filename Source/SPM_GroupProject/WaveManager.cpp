@@ -33,13 +33,38 @@ void AWaveManager::StartNextWave()
 	{
 		ActiveWaveData = DefaultWave;
 
-		// Här skrivs koden som bestämmer hur svårt default wavesen ska vara. Den utgår från det som skrivs in i unreal engine, och sedan adderas det med CurrentWaveIndex * 2, detta kan dock ändras för balancing
-		ActiveWaveData.NumEnemies += (CurrentWaveIndex + 1) * 2;
+		// Fallback för om man glömmer att fylla i DefaultWave i unreal.
+		if (ActiveWaveData.EnemyTypes.Num() == 0 && EnemyClass)
+		{
+			FEnemyTypeData DefaultType;
+			DefaultType.EnemyClass = EnemyClass;
+			DefaultType.MinCount = 5 + CurrentWaveIndex * 2;
+
+			ActiveWaveData.EnemyTypes.Add(DefaultType);
+
+			ActiveWaveData.MaxExtraCount = 3 + CurrentWaveIndex; // Detta är bara för att spawna extra fiender utöver de minimum kravet som MinCount sköter. Den behöver alltså inte vara större en MinCount och den bör faktiskt vara mindre egentligen för preformance skäl
+		}
+
+		// Här skrivs koden som bestämmer hur svårt default wavesen ska vara. Den utgår från det som skrivs in i unreal engine, och sedan adderas det med CurrentWaveIndex * DefaultWaveDifficultyMultiplier, detta kan dock ändras för balancing
+		for (FEnemyTypeData& Type : ActiveWaveData.EnemyTypes)
+		{
+			Type.MinCount += (CurrentWaveIndex + 1) * DefaultWaveDifficultyMultiplier;             // ökar minimum spawnas av varje enemy type
+			ActiveWaveData.MaxExtraCount += (CurrentWaveIndex + 1);            // ökar maximum spawns
+		}
 	}
 
 	EnemiesSpawnedInCurrentWave = 0;
 	EnemiesKilledThisWave = 0;
+	SpawnedCountPerType.Empty();
 
+	TotalEnemiesToSpawn = 0;
+	for (const FEnemyTypeData& Type : ActiveWaveData.EnemyTypes)
+	{
+		TotalEnemiesToSpawn += Type.MinCount;
+	}
+	
+	TotalEnemiesToSpawn += ActiveWaveData.MaxExtraCount;
+	
 	GetWorldTimerManager().SetTimer(
 		EnemySpawnTimer,
 		this,
@@ -49,33 +74,55 @@ void AWaveManager::StartNextWave()
 	);
 }
 
-// Denna funktion är den som faktisk spawnar in enemies
+// Denna funktion är den som faktisk spawnar in enemiesvoid AWaveManager::SpawnEnemy()
 void AWaveManager::SpawnEnemy()
 {
-	if (EnemiesSpawnedInCurrentWave >= ActiveWaveData.NumEnemies)
+	if (EnemiesSpawnedInCurrentWave >= TotalEnemiesToSpawn)
 	{
 		GetWorldTimerManager().ClearTimer(EnemySpawnTimer);
 		return;
 	}
 
-	if (!EnemyClass || SpawnPoints.Num() == 0) return;
+	const TArray<FEnemyTypeData>& EnemyTypes = ActiveWaveData.EnemyTypes; // is currently Waves[CurrentWaveIndex]. maybe should change to ActiveWaveData
 
+	TSubclassOf<AActor> SelectedClass = nullptr;
+
+	// Ser till att de minimum av alla fiender typer spawnas först. 
+	for (const FEnemyTypeData& Type : EnemyTypes)
+	{
+		int32 Spawned = SpawnedCountPerType.FindRef(Type.EnemyClass);
+		if (Spawned < Type.MinCount)
+		{
+			SelectedClass = Type.EnemyClass;
+			break;
+		}
+	}
+
+	// Ifall minimumet av alla fiender typer är spawnad, så slumpar den resten. 
+	if (!SelectedClass)
+	{
+		int32 RandomIndex = FMath::RandRange(0, EnemyTypes.Num() - 1);
+		SelectedClass = EnemyTypes[RandomIndex].EnemyClass;
+	}
+
+	// Har gjort så att koden körs om och försöker spawna en fiende igen, ifall den misslyckas med att spawna en fiende. 
 	const int32 MaxAttempts = 5;
 	bool bSpawned = false;
+
 	for (int32 Attempt = 0; Attempt < MaxAttempts; ++Attempt)
 	{
-		int32 RandomIndex = FMath::RandRange(0, SpawnPoints.Num() - 1);
-		FVector SpawnLocation = SpawnPoints[RandomIndex]->GetActorLocation();
-		FRotator SpawnRotation = FRotator::ZeroRotator;
+		int32 RandomSpawnIndex = FMath::RandRange(0, SpawnPoints.Num() - 1);
+		FVector SpawnLocation = SpawnPoints[RandomSpawnIndex]->GetActorLocation();
 
 		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn; 
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-		AActor* SpawnedEnemy = GetWorld()->SpawnActor<AActor>(EnemyClass, SpawnLocation, SpawnRotation, SpawnParams);
+		AActor* SpawnedEnemy = GetWorld()->SpawnActor<AActor>(SelectedClass, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
 
 		if (SpawnedEnemy)
 		{
 			bSpawned = true;
+			SpawnedCountPerType.FindOrAdd(SelectedClass)++;
 			EnemiesSpawnedInCurrentWave++;
 			UE_LOG(LogTemp, Warning, TEXT("Spawned enemy: %i"), EnemiesSpawnedInCurrentWave);
 			break;
@@ -84,9 +131,7 @@ void AWaveManager::SpawnEnemy()
 
 	if (!bSpawned)
 	{
-		// denna del kanske är onödig, har aldrig sätt medelandet
 		UE_LOG(LogTemp, Warning, TEXT("Failed to spawn enemy after several attempts. Retrying..."));
-
 		GetWorldTimerManager().SetTimerForNextTick(this, &AWaveManager::SpawnEnemy);
 	}
 }
@@ -97,7 +142,7 @@ void AWaveManager::OnEnemyKilled()
 	EnemiesKilledThisWave++;
 	UE_LOG(LogTemp, Warning, TEXT("Enemy died"));
 	
-	if (EnemiesKilledThisWave >= ActiveWaveData.NumEnemies)
+	if (EnemiesKilledThisWave >= TotalEnemiesToSpawn)
 	{
 		EndWave();
 	}
@@ -147,13 +192,13 @@ void AWaveManager::EndWave()
 
 int32 AWaveManager::GetCurrentWaveNumber() const
 {
-	// Add 1 since index starts at 0
+	// Lägger till 1 eftersom att index börjar på 0, då CurrentWaveIndex är för en array
 	return CurrentWaveIndex + 1;
 }
 
 int32 AWaveManager::GetEnemiesRemaining() const
 {
-	return ActiveWaveData.NumEnemies - EnemiesKilledThisWave;
+	return TotalEnemiesToSpawn - EnemiesKilledThisWave;
 }
 
 float AWaveManager::GetGraceSecondsRemaining() const
