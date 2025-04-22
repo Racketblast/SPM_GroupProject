@@ -3,61 +3,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "CollectableBox.h"
 #include "MoneyBox.generated.h"
 
 UCLASS()
-class SPM_GROUPPROJECT_API AMoneyBox : public AActor
+class SPM_GROUPPROJECT_API AMoneyBox : public ACollectableBox
 {
 	GENERATED_BODY()
 	
-public:	
-	// Sets default values for this actor's properties
-	AMoneyBox();
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-	
+public:		
 	UPROPERTY(EditAnywhere, Category="Money")
 	int32 MoneyAmount = 20;
 	
 private:
-	UPROPERTY(EditDefaultsOnly)
-	class UStaticMeshComponent* MoneyMesh;
+	virtual void CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 	
-	UPROPERTY(EditDefaultsOnly)
-	class UBoxComponent* MoneyTriggerVolume;
-
-	UPROPERTY(EditDefaultsOnly)
-	class USoundBase* MoneyPickUpSound;
-	
-	UFUNCTION()
-	void MoneyBoxTriggered(UPrimitiveComponent* OverlappedComponent,AActor* OtherActor, UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UPROPERTY(EditAnywhere)
-	float DistFloat = -1;
-	
-	FVector StartVector;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "moving")
-	FVector PlatformVelocity;
-
-	
-	UPROPERTY(EditDefaultsOnly, Category = "rotation")
-	FRotator RotationVelocity;
-
-	
-	void MoveBox(float DeltaTime);
-	void RotateBox(float DeltaTime);
-	
-	bool ShouldBoxReturn() const;
-	float GetDistanceMoved() const;
-
 	UPROPERTY(EditAnywhere, Category = "Self Destruct")
 	float LifeTime = 5.0f;
 
