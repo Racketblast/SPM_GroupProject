@@ -8,6 +8,8 @@
 #include "Blueprint/UserWidget.h"
 #include "WaveManager.generated.h"
 
+
+//Struct för en fiende typ, här kan man ställa in hur många av just denna typ av fiende som ska spawnas under en wave.
 USTRUCT(BlueprintType)
 struct FEnemyTypeData
 {

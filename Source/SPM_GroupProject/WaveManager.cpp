@@ -48,8 +48,8 @@ void AWaveManager::StartNextWave()
 		// Här skrivs koden som bestämmer hur svårt default wavesen ska vara. Den utgår från det som skrivs in i unreal engine, och sedan adderas det med CurrentWaveIndex * DefaultWaveDifficultyMultiplier, detta kan dock ändras för balancing
 		for (FEnemyTypeData& Type : ActiveWaveData.EnemyTypes)
 		{
-			Type.MinCount += (CurrentWaveIndex + 1) * DefaultWaveDifficultyMultiplier;             // ökar minimum spawnas av varje enemy type
-			ActiveWaveData.MaxExtraCount += (CurrentWaveIndex + 1);            // ökar maximum spawns
+			Type.MinCount += CurrentWaveIndex  * DefaultWaveDifficultyMultiplier;             // ökar minimum spawnas av varje enemy type
+			ActiveWaveData.MaxExtraCount += CurrentWaveIndex;            // ökar maximum spawns
 		}
 	}
 
