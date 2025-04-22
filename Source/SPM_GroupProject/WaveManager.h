@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Engine/TargetPoint.h"
 #include "Blueprint/UserWidget.h"
+#include "EnemySpawnPoint.h"
 #include "WaveManager.generated.h"
 
 
@@ -43,7 +44,7 @@ struct FWaveData
 // Det finns viss data som måste fyllas i för att wave managern ska fungera. Detta kan du göra i unreal egine, där du behöver lägga till spawn points för fienderna att spawna på, samt se till att enemy class är i fylld med klassen som ska spawnas in.
 // Default waven behöver också fyllas i. 
 UCLASS()
-class AWaveManager : public AActor
+class SPM_GROUPPROJECT_API AWaveManager : public AActor
 {
 	GENERATED_BODY()
 
@@ -81,8 +82,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Wave Config") // finns endast kvar för fallbacken i StartNextWave funktionen
 	TSubclassOf<AActor> EnemyClass;
 
-	UPROPERTY(EditAnywhere, Category = "Wave Config")
-	TArray<AActor*> SpawnPoints;
+	UPROPERTY(EditAnywhere, Category = "Spawning")
+	TArray<AEnemySpawnPoint*> SpawnPoints;
 
 	UPROPERTY(EditAnywhere, Category = "Wave Config")
 	FWaveData DefaultWave;

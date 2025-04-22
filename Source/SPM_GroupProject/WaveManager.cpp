@@ -48,8 +48,8 @@ void AWaveManager::StartNextWave()
 		// Här skrivs koden som bestämmer hur svårt default wavesen ska vara. Den utgår från det som skrivs in i unreal engine, och sedan adderas det med CurrentWaveIndex * DefaultWaveDifficultyMultiplier, detta kan dock ändras för balancing
 		for (FEnemyTypeData& Type : ActiveWaveData.EnemyTypes)
 		{
-			Type.MinCount += CurrentWaveIndex  * DefaultWaveDifficultyMultiplier;             // ökar minimum spawnas av varje enemy type
-			ActiveWaveData.MaxExtraCount += CurrentWaveIndex;            // ökar maximum spawns
+			Type.MinCount += (CurrentWaveIndex + 1)  * DefaultWaveDifficultyMultiplier;             // ökar minimum spawnas av varje enemy type
+			ActiveWaveData.MaxExtraCount += (CurrentWaveIndex + 1);            // ökar maximum spawns
 		}
 	}
 
@@ -111,8 +111,24 @@ void AWaveManager::SpawnEnemy()
 
 	for (int32 Attempt = 0; Attempt < MaxAttempts; ++Attempt)
 	{
-		int32 RandomSpawnIndex = FMath::RandRange(0, SpawnPoints.Num() - 1);
-		FVector SpawnLocation = SpawnPoints[RandomSpawnIndex]->GetActorLocation();
+		// Filter valid spawn points for this enemy type
+		TArray<AEnemySpawnPoint*> ValidSpawnPoints;
+		for (AEnemySpawnPoint* Point : SpawnPoints)
+		{
+			if (Point && Point->CanSpawn(SelectedClass))
+			{
+				ValidSpawnPoints.Add(Point);
+			}
+		}
+
+		if (ValidSpawnPoints.Num() == 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("No valid spawn points for %s"), *SelectedClass->GetName());
+			return;
+		}
+
+		int32 RandomSpawnIndex = FMath::RandRange(0, ValidSpawnPoints.Num() - 1);
+		FVector SpawnLocation = ValidSpawnPoints[RandomSpawnIndex]->GetActorLocation();
 
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
