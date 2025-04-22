@@ -3,6 +3,7 @@
 #include "WaveManager.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "PlayerGameInstance.h"
 #include "TimerManager.h"
 
 AWaveManager::AWaveManager()
@@ -25,6 +26,11 @@ void AWaveManager::BeginPlay()
 // Funktionen som startar waven. 
 void AWaveManager::StartNextWave()
 {
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		GI->bIsWave = true;
+	}
+	
 	if (Waves.IsValidIndex(CurrentWaveIndex))
 	{
 		ActiveWaveData = Waves[CurrentWaveIndex];
@@ -192,6 +198,10 @@ void AWaveManager::TickGracePeriod()
 // funktionen som sätter igång TickGracePeriod när alla enemies är döda, kallas från OnEnemyKilled funktionen
 void AWaveManager::EndWave()
 {
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		GI->bIsWave = false;
+	}
 	bIsGracePeriod = true;
 	GraceSecondsRemaining = FMath::CeilToInt(GracePeriodDuration);
 	
@@ -204,6 +214,11 @@ void AWaveManager::EndWave()
 	);
 
 	UE_LOG(LogTemp, Warning, TEXT("Grace period started: %d seconds"), GraceSecondsRemaining);
+
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		GI->bIsWave = false;
+	}
 }
 
 int32 AWaveManager::GetCurrentWaveNumber() const

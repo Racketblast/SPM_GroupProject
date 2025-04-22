@@ -31,6 +31,7 @@ void AMoneyBox::CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedC
 		{
 			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 			{
+				UE_LOG(LogTemp, Warning, TEXT("MoneyBoxTriggered"));
 				GI->Money += MoneyAmount;
 				UGameplayStatics::PlaySoundAtLocation(GetWorld(), CollectablePickUpSound, GetActorLocation());
 				Destroy();

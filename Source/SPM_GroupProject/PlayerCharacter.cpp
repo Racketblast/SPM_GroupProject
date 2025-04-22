@@ -239,7 +239,7 @@ void APlayerCharacter::SelectWeapon2()
 	}
 }
 
-
+//TODO: Make this a switch case and put it in it's own class
 void APlayerCharacter::Use()
 {
 	if (TargetActor)
@@ -250,11 +250,14 @@ void APlayerCharacter::Use()
 		{
 			if (GI)
 			{
-				if (Teleporter->TargetLevelName != "Hub")
+				if (!GI->bIsWave)
 				{
-					GI->Level += 1;
+					if (Teleporter->TargetLevelName != "Hub")
+					{
+						GI->Level += 1;
+					}
+					UGameplayStatics::OpenLevel(this, Teleporter->TargetLevelName);
 				}
-        		UGameplayStatics::OpenLevel(this, Teleporter->TargetLevelName);
 			}
 		}
 		//Buying function

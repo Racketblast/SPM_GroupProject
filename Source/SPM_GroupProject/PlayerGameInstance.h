@@ -19,6 +19,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Level;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsWave;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName CurrentWeapon;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FName> UpgradeArray;

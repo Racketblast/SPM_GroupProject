@@ -17,9 +17,27 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
 	FName TargetLevelName;
 	
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION()
+	void ChangeTexture();
+	
+
 protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+	
 	UPROPERTY(EditAnywhere)
 	class UStaticMeshComponent* CubeMeshComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
+	class UMaterialInterface* WaveMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
+	UMaterialInterface* GracePeriodMaterial;
+private:
+	class UPlayerGameInstance* CachedGameInstance;
+	bool bOldWaveValue;
 
 };
