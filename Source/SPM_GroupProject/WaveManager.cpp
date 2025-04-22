@@ -111,7 +111,7 @@ void AWaveManager::SpawnEnemy()
 
 	for (int32 Attempt = 0; Attempt < MaxAttempts; ++Attempt)
 	{
-		// Filter valid spawn points for this enemy type
+		// Här används EnemySpawnPoint klassen
 		TArray<AEnemySpawnPoint*> ValidSpawnPoints;
 		for (AEnemySpawnPoint* Point : SpawnPoints)
 		{
