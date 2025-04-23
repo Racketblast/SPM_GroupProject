@@ -16,6 +16,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
 	FName TargetLevelName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
+	int32 TeleportKeyNumber = 0;
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

@@ -24,6 +24,8 @@ public:
 	FName CurrentWeapon;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FName> UpgradeArray;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<bool> TeleportKeyArray = {true,false,false,false};
 
 	UFUNCTION(BlueprintCallable)
 	bool HasBought(FName Upgrade);

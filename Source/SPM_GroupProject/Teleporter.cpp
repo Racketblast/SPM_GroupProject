@@ -48,10 +48,13 @@ void ATeleporter::Tick(float DeltaTime)
 
 void ATeleporter::ChangeTexture()
 {
-	if (bOldWaveValue)
+	UE_LOG(LogTemp, Display, TEXT("Can Teleport: %s"), CachedGameInstance->TeleportKeyArray[TeleportKeyNumber] ? TEXT("true") : TEXT("false"));
+	//if it is a wave or if player does not have a key
+	if (bOldWaveValue || !CachedGameInstance->TeleportKeyArray[TeleportKeyNumber])
 	{
 		if (WaveMaterial)
 		{
+			UE_LOG(LogTemp, Display, TEXT("Who Cant Teleport: %s"), *GetName());
 			CubeMeshComponent->SetMaterial(0, WaveMaterial);
 		}
 	}
@@ -59,6 +62,7 @@ void ATeleporter::ChangeTexture()
 	{
 		if (GracePeriodMaterial)
 		{
+			UE_LOG(LogTemp, Display, TEXT("Who Can Teleport: %s"), *GetName());
 			CubeMeshComponent->SetMaterial(0, GracePeriodMaterial);
 		}
 	}
