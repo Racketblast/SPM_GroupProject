@@ -202,6 +202,7 @@ void AWaveManager::EndWave()
 	{
 		GI->bIsWave = false;
 	}
+	
 	bIsGracePeriod = true;
 	GraceSecondsRemaining = FMath::CeilToInt(GracePeriodDuration);
 	
@@ -214,11 +215,6 @@ void AWaveManager::EndWave()
 	);
 
 	UE_LOG(LogTemp, Warning, TEXT("Grace period started: %d seconds"), GraceSecondsRemaining);
-
-	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
-	{
-		GI->bIsWave = false;
-	}
 }
 
 int32 AWaveManager::GetCurrentWaveNumber() const
