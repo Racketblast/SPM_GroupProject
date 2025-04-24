@@ -36,6 +36,8 @@ class SPM_GROUPPROJECT_API UPlayerGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 public:
+	UPlayerGameInstance();
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Money;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -74,4 +76,14 @@ private:
 	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player = nullptr);
 	
 	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);
+	// För att låsa upp levels, relaterat till MissionSubsystem
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Progression")
+	TArray<FName> LevelOrder;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Progression")
+	TSet<FName> UnlockedLevels;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Progression")
+	FName LastCompletedLevel;
+	
 };

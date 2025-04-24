@@ -5,6 +5,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "PlayerGameInstance.h"
 #include "TimerManager.h"
+#include "MissionSubsystem.h"
 
 AWaveManager::AWaveManager()
 {
@@ -215,6 +216,15 @@ void AWaveManager::EndWave()
 	);
 
 	UE_LOG(LogTemp, Warning, TEXT("Grace period started: %d seconds"), GraceSecondsRemaining);
+	
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		UMissionSubsystem* MissionSystem = GI->GetSubsystem<UMissionSubsystem>();
+		if (MissionSystem)
+		{
+			MissionSystem->OnWaveCompleted(CurrentWaveIndex);
+		}
+	}
 }
 
 int32 AWaveManager::GetCurrentWaveNumber() const
