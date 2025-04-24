@@ -60,10 +60,18 @@ void UMissionSubsystem::CompleteMission()
 
 	// Level unlock 
 	UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	GI->Level += 1;
-	if (GI->TeleportKeyArray.IsValidIndex(GI->Level))
+	if (!GI) return;
+	
+	FName CurrentLevel = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
+	GI->LastCompletedLevel = CurrentLevel;
+	GI->UnlockedLevels.Add(CurrentLevel);
+
+	int32 CurrentIndex = GI->LevelOrder.IndexOfByKey(CurrentLevel);
+	if (CurrentIndex != INDEX_NONE && GI->LevelOrder.IsValidIndex(CurrentIndex + 1))
 	{
-		GI->TeleportKeyArray[GI->Level] = true;
+		FName NextLevel = GI->LevelOrder[CurrentIndex + 1];
+		GI->UnlockedLevels.Add(NextLevel);
+		UE_LOG(LogTemp, Log, TEXT("Unlocked level: %s"), *NextLevel.ToString());
 	}
 }
 
@@ -73,6 +81,10 @@ void UMissionSubsystem::NewMission()
 	WavesSurvived = 0;
 }
 
+void UMissionSubsystem::SetRequiredWavesToComplete(int32 NewRequired)
+{
+	RequiredWaveToComplete = NewRequired;
+}
 
 
 FText UMissionSubsystem::GetMissionStatusText() const

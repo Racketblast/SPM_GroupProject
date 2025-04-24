@@ -22,12 +22,14 @@ public:
 	void NewMission();
 	bool IsMissionCompleted() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Mission")
+	void SetRequiredWavesToComplete(int32 NewRequired);
+
 	// för widget
 	FText GetMissionStatusText() const;
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mission")
 	int32 RequiredWaveToComplete = 2;
-
+	
 private:
 	int32 WavesSurvived = 0;
 	bool bIsCompleted = false;

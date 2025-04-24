@@ -14,6 +14,8 @@ class SPM_GROUPPROJECT_API UPlayerGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 public:
+	UPlayerGameInstance();
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Money;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -32,4 +34,15 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	FName GetArrayName();
+
+	// For unlocking levels, related to MissionSubsystem
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Progression")
+	TArray<FName> LevelOrder;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Progression")
+	TSet<FName> UnlockedLevels;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Progression")
+	FName LastCompletedLevel;
+	
 };

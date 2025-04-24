@@ -48,9 +48,12 @@ void ATeleporter::Tick(float DeltaTime)
 
 void ATeleporter::ChangeTexture()
 {
-	UE_LOG(LogTemp, Display, TEXT("Can Teleport: %s"), CachedGameInstance->TeleportKeyArray[TeleportKeyNumber] ? TEXT("true") : TEXT("false"));
+	bool bHasAccess = CachedGameInstance->UnlockedLevels.Contains(TargetLevelName);
+	UE_LOG(LogTemp, Display, TEXT("Can Teleport to %s: %s"), *TargetLevelName.ToString(), bHasAccess ? TEXT("true") : TEXT("false"));
+	//UE_LOG(LogTemp, Display, TEXT("Can Teleport: %s"), CachedGameInstance->TeleportKeyArray[TeleportKeyNumber] ? TEXT("true") : TEXT("false"));
 	//if it is a wave or if player does not have a key
-	if (bOldWaveValue || !CachedGameInstance->TeleportKeyArray[TeleportKeyNumber])
+	//if (bOldWaveValue || !CachedGameInstance->TeleportKeyArray[TeleportKeyNumber])
+	if (bOldWaveValue || !CachedGameInstance->UnlockedLevels.Contains(TargetLevelName))
 	{
 		if (WaveMaterial)
 		{

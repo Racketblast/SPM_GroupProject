@@ -24,3 +24,22 @@ FName UPlayerGameInstance::GetArrayName()
 	}
 	return FName(*CombinedString);
 }
+
+UPlayerGameInstance::UPlayerGameInstance()
+{
+	// Sätter upp level order, aka vilken level är numer 1 o.s.v
+	LevelOrder = {
+		FName("Hub"),
+		FName("Arena_1"),
+		FName("V1"),
+		FName("V2"),
+		FName("MetroV2")
+	};
+
+	// Låser upp level 1 direkt.
+	if (LevelOrder.Num() > 0)
+	{
+		UnlockedLevels.Add(LevelOrder[0]);
+		UnlockedLevels.Add(LevelOrder[1]);
+	}
+}

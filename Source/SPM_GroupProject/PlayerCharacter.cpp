@@ -251,7 +251,8 @@ void APlayerCharacter::Use()
 			if (GI)
 			{
 				//Checks if in wave and if you have the key
-				if (!GI->bIsWave && GI->TeleportKeyArray[Teleporter->TeleportKeyNumber])
+				//if (!GI->bIsWave && GI->TeleportKeyArray[Teleporter->TeleportKeyNumber])
+				if (!GI->bIsWave && GI->UnlockedLevels.Contains(Teleporter->TargetLevelName))
 				{
 					/*if (Teleporter->TargetLevelName != "Hub")
 					{
