@@ -36,7 +36,7 @@ UPlayerGameInstance::UPlayerGameInstance()
 		FName("MetroV2")
 	};
 
-	// Låser upp level 1 direkt.
+	// Låser upp level 1 och Huben direkt.
 	if (LevelOrder.Num() > 0)
 	{
 		UnlockedLevels.Add(LevelOrder[0]);

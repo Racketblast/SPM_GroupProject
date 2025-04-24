@@ -35,7 +35,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FName GetArrayName();
 
-	// For unlocking levels, related to MissionSubsystem
+	// För att låsa upp levels, relaterat till MissionSubsystem
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Progression")
 	TArray<FName> LevelOrder;
 

@@ -6,9 +6,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "MissionSubsystem.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class SPM_GROUPPROJECT_API UMissionSubsystem : public UGameInstanceSubsystem
 {
@@ -25,7 +23,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Mission")
 	void SetRequiredWavesToComplete(int32 NewRequired);
 
-	// för widget
+	// för widget, används inte just nu
+	UFUNCTION(BlueprintCallable, Category = "Mission")
 	FText GetMissionStatusText() const;
 protected:
 	int32 RequiredWaveToComplete = 2;

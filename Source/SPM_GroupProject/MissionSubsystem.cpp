@@ -13,8 +13,7 @@
 void UMissionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-
-	// Subscribe to the post-world initialization delegate
+	
 	FWorldDelegates::OnPostWorldInitialization.AddUObject(this, &UMissionSubsystem::OnWorldInitialized);
 	
 	UE_LOG(LogTemp, Log, TEXT("MissionSubsystem initialized."));
@@ -23,8 +22,7 @@ void UMissionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 void UMissionSubsystem::Deinitialize()
 {
 	Super::Deinitialize();
-
-	// Unsubscribe from the delegate when the subsystem is deinitialized
+	
 	FWorldDelegates::OnPostWorldInitialization.RemoveAll(this);
 	
 	UE_LOG(LogTemp, Log, TEXT("MissionSubsystem deinitialized."));
