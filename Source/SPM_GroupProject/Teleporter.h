@@ -28,6 +28,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category="Teleport")
 	int32 TeleportDelay;
+
+	UPROPERTY(EditDefaultsOnly, Category="Teleport")
+	class ULevelSequence* FadeOutAnimation;
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
