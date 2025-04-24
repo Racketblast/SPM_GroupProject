@@ -4,6 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+
+class UPlayerGameInstance;
+enum class EUpgradeType : uint8;
+enum class EUpgradeCategory : uint8;
+
 #include "BuyBox.generated.h"
 
 UCLASS()
@@ -15,10 +20,13 @@ public:
 	// Sets default values for this actor's properties
 	ABuyBox();
 
-	UPROPERTY(EditAnywhere)
-	FName TargetUpgradeName;
+	UPROPERTY(EditAnywhere, Category="Upgrade")
+	EUpgradeType TargetUpgradeName;
+	
+	UPROPERTY(EditAnywhere, Category="Upgrade")
+	EUpgradeCategory TargetUpgradeCategory;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category="Upgrade")
 	int32 TargetUpgradeCost;
 protected:
 	UPROPERTY(EditAnywhere)

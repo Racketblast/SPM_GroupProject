@@ -25,14 +25,15 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
-		if (GI->CurrentWeapon == WeaponName1)
+		if (GI->GetCurrentWeaponName() == WeaponName1)
 		{
 			APlayerCharacter::SelectWeapon1();
 		}
-		else if (GI->CurrentWeapon == WeaponName2)
+		else if (GI->GetCurrentWeaponName() == WeaponName2)
 		{
 			APlayerCharacter::SelectWeapon2();
 		}
+		GI->GetUpgradeFunction(this);
 	}
 }
 
@@ -167,7 +168,7 @@ void APlayerCharacter::SelectWeapon1()
 				CurrentGun->Destroy();
 				UE_LOG(LogTemp, Warning, TEXT("Gun Destroyed"));
 			}
-			PlayerGameInstance->CurrentWeapon = WeaponName1;
+			PlayerGameInstance->SetCurrentWeapon(WeaponName1);
      
 			if (CurrentMaxAmmo > 0)
 			{
@@ -208,7 +209,7 @@ void APlayerCharacter::SelectWeapon2()
 			CurrentGun->Destroy();
 			UE_LOG(LogTemp, Warning, TEXT("Gun Destroyed"));
 		}
-			PlayerGameInstance->CurrentWeapon = WeaponName2;
+			PlayerGameInstance->SetCurrentWeapon(WeaponName2);
      
 			if (CurrentMaxAmmo > 0)
 			{
@@ -261,6 +262,8 @@ void APlayerCharacter::Use()
 							GI->TeleportKeyArray[GI->Level] = true;
 						}
 					}
+					GI->Money += PickedUpMoney;
+					
 					UGameplayStatics::OpenLevel(this, Teleporter->TargetLevelName);
 				}
 			}
@@ -276,28 +279,37 @@ void APlayerCharacter::Use()
 					{
 						GI->Money -= BuyBox->TargetUpgradeCost;
 						GI->UpgradeArray.Add(BuyBox->TargetUpgradeName);
-						GI->CurrentWeapon = BuyBox->TargetUpgradeName;
-						if (GI->CurrentWeapon == WeaponName1)
+						if (BuyBox->TargetUpgradeCategory == EUpgradeCategory::Weapon)
 						{
-							APlayerCharacter::SelectWeapon1();
+							GI->SetCurrentWeapon(BuyBox->TargetUpgradeName);
+							if (GI->GetCurrentWeaponName() == WeaponName1)
+							{
+								APlayerCharacter::SelectWeapon1();
+							}
+							else if (GI->GetCurrentWeaponName() == WeaponName2)
+							{
+								APlayerCharacter::SelectWeapon2();
+							}
 						}
-						else if (GI->CurrentWeapon == WeaponName2)
+						else
 						{
-							APlayerCharacter::SelectWeapon2();
+							GI->GetUpgradeFunction(this);
 						}
-                 
 					}
 				}
 				else
 				{
-					GI->CurrentWeapon = BuyBox->TargetUpgradeName;
-					if (GI->CurrentWeapon == WeaponName1)
+					if (BuyBox->TargetUpgradeCategory == EUpgradeCategory::Weapon)
 					{
-						APlayerCharacter::SelectWeapon1();
-					}
-					else if (GI->CurrentWeapon == WeaponName2)
-					{
-						APlayerCharacter::SelectWeapon2();
+						GI->SetCurrentWeapon(BuyBox->TargetUpgradeName);
+						if (GI->GetCurrentWeaponName() == WeaponName1)
+						{
+							APlayerCharacter::SelectWeapon1();
+						}
+						else if (GI->GetCurrentWeaponName() == WeaponName2)
+						{
+							APlayerCharacter::SelectWeapon2();
+						}
 					}
 				}
 			}

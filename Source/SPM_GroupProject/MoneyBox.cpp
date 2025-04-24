@@ -29,13 +29,23 @@ void AMoneyBox::CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedC
 	{
 		if (Cast<UCapsuleComponent>(OtherComp) == Player->GetCapsuleComponent())
 		{
-			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+			FString MapName = GetWorld()->GetMapName();
+			MapName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
+			if (MapName == "Hub")
 			{
-				UE_LOG(LogTemp, Warning, TEXT("MoneyBoxTriggered"));
-				GI->Money += MoneyAmount;
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), CollectablePickUpSound, GetActorLocation());
-				Destroy();
+				if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+				{
+					GI->Money += MoneyAmount;
+				}
 			}
+			else
+			{
+				Player->PickedUpMoney += MoneyAmount;
+			}
+			
+			UE_LOG(LogTemp, Warning, TEXT("MoneyBoxTriggered"));
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), CollectablePickUpSound, GetActorLocation());
+			Destroy();
 		}
 	}
 }

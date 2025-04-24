@@ -3,11 +3,18 @@
 
 #include "PlayerGameInstance.h"
 
-bool UPlayerGameInstance::HasBought(FName Upgrade)
+#include "PlayerCharacter.h"
+
+bool UPlayerGameInstance::HasBought(const EUpgradeType Upgrade) const
 {
-	for (FName OwnedUpgrades : UpgradeArray)
+	return UpgradeArray.Contains(Upgrade);
+}
+
+bool UPlayerGameInstance::HasBought(const FName Upgrade) const
+{
+	for (EUpgradeType UpgradeType : UpgradeArray)
 	{
-		if (OwnedUpgrades == Upgrade)
+		if (FName(*StaticEnum<EUpgradeType>()->GetNameStringByValue(static_cast<int64>(UpgradeType))) == Upgrade)
 		{
 			return true;
 		}
@@ -18,9 +25,57 @@ bool UPlayerGameInstance::HasBought(FName Upgrade)
 FName UPlayerGameInstance::GetArrayName()
 {
 	FString CombinedString;
-	for (FName Name : UpgradeArray)
+	for (EUpgradeType Upgrade : UpgradeArray)
 	{
-		CombinedString += Name.ToString() + ", ";
+		CombinedString += ConvertUpgradeTypeToString(Upgrade) + ", ";
 	}
 	return FName(*CombinedString);
+}
+
+FName UPlayerGameInstance::GetCurrentWeaponName()
+{
+	return FName(*ConvertUpgradeTypeToString(CurrentWeapon));
+}
+
+void UPlayerGameInstance::SetCurrentWeapon(const EUpgradeType Weapon)
+{
+	CurrentWeapon = Weapon;
+}
+
+void UPlayerGameInstance::SetCurrentWeapon(const FName Weapon)
+{
+	for (EUpgradeType UpgradeType : UpgradeArray)
+	{
+		if (Weapon == ConvertUpgradeTypeToString(UpgradeType))
+		{
+			CurrentWeapon = UpgradeType;
+		}
+	}
+}
+
+void UPlayerGameInstance::GetUpgradeFunction(APlayerCharacter* Player)
+{
+	for (EUpgradeType Upgrade : UpgradeArray)
+	{
+		if (Player != nullptr)
+		{
+			switch (Upgrade)
+			{
+				case EUpgradeType::Health20:
+					Player->PlayerHealth += 20;
+					break;
+				case EUpgradeType::Speed20:
+					break;
+				default:
+					break;
+			}
+		}
+	}
+}
+
+FString UPlayerGameInstance::ConvertUpgradeTypeToString(const EUpgradeType Type)
+{
+	FString EnumString = StaticEnum<EUpgradeType>()->GetNameStringByValue(static_cast<int64>(Type));
+	EnumString.RemoveFromStart(TEXT("EUpgradeType::"));
+	return EnumString;
 }

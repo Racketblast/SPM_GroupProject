@@ -38,6 +38,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 PlayerHealth = 100;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int32 PickedUpMoney;
 protected:
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* PlayerCamera;

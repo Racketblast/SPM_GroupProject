@@ -9,6 +9,27 @@
 /**
  * 
  */
+UENUM(BlueprintType)
+enum class EUpgradeType : uint8
+{
+	None        UMETA(DisplayName = "None"),
+	Pistol        UMETA(DisplayName = "Pistol"),
+	Rifle    UMETA(DisplayName = "Rifle"),
+	Health20    UMETA(DisplayName = "20 Health"),
+	Speed20  UMETA(DisplayName = "Speed 20%")
+	// Add more as needed
+};
+
+UENUM(BlueprintType)
+enum class EUpgradeCategory : uint8
+{
+	None        UMETA(DisplayName = "None"),
+	PlayerStats    UMETA(DisplayName = "Player Stats"),
+	PlayerAbilities    UMETA(DisplayName = "Player Abilities"),
+	Weapon    UMETA(DisplayName = "Weapon"),
+	WeaponStats  UMETA(DisplayName = "Weapon Stats")
+};
+
 UCLASS()
 class SPM_GROUPPROJECT_API UPlayerGameInstance : public UGameInstance
 {
@@ -21,15 +42,29 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsWave;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FName CurrentWeapon;
+	EUpgradeType CurrentWeapon;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FName> UpgradeArray;
+	TArray<EUpgradeType> UpgradeArray;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<bool> TeleportKeyArray = {true,false,false,false};
 
 	UFUNCTION(BlueprintCallable)
-	bool HasBought(FName Upgrade);
+	bool HasBought(const EUpgradeType Upgrade) const;
+	bool HasBought(const FName Upgrade) const;
 
 	UFUNCTION(BlueprintCallable)
 	FName GetArrayName();
+
+	UFUNCTION(BlueprintCallable)
+	FName GetCurrentWeaponName();
+	
+	UFUNCTION(BlueprintCallable)
+	void SetCurrentWeapon(const EUpgradeType Weapon);
+	void SetCurrentWeapon(const FName Weapon);
+	
+	UFUNCTION(BlueprintCallable)
+	void GetUpgradeFunction(class APlayerCharacter* Player = nullptr);
+
+private:
+	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);
 };
