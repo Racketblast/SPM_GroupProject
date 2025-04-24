@@ -1,5 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// Gun.h
 #pragma once
 
 #include "CoreMinimal.h"
@@ -10,17 +9,27 @@ UCLASS()
 class SPM_GROUPPROJECT_API AGun : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
-	AGun();
+
+public:
+	virtual void Fire(FVector FireLocation, FRotator FireRotation) PURE_VIRTUAL(AGun::Fire, );
+	virtual void Reload();
+	void SetOwnerCharacter(class APlayerCharacter* NewOwner);
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun")
+	bool bHasInfiniteReloads = false;
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	UPROPERTY()
+	APlayerCharacter* OwnerCharacter;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmo ;
+
+	UPROPERTY(EditAnywhere)
+	int32 CurrentAmmo = MaxAmmo;
+
+	UPROPERTY(EditDefaultsOnly)
+	int32 ExtraMags = 2;
+
 
 };
+
