@@ -2,11 +2,7 @@
 #include "PlayerGameInstance.h"
 #include "BuyBox.h"
 #include "Teleporter.h"
-#include "Projectile.h"
-//#include "ProjectileSpawner.h"
 #include "Gun.h"
-#include "ProjectileGun.h"
-#include "Engine/StaticMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
