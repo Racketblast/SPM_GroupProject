@@ -253,8 +253,9 @@ void APlayerCharacter::Use()
 							GI->TeleportKeyArray[GI->Level] = true;
 						}
 					}
-					GI->Money += PickedUpMoney;*/
-
+					*/
+					GI->Money += PickedUpMoney;
+					
 					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Teleporter->TeleportSound, Teleporter->GetActorLocation());
 
 					Teleporter->Teleport();
@@ -265,7 +266,6 @@ void APlayerCharacter::Use()
 				}
 			}
 		}
-	}
 	// Buying function
 	if (const ABuyBox *BuyBox = Cast<ABuyBox>(TargetActor))
 	{
@@ -327,5 +327,6 @@ void APlayerCharacter::Use()
 				}
 			}
 		}
+	}
 	}
 }

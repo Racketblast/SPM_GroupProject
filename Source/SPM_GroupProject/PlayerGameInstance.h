@@ -57,6 +57,16 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	FName GetArrayName();
+	
+	// För att låsa upp levels, relaterat till MissionSubsystem
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Progression")
+	TArray<FName> LevelOrder;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Progression")
+	TSet<FName> UnlockedLevels;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Progression")
+	FName LastCompletedLevel;
 
 	UFUNCTION(BlueprintCallable)
 	FName GetCurrentWeaponName();
@@ -76,14 +86,5 @@ private:
 	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player = nullptr);
 	
 	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);
-	// För att låsa upp levels, relaterat till MissionSubsystem
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Progression")
-	TArray<FName> LevelOrder;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Progression")
-	TSet<FName> UnlockedLevels;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Progression")
-	FName LastCompletedLevel;
 	
 };
