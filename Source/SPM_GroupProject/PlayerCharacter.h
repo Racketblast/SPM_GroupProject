@@ -87,4 +87,10 @@ private:
 	class ULevelSequence* FadeInTransition;
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
 	class USoundBase* TeleportInSound;
+	UPROPERTY()
+	AGun* Weapon1Instance;
+
+	UPROPERTY()
+	AGun* Weapon2Instance;
+
 };

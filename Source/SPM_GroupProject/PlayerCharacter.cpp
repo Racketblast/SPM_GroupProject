@@ -5,6 +5,7 @@
 #include "Projectile.h"
 //#include "ProjectileSpawner.h"
 #include "Gun.h"
+#include "ProjectileGun.h"
 #include "Engine/StaticMeshSocket.h"
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
@@ -135,41 +136,31 @@ void APlayerCharacter::Pitch(float Value)
 }
 void APlayerCharacter::Shoot()
 {
-	if (CurrentAmmo > 0)
-	{
-		
-		if (Weapon1Equipped)
-		{
-			const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
-			FRotator SocketRot = SocketTransform.GetRotation().Rotator();
-			FRotator SpawnRotation( SocketRot.Pitch+12, GetActorRotation().Yaw,  SocketRot.Roll);
-			GetWorld()->SpawnActor<AProjectile>(Projectile1, SocketTransform.GetLocation(), SpawnRotation);
-		}
-		if (Weapon2Equipped)
-		{
-			const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
-			FRotator SocketRot = SocketTransform.GetRotation().Rotator();
-			FRotator SpawnRotation( SocketRot.Pitch+12, GetActorRotation().Yaw,  SocketRot.Roll);
-			GetWorld()->SpawnActor<AProjectile>(Projectile2, SocketTransform.GetLocation(), SpawnRotation);
-		}
-		CurrentAmmo--;
-	}
+	if (!CurrentGun) return;
+	UE_LOG(LogTemp, Warning, TEXT("Shoot function called"));
+	const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
+	FRotator SocketRot = SocketTransform.GetRotation().Rotator();
+	FRotator FireRotation(SocketRot.Pitch + 20, GetActorRotation().Yaw, SocketRot.Roll);
+	FVector FireLocation = SocketTransform.GetLocation();
+
+	CurrentGun->Fire(FireLocation, FireRotation);
 }
+
 
 void APlayerCharacter::Reload()
 {
-	if (Weapon2Equipped)
+	if (CurrentGun) // Ensure the player has a current weapon
 	{
-		if (ExtraMags <= 0){
-			return;
-		}else
-		{
-			ExtraMags--;
-		}
-		
+		// Call the Reload function on the weapon
+		CurrentGun->Reload();
+		UE_LOG(LogTemp, Warning, TEXT("Player reload triggered"));
 	}
-	CurrentAmmo = CurrentMaxAmmo;
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No weapon equipped to reload"));
+	}
 }
+
 
 void APlayerCharacter::SelectWeapon1()
 {
@@ -177,82 +168,107 @@ void APlayerCharacter::SelectWeapon1()
 	{
 		if (!Weapon1Equipped && PlayerGameInstance->HasBought(WeaponName1))
 		{
-			if (Weapon2Equipped)
-			{
-				CurrentGun->Destroy();
-				UE_LOG(LogTemp, Warning, TEXT("Gun Destroyed"));
-			}
-			PlayerGameInstance->SetCurrentWeapon(WeaponName1);
-     
+			PlayerGameInstance->CurrentWeapon = WeaponName1;
+
+			// Save current weapon ammo before switching
 			if (CurrentMaxAmmo > 0)
 			{
 				Ammo2 = CurrentAmmo;
 			}
-     
+
 			Weapon1Equipped = true;
 			Weapon2Equipped = false;
 
+			// Load weapon1's saved ammo
 			CurrentAmmo = Ammo1;
 			CurrentMaxAmmo = MaxAmmo1;
-     
-			if (!GetMesh()->DoesSocketExist(TEXT("hand_lSocket")))
+
+			// Spawn the weapon if it's not already in the world
+			if (!Weapon1Instance)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("hand_lSocket not found on mesh."));
-				return;
+				Weapon1Instance = GetWorld()->SpawnActor<AGun>(GWeapon1);
+				if (Weapon1Instance)
+				{
+					Weapon1Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
+					Weapon1Instance->SetOwnerCharacter(this);
+
+					// Example: Give Weapon1 infinite reloads
+					Weapon1Instance->bHasInfiniteReloads = true;
+				}
 			}
 
-			// Get the socket transform from the mesh
-			const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
-			AGun* SpawnedGun = GetWorld()->SpawnActor<AGun>(GWeapon1);
-			if (SpawnedGun)
+			// Hide the other gun
+			if (Weapon2Instance)
 			{
-				SpawnedGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
-				CurrentGun = SpawnedGun;
+				Weapon2Instance->SetActorHiddenInGame(true);
+				Weapon2Instance->SetActorEnableCollision(false);
+			}
+
+			// Enable current gun
+			if (Weapon1Instance)
+			{
+				Weapon1Instance->SetActorHiddenInGame(false);
+				Weapon1Instance->SetActorEnableCollision(true);
+				CurrentGun = Weapon1Instance;
 			}
 		}
 	}
 }
+
+
 
 void APlayerCharacter::SelectWeapon2()
 {
 	if (UPlayerGameInstance* PlayerGameInstance = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
 		if (!Weapon2Equipped && PlayerGameInstance->HasBought(WeaponName2))
-		{if (Weapon1Equipped)
 		{
-			CurrentGun->Destroy();
-			UE_LOG(LogTemp, Warning, TEXT("Gun Destroyed"));
-		}
-			PlayerGameInstance->SetCurrentWeapon(WeaponName2);
-     
+			PlayerGameInstance->CurrentWeapon = WeaponName2;
+
 			if (CurrentMaxAmmo > 0)
 			{
 				Ammo1 = CurrentAmmo;
 			}
-     
+
 			Weapon2Equipped = true;
 			Weapon1Equipped = false;
 
 			CurrentAmmo = Ammo2;
 			CurrentMaxAmmo = MaxAmmo2;
-     
-			if (!GetMesh()->DoesSocketExist(TEXT("hand_lSocket")))
+
+			if (!Weapon2Instance)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("hand_lSocket not found on mesh."));
-				return;
+				Weapon2Instance = GetWorld()->SpawnActor<AGun>(GWeapon2);
+				if (Weapon2Instance)
+				{
+					Weapon2Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
+					Weapon2Instance->SetOwnerCharacter(this);
+
+					// Optional: Set projectile class
+					if (AProjectileGun* PGun = Cast<AProjectileGun>(Weapon2Instance))
+					{
+						PGun->SetProjectileClass(Projectile2);
+					}
+				}
 			}
 
-			// Get the socket transform from the mesh
-			const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
-			AGun* SpawnedGun = GetWorld()->SpawnActor<AGun>(GWeapon2);
-			if (SpawnedGun)
+			if (Weapon1Instance)
 			{
-				SpawnedGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
-				CurrentGun = SpawnedGun;
+				Weapon1Instance->SetActorHiddenInGame(true);
+				Weapon1Instance->SetActorEnableCollision(false);
+			}
+
+			if (Weapon2Instance)
+			{
+				Weapon2Instance->SetActorHiddenInGame(false);
+				Weapon2Instance->SetActorEnableCollision(true);
+				CurrentGun = Weapon2Instance;
 			}
 		}
 	}
 }
+
+
 
 //TODO: Make this a switch case and put it in it's own class
 void APlayerCharacter::Use()
