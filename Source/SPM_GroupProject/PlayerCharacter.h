@@ -82,4 +82,9 @@ private:
 	TSubclassOf<class AGun> GWeapon2;
 	UPROPERTY()
 	AGun* CurrentGun;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Transition")
+	class ULevelSequence* FadeInTransition;
+	UPROPERTY(EditDefaultsOnly, Category="Transition")
+	class USoundBase* TeleportInSound;
 };

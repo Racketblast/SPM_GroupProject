@@ -15,7 +15,7 @@ public:
 	ATeleporter();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
-	FName TargetLevelName;
+	FName TargetLevelName = "Hub";
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
 	int32 TeleportKeyNumber = 0;
@@ -27,17 +27,16 @@ public:
 	USoundBase* CantTeleportSound;
 
 	UPROPERTY(EditDefaultsOnly, Category="Teleport")
-	int32 TeleportDelay;
-
-	UPROPERTY(EditDefaultsOnly, Category="Teleport")
-	class ULevelSequence* FadeOutAnimation;
+	class ULevelSequence* FadeOutTransition;
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
 	void ChangeTexture();
-	
+
+	UFUNCTION()
+	void Teleport();
 
 protected:
 	// Called when the game starts or when spawned
@@ -51,8 +50,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
 	UMaterialInterface* GracePeriodMaterial;
+	
 private:
 	class UPlayerGameInstance* CachedGameInstance;
 	bool bOldWaveValue;
 
+	UFUNCTION()
+	void ChangeLevel();
 };

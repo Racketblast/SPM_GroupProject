@@ -3,7 +3,11 @@
 
 #include "Teleporter.h"
 
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
+#include "MovieSceneSequencePlaybackSettings.h"
 #include "PlayerGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ATeleporter::ATeleporter()
@@ -66,4 +70,25 @@ void ATeleporter::ChangeTexture()
 			CubeMeshComponent->SetMaterial(0, GracePeriodMaterial);
 		}
 	}
+}
+
+void ATeleporter::Teleport()
+{
+	if (FadeOutTransition)
+	{
+		FMovieSceneSequencePlaybackSettings Settings;
+		ALevelSequenceActor* OutActor;
+		ULevelSequencePlayer* SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), FadeOutTransition, Settings, OutActor);
+		SequencePlayer->Play();
+
+		if (SequencePlayer)
+		{
+			SequencePlayer->OnFinished.AddDynamic(this, &ATeleporter::ChangeLevel);
+		}
+	}
+}
+
+void ATeleporter::ChangeLevel()
+{
+	UGameplayStatics::OpenLevel(this, TargetLevelName);
 }

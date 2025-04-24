@@ -6,6 +6,8 @@
 //#include "ProjectileSpawner.h"
 #include "Gun.h"
 #include "Engine/StaticMeshSocket.h"
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -34,6 +36,18 @@ void APlayerCharacter::BeginPlay()
 			APlayerCharacter::SelectWeapon2();
 		}
 		GI->GetAllUpgradeFunctions(this);
+	}
+
+	if (FadeInTransition)
+	{
+		if (TeleportInSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportInSound, GetActorLocation());
+		}
+		FMovieSceneSequencePlaybackSettings Settings;
+		ALevelSequenceActor* OutActor;
+		ULevelSequencePlayer* SequencePlayer =  ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), FadeInTransition, Settings, OutActor);
+		SequencePlayer->Play();
 	}
 }
 
@@ -257,7 +271,6 @@ void APlayerCharacter::Use()
 				{
 					if (Teleporter->TargetLevelName != "Hub")
 					{
-						UGameplayStatics::PlaySoundAtLocation(GetWorld(), Teleporter->TeleportSound, Teleporter->GetActorLocation());
 						GI->Level += 1;
 						if (GI->TeleportKeyArray.IsValidIndex(GI->Level))
 						{
@@ -266,7 +279,9 @@ void APlayerCharacter::Use()
 					}
 					GI->Money += PickedUpMoney;
 					
-					UGameplayStatics::OpenLevel(this, Teleporter->TargetLevelName);
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Teleporter->TeleportSound, Teleporter->GetActorLocation());
+					
+					Teleporter->Teleport();
 				}
 				else
 				{
