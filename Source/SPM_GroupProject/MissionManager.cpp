@@ -10,11 +10,11 @@ void UMissionManager::Initialize(int32 WavesToSurvive)
 	bIsCompleted = false;
 }
 
-void UMissionManager::OnWaveCompleted()
+void UMissionManager::OnWaveCompleted(int32 WaveIndex)
 {
 	if (bIsCompleted) return;
 
-	WavesSurvived++;
+	WavesSurvived = WaveIndex + 1;
 
 	if (WavesSurvived >= RequiredWaves)
 	{

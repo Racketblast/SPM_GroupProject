@@ -24,7 +24,7 @@ public:
 
 	// Call this each time a wave is completed
 	UFUNCTION(BlueprintCallable, Category = "Mission")
-	void OnWaveCompleted();
+	void OnWaveCompleted(int32 WaveIndex);
 
 	// Check if mission is already completed
 	UFUNCTION(BlueprintCallable, Category = "Mission")

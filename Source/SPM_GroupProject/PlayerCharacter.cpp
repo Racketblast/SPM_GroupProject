@@ -253,14 +253,14 @@ void APlayerCharacter::Use()
 				//Checks if in wave and if you have the key
 				if (!GI->bIsWave && GI->TeleportKeyArray[Teleporter->TeleportKeyNumber])
 				{
-					if (Teleporter->TargetLevelName != "Hub")
+					/*if (Teleporter->TargetLevelName != "Hub")
 					{
 						GI->Level += 1;
 						if (GI->TeleportKeyArray.IsValidIndex(GI->Level))
 						{
 							GI->TeleportKeyArray[GI->Level] = true;
 						}
-					}
+					}*/
 					UGameplayStatics::OpenLevel(this, Teleporter->TargetLevelName);
 				}
 			}
