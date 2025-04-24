@@ -33,7 +33,7 @@ void APlayerCharacter::BeginPlay()
 		{
 			APlayerCharacter::SelectWeapon2();
 		}
-		GI->GetUpgradeFunction(this);
+		GI->GetAllUpgradeFunctions(this);
 	}
 }
 
@@ -293,7 +293,7 @@ void APlayerCharacter::Use()
 						}
 						else
 						{
-							GI->GetUpgradeFunction(this);
+							GI->GetSpecificUpgradeFunction(BuyBox->TargetUpgradeName, this);
 						}
 					}
 				}

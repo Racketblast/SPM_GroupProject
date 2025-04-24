@@ -54,26 +54,42 @@ void UPlayerGameInstance::SetCurrentWeapon(const FName Weapon)
 	}
 }
 
-void UPlayerGameInstance::GetUpgradeFunction(APlayerCharacter* Player)
+void UPlayerGameInstance::GetAllUpgradeFunctions(APlayerCharacter* Player)
 {
-	for (EUpgradeType Upgrade : UpgradeArray)
+	for (const EUpgradeType Upgrade : UpgradeArray)
 	{
 		if (Player != nullptr)
 		{
-			switch (Upgrade)
-			{
-				case EUpgradeType::Health20:
-					Player->PlayerHealth += 20;
-					break;
-				case EUpgradeType::Speed20:
-					Player->GetCharacterMovement()->MaxWalkSpeed *= 1.2;
-					break;
-				case EUpgradeType::Jump50:
-					Player->GetCharacterMovement()->JumpZVelocity *= 1.5;
-					break;
-				default:
-					break;
-			}
+			UseUpgradeFunction(Upgrade, Player);
+		}
+	}
+}
+
+void UPlayerGameInstance::GetSpecificUpgradeFunction(const EUpgradeType Upgrade, APlayerCharacter* Player)
+{
+	if (Player != nullptr)
+	{
+		UseUpgradeFunction(Upgrade, Player);
+	}
+}
+
+void UPlayerGameInstance::UseUpgradeFunction(const EUpgradeType Upgrade, APlayerCharacter* Player)
+{
+	if (Player != nullptr)
+	{
+		switch (Upgrade)
+		{
+		case EUpgradeType::Health20:
+			Player->PlayerHealth += 20;
+			break;
+		case EUpgradeType::Speed20:
+			Player->GetCharacterMovement()->MaxWalkSpeed *= 1.2;
+			break;
+		case EUpgradeType::Jump50:
+			Player->GetCharacterMovement()->JumpZVelocity *= 1.5;
+			break;
+		default:
+			break;
 		}
 	}
 }

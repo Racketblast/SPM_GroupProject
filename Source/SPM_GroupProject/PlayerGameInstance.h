@@ -64,8 +64,14 @@ public:
 	void SetCurrentWeapon(const FName Weapon);
 	
 	UFUNCTION(BlueprintCallable)
-	void GetUpgradeFunction(class APlayerCharacter* Player = nullptr);
+	void GetAllUpgradeFunctions(class APlayerCharacter* Player = nullptr);
+
+	UFUNCTION(BlueprintCallable)
+	void GetSpecificUpgradeFunction(EUpgradeType Upgrade, class APlayerCharacter* Player = nullptr);
+
 
 private:
+	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player = nullptr);
+	
 	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);
 };
