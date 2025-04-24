@@ -2,11 +2,7 @@
 #include "PlayerGameInstance.h"
 #include "BuyBox.h"
 #include "Teleporter.h"
-#include "Projectile.h"
-//#include "ProjectileSpawner.h"
 #include "Gun.h"
-#include "ProjectileGun.h"
-#include "Engine/StaticMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -155,18 +151,8 @@ void APlayerCharacter::SelectWeapon1()
 		{
 			PlayerGameInstance->CurrentWeapon = WeaponName1;
 
-			// Save current weapon ammo before switching
-			if (CurrentMaxAmmo > 0)
-			{
-				Ammo2 = CurrentAmmo;
-			}
-
 			Weapon1Equipped = true;
 			Weapon2Equipped = false;
-
-			// Load weapon1's saved ammo
-			CurrentAmmo = Ammo1;
-			CurrentMaxAmmo = MaxAmmo1;
 
 			// Spawn the weapon if it's not already in the world
 			if (!Weapon1Instance)
@@ -209,18 +195,8 @@ void APlayerCharacter::SelectWeapon2()
 		if (!Weapon2Equipped && PlayerGameInstance->HasBought(WeaponName2))
 		{
 			PlayerGameInstance->CurrentWeapon = WeaponName2;
-
-			if (CurrentMaxAmmo > 0)
-			{
-				Ammo1 = CurrentAmmo;
-			}
-
 			Weapon2Equipped = true;
 			Weapon1Equipped = false;
-
-			CurrentAmmo = Ammo2;
-			CurrentMaxAmmo = MaxAmmo2;
-
 			if (!Weapon2Instance)
 			{
 				Weapon2Instance = GetWorld()->SpawnActor<AGun>(GWeapon2);
@@ -228,12 +204,7 @@ void APlayerCharacter::SelectWeapon2()
 				{
 					Weapon2Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
 					Weapon2Instance->SetOwnerCharacter(this);
-
-					// Optional: Set projectile class
-					if (AProjectileGun* PGun = Cast<AProjectileGun>(Weapon2Instance))
-					{
-						PGun->SetProjectileClass(Projectile2);
-					}
+					
 				}
 			}
 

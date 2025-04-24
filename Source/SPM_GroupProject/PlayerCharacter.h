@@ -61,18 +61,10 @@ protected:
 private:
 	FName WeaponName1 = "Pistol";
 	FName WeaponName2 = "Rifle";
-	int32 MaxAmmo1 = 9;
-	int32 MaxAmmo2 = 30;
-	int32 Ammo1 = MaxAmmo1;
-	int32 Ammo2 = MaxAmmo2;
 	
 	AActor* TargetActor;
 	
 
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AProjectile> Projectile1;
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AProjectile> Projectile2;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AGun> GWeapon1;
 	UPROPERTY(EditAnywhere)
