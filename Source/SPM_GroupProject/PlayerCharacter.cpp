@@ -168,7 +168,7 @@ void APlayerCharacter::SelectWeapon1()
 	{
 		if (!Weapon1Equipped && PlayerGameInstance->HasBought(WeaponName1))
 		{
-			PlayerGameInstance->CurrentWeapon = WeaponName1;
+			PlayerGameInstance->SetCurrentWeapon(WeaponName1);
 
 			// Save current weapon ammo before switching
 			if (CurrentMaxAmmo > 0)
@@ -223,7 +223,7 @@ void APlayerCharacter::SelectWeapon2()
 	{
 		if (!Weapon2Equipped && PlayerGameInstance->HasBought(WeaponName2))
 		{
-			PlayerGameInstance->CurrentWeapon = WeaponName2;
+			PlayerGameInstance->SetCurrentWeapon(WeaponName2);
 
 			if (CurrentMaxAmmo > 0)
 			{
