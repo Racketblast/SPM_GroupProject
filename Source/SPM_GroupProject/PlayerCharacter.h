@@ -79,4 +79,10 @@ private:
 	TSubclassOf<class AGun> GWeapon2;
 	UPROPERTY()
 	AGun* CurrentGun;
+	UPROPERTY()
+	AGun* Weapon1Instance;
+
+	UPROPERTY()
+	AGun* Weapon2Instance;
+
 };
