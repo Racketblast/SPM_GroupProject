@@ -16,7 +16,8 @@ enum class EUpgradeType : uint8
 	Pistol        UMETA(DisplayName = "Pistol"),
 	Rifle    UMETA(DisplayName = "Rifle"),
 	Health20    UMETA(DisplayName = "20 Health"),
-	Speed20  UMETA(DisplayName = "Speed 20%")
+	Speed20  UMETA(DisplayName = "Speed 20%"),
+	Jump50    UMETA(DisplayName = "50% Jump"),
 	// Add more as needed
 };
 

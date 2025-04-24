@@ -4,6 +4,7 @@
 #include "PlayerGameInstance.h"
 
 #include "PlayerCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 bool UPlayerGameInstance::HasBought(const EUpgradeType Upgrade) const
 {
@@ -65,6 +66,10 @@ void UPlayerGameInstance::GetUpgradeFunction(APlayerCharacter* Player)
 					Player->PlayerHealth += 20;
 					break;
 				case EUpgradeType::Speed20:
+					Player->GetCharacterMovement()->MaxWalkSpeed *= 1.2;
+					break;
+				case EUpgradeType::Jump50:
+					Player->GetCharacterMovement()->JumpZVelocity *= 1.5;
 					break;
 				default:
 					break;
