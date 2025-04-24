@@ -4,6 +4,8 @@
 #include "Teleporter.h"
 #include "Gun.h"
 #include "Kismet/GameplayStatics.h"
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -207,7 +209,7 @@ void APlayerCharacter::SelectWeapon2()
 	{
 		if (!Weapon2Equipped && PlayerGameInstance->HasBought(WeaponName2))
 		{
-			PlayerGameInstance->CurrentWeapon = WeaponName2;
+			PlayerGameInstance->SetCurrentWeapon(WeaponName2);
 			Weapon2Equipped = true;
 			Weapon1Equipped = false;
 			if (!Weapon2Instance)
