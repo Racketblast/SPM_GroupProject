@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ALaunchPad::ALaunchPad()
@@ -56,6 +57,7 @@ void ALaunchPad::LaunchPadTriggered(UPrimitiveComponent* OverlappedComponent, AA
 		if (Cast<UCapsuleComponent>(OtherComp) == Player->GetCapsuleComponent())
 		{
 			FVector Velocity = LaunchPadMesh->GetComponentRotation().RotateVector(LaunchVector);
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), LaunchSound, GetActorLocation());
 			Player->LaunchCharacter(Velocity, bOverrideXY, bOverrideZ);
 			UE_LOG(LogTemp,Display,TEXT("LaunchPadTriggered"));
 		}

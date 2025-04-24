@@ -251,11 +251,13 @@ void APlayerCharacter::Use()
 		{
 			if (GI)
 			{
+				//If you can teleport
 				//Checks if in wave and if you have the key
 				if (!GI->bIsWave && GI->TeleportKeyArray[Teleporter->TeleportKeyNumber])
 				{
 					if (Teleporter->TargetLevelName != "Hub")
 					{
+						UGameplayStatics::PlaySoundAtLocation(GetWorld(), Teleporter->TeleportSound, Teleporter->GetActorLocation());
 						GI->Level += 1;
 						if (GI->TeleportKeyArray.IsValidIndex(GI->Level))
 						{
@@ -266,6 +268,10 @@ void APlayerCharacter::Use()
 					
 					UGameplayStatics::OpenLevel(this, Teleporter->TargetLevelName);
 				}
+				else
+				{
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Teleporter->CantTeleportSound, Teleporter->GetActorLocation());
+				}
 			}
 		}
 		//Buying function
@@ -273,10 +279,14 @@ void APlayerCharacter::Use()
 		{
 			if (GI)
 			{
+				//If you don't own the product
 				if (!GI->HasBought(BuyBox->TargetUpgradeName))
 				{
+					//If you can buy the product
 					if (BuyBox->TargetUpgradeCost <= GI->Money)
 					{
+						UGameplayStatics::PlaySoundAtLocation(GetWorld(), BuyBox->BuySound, BuyBox->GetActorLocation());
+						
 						GI->Money -= BuyBox->TargetUpgradeCost;
 						GI->UpgradeArray.Add(BuyBox->TargetUpgradeName);
 						if (BuyBox->TargetUpgradeCategory == EUpgradeCategory::Weapon)
@@ -296,11 +306,19 @@ void APlayerCharacter::Use()
 							GI->GetSpecificUpgradeFunction(BuyBox->TargetUpgradeName, this);
 						}
 					}
+					//If you can't buy the product
+					else
+					{
+						UGameplayStatics::PlaySoundAtLocation(GetWorld(), BuyBox->CantBuySound, BuyBox->GetActorLocation());
+					}
 				}
+				//If you own the product
 				else
 				{
 					if (BuyBox->TargetUpgradeCategory == EUpgradeCategory::Weapon)
 					{
+						UGameplayStatics::PlaySoundAtLocation(GetWorld(), BuyBox->BuySound, BuyBox->GetActorLocation());
+						
 						GI->SetCurrentWeapon(BuyBox->TargetUpgradeName);
 						if (GI->GetCurrentWeaponName() == WeaponName1)
 						{
@@ -310,6 +328,10 @@ void APlayerCharacter::Use()
 						{
 							APlayerCharacter::SelectWeapon2();
 						}
+					}
+					else
+					{
+						UGameplayStatics::PlaySoundAtLocation(GetWorld(), BuyBox->CantBuySound, BuyBox->GetActorLocation());
 					}
 				}
 			}

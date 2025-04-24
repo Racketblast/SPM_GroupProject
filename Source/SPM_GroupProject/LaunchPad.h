@@ -31,6 +31,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="LaunchPad")
 	FVector LaunchVector = {0,0,1000};
+protected:
+	UPROPERTY(EditDefaultsOnly, Category="LaunchPad")
+	class USoundBase* LaunchSound;
 private:
 	UPROPERTY(EditDefaultsOnly)
 	class UStaticMeshComponent* LaunchPadMesh;

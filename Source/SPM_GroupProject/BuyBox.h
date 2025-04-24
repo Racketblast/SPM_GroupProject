@@ -28,6 +28,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="Upgrade")
 	int32 TargetUpgradeCost;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Upgrade")
+	class USoundBase* BuySound;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Upgrade")
+	USoundBase* CantBuySound;
 protected:
 	UPROPERTY(EditAnywhere)
 	class UStaticMeshComponent* CubeMeshComponent;

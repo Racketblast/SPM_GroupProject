@@ -20,6 +20,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
 	int32 TeleportKeyNumber = 0;
 	
+	UPROPERTY(EditDefaultsOnly, Category="Teleport")
+	class USoundBase* TeleportSound;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Teleport")
+	USoundBase* CantTeleportSound;
+
+	UPROPERTY(EditDefaultsOnly, Category="Teleport")
+	int32 TeleportDelay;
+	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
