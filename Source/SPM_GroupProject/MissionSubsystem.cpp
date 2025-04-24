@@ -92,6 +92,6 @@ FText UMissionSubsystem::GetMissionStatusText() const
 		return FText::FromString(TEXT("Mission Complete!"));
 	}
 
-	return FText::Format(NSLOCTEXT("Mission", "MissionStatus", "Survive until Wave {0}"), FText::AsNumber(RequiredWaveToComplete));
+	return FText::Format(FText::FromString("Survive until Wave {0}"), FText::AsNumber(RequiredWaveToComplete));
 }
 

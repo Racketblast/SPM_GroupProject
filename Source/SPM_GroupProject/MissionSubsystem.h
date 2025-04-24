@@ -23,7 +23,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Mission")
 	void SetRequiredWavesToComplete(int32 NewRequired);
 
-	// för widget, används inte just nu
+	// för widget
 	UFUNCTION(BlueprintCallable, Category = "Mission")
 	FText GetMissionStatusText() const;
 protected:
