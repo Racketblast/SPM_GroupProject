@@ -19,10 +19,6 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 
 	if (GetWorld()->LineTraceSingleByChannel(Hit, FireLocation, End, ECC_Visibility, Params))
 	{
-		if (AActor* HitActor = Hit.GetActor())
-		{
-			UGameplayStatics::ApplyPointDamage(HitActor, Damage, ShotDirection, Hit, OwnerCharacter->GetInstigatorController(), this, DamageType);
-		}
 		DrawDebugLine(GetWorld(), FireLocation, Hit.ImpactPoint, FColor::Red, false, 1.0f, 0, 1.0f);
 	}
 	else
