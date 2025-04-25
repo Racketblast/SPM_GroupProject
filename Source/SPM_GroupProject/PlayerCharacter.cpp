@@ -128,13 +128,9 @@ void APlayerCharacter::Shoot()
 {
 	if (!CurrentGun)
 		return;
-	UE_LOG(LogTemp, Warning, TEXT("Shoot function called"));
 	const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
-	FRotator SocketRot = SocketTransform.GetRotation().Rotator();
-	FRotator FireRotation(SocketRot.Pitch + 20, GetActorRotation().Yaw, SocketRot.Roll);
 	FVector FireLocation = SocketTransform.GetLocation();
-
-	CurrentGun->Fire(FireLocation, FireRotation);
+	CurrentGun->Fire(FireLocation, PlayerCamera->GetComponentRotation());
 }
 
 void APlayerCharacter::Reload()

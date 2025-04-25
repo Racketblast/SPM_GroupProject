@@ -1,7 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-
+#include "HitscanGun.h"
+#include "Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
 #include "CoreMinimal.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
@@ -53,13 +55,16 @@ protected:
 	void Reload();
 	void SelectWeapon1();
 	void SelectWeapon2();
+	void SelectWeapon3();
+
 	bool Weapon1Equipped = false;
 	bool Weapon2Equipped = false;
+	bool Weapon3Equipped = false;
 	
 private:
 	FName WeaponName1 = "Pistol";
 	FName WeaponName2 = "Rifle";
-	
+	FName WeaponName3 = "Laser"; 
 	AActor* TargetActor;
 	
 
@@ -67,6 +72,8 @@ private:
 	TSubclassOf<class AGun> GWeapon1;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AGun> GWeapon2;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AGun> GWeapon3; // Set this to HitscanGun subclass in the editor
 	
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
 	class ULevelSequence* FadeInTransition;
@@ -77,5 +84,11 @@ private:
 
 	UPROPERTY()
 	AGun* Weapon2Instance;
+
+	UPROPERTY()
+	AGun* Weapon3Instance;
+
+
+
 
 };
