@@ -48,8 +48,6 @@ public:
 	EUpgradeType CurrentWeapon;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<EUpgradeType> UpgradeArray;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<bool> TeleportKeyArray = {true,false,false,false};
 
 	UFUNCTION(BlueprintCallable)
 	bool HasBought(const EUpgradeType Upgrade) const;
@@ -59,14 +57,12 @@ public:
 	FName GetArrayName();
 	
 	// För att låsa upp levels, relaterat till MissionSubsystem
+	// Sätter upp level order, aka vilken level är numer 1 o.s.v
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Progression")
 	TArray<FName> LevelOrder;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Progression")
 	TSet<FName> UnlockedLevels;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Progression")
-	FName LastCompletedLevel;
 
 	UFUNCTION(BlueprintCallable)
 	FName GetCurrentWeaponName();

@@ -15,11 +15,11 @@ public:
 	ATeleporter();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
-	FName TargetLevelName = "Hub";
+	UWorld* TargetLevel;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
-	int32 TeleportKeyNumber = 0;
-	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleport")
+	FName TargetLevelName;
+
 	UPROPERTY(EditDefaultsOnly, Category="Teleport")
 	class USoundBase* TeleportSound;
 	
