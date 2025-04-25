@@ -102,6 +102,7 @@ FString UPlayerGameInstance::ConvertUpgradeTypeToString(const EUpgradeType Type)
 }
 UPlayerGameInstance::UPlayerGameInstance()
 {
+	// Sätter upp level order, aka vilken level är numer 1 o.s.v
 	LevelOrder = {
 		FName("Hub"),
 		FName("Arena_1"),
@@ -109,6 +110,8 @@ UPlayerGameInstance::UPlayerGameInstance()
 		FName("V2"),
 		FName("MetroV2")
 	};
+
+	// Låser upp level 1 och Huben direkt.
 	if (LevelOrder.Num() > 0)
 	{
 		UnlockedLevels.Add(LevelOrder[0]);

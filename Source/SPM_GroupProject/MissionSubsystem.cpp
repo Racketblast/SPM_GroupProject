@@ -61,6 +61,7 @@ void UMissionSubsystem::CompleteMission()
 	if (!GI) return;
 	
 	FName CurrentLevel = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
+	GI->LastCompletedLevel = CurrentLevel;
 	GI->UnlockedLevels.Add(CurrentLevel);
 
 	int32 CurrentIndex = GI->LevelOrder.IndexOfByKey(CurrentLevel);
