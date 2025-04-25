@@ -16,20 +16,17 @@ public:
 	void SetOwnerCharacter(class APlayerCharacter* NewOwner);
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun")
 	bool bHasInfiniteReloads = false;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 TotalAmmo = 90;
+
 protected:
 	UPROPERTY()
 	APlayerCharacter* OwnerCharacter;
 
 	UPROPERTY(EditAnywhere)
-	int32 MaxAmmo;
+	int32 MaxAmmo ;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere)
 	int32 CurrentAmmo = MaxAmmo;
-	
-	//Ta bort
+
 	UPROPERTY(EditDefaultsOnly)
 	int32 ExtraMags = 2;
 
