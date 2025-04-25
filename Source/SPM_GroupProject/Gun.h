@@ -29,9 +29,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 CurrentAmmo = MaxAmmo;
 	
-	//Ta bort
-	UPROPERTY(EditDefaultsOnly)
-	int32 ExtraMags = 2;
+
 
 
 };

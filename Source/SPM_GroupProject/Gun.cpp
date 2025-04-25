@@ -4,8 +4,8 @@
 
 void AGun::Reload()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Attempting reload. CurrentAmmo: %d, ExtraMags: %d, bHasInfiniteReloads: %d"), 
-		   CurrentAmmo, ExtraMags, bHasInfiniteReloads);
+	UE_LOG(LogTemp, Warning, TEXT("Attempting reload. CurrentAmmo: %d, bHasInfiniteReloads: %d"), 
+		   CurrentAmmo, bHasInfiniteReloads);
 
 	if (bHasInfiniteReloads)
 	{
@@ -13,13 +13,23 @@ void AGun::Reload()
 		CurrentAmmo = MaxAmmo;
 		UE_LOG(LogTemp, Warning, TEXT("Infinite reload: CurrentAmmo set to MaxAmmo: %d"), CurrentAmmo);
 	}
-	else if (ExtraMags > 0)
+	else if (TotalAmmo > 0)
 	{
+		int missingAmmo = MaxAmmo - CurrentAmmo;
+		if (missingAmmo < TotalAmmo)
+		{
+			CurrentAmmo = MaxAmmo;
+			TotalAmmo = TotalAmmo - missingAmmo;
+		}
+		else
+		{
+			CurrentAmmo = CurrentAmmo + TotalAmmo;
+			TotalAmmo = 0;
+		}
 		// Regular reload (decrease extra mags, reset to max ammo)
-		ExtraMags--;
-		CurrentAmmo = MaxAmmo;
-		UE_LOG(LogTemp, Warning, TEXT("Regular reload: ExtraMags decremented. CurrentAmmo set to MaxAmmo: %d, Remaining ExtraMags: %d"), 
-			   CurrentAmmo, ExtraMags);
+		
+		//CurrentAmmo = MaxAmmo;
+		
 	}
 	else
 	{
