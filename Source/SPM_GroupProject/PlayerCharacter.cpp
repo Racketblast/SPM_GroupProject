@@ -6,6 +6,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
+#include "MissionSubsystem.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -257,6 +258,12 @@ void APlayerCharacter::Use()
 					GI->Money += PickedUpMoney;
 					
 					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Teleporter->TeleportSound, Teleporter->GetActorLocation());
+
+					// För level unlock 
+					if (UMissionSubsystem* MissionSub = GI->GetSubsystem<UMissionSubsystem>())
+					{
+						MissionSub->TryUnlockLevel();
+					}
 
 					Teleporter->Teleport();
 				}

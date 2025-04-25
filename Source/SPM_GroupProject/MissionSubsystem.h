@@ -19,6 +19,7 @@ public:
 	void OnWaveCompleted(int32 WaveIndex);
 	void NewMission();
 	bool IsMissionCompleted() const;
+	void TryUnlockLevel() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Mission")
 	void SetRequiredWavesToComplete(int32 NewRequired);

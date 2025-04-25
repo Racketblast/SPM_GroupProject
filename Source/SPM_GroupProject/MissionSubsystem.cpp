@@ -55,6 +55,11 @@ void UMissionSubsystem::CompleteMission()
 {
 	bIsCompleted = true;
 	UE_LOG(LogTemp, Warning, TEXT("Mission Complete! You survived %d waves."), WavesSurvived);
+}
+
+void UMissionSubsystem::TryUnlockLevel() const
+{
+	if (!bIsCompleted) return;
 
 	// Level unlock 
 	UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
