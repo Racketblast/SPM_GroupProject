@@ -20,10 +20,13 @@ void AAmmoBox::CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedCo
 	{
 		if (Cast<UCapsuleComponent>(OtherComp) == Player->GetCapsuleComponent())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("AmmoBoxTriggered"));
-			Player->CurrentGun->TotalAmmo += AmmoAmount;
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), CollectablePickUpSound, GetActorLocation());
-			Destroy();
+			if (Player->CurrentGun)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("AmmoBoxTriggered"));
+				Player->CurrentGun->TotalAmmo += AmmoAmount;
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), CollectablePickUpSound, GetActorLocation());
+				Destroy();
+			}
 		}
 	}
 }
