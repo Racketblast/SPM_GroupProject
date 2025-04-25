@@ -33,14 +33,14 @@ public:
 	UPROPERTY(EditAnywhere)
 	int32 UseDistance = 300;
 	
-	UPROPERTY(BlueprintReadWrite)
-	int32 ExtraMags = 2;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 PlayerHealth = 100;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 PickedUpMoney;
+	
+	UPROPERTY(BlueprintReadOnly)
+	class AGun* CurrentGun;
 protected:
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* PlayerCamera;
@@ -56,11 +56,6 @@ protected:
 	bool Weapon1Equipped = false;
 	bool Weapon2Equipped = false;
 	
-	UPROPERTY(BlueprintReadWrite)
-	int32 CurrentMaxAmmo;
-	UPROPERTY(BlueprintReadWrite)
-	int32 CurrentAmmo;
-	
 private:
 	FName WeaponName1 = "Pistol";
 	FName WeaponName2 = "Rifle";
@@ -72,8 +67,6 @@ private:
 	TSubclassOf<class AGun> GWeapon1;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AGun> GWeapon2;
-	UPROPERTY()
-	AGun* CurrentGun;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
 	class ULevelSequence* FadeInTransition;

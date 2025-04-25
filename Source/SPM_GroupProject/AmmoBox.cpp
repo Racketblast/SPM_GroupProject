@@ -2,6 +2,8 @@
 
 
 #include "AmmoBox.h"
+
+#include "Gun.h"
 #include "PlayerCharacter.h"
 #include "PlayerGameInstance.h"
 #include "AssetTypeActions/AssetDefinition_SoundBase.h"
@@ -19,7 +21,7 @@ void AAmmoBox::CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedCo
 		if (Cast<UCapsuleComponent>(OtherComp) == Player->GetCapsuleComponent())
 		{
 			UE_LOG(LogTemp, Warning, TEXT("AmmoBoxTriggered"));
-			Player->ExtraMags += AmmoAmount;
+			Player->CurrentGun->TotalAmmo += AmmoAmount;
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), CollectablePickUpSound, GetActorLocation());
 			Destroy();
 		}
