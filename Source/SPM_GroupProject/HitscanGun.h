@@ -14,7 +14,7 @@ public:
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
-	float Range = 1000.0f;
+	float Range = 2000.0f;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UDamageType> DamageType;
