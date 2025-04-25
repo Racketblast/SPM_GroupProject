@@ -102,4 +102,16 @@ FString UPlayerGameInstance::ConvertUpgradeTypeToString(const EUpgradeType Type)
 }
 UPlayerGameInstance::UPlayerGameInstance()
 {
+	LevelOrder = {
+		FName("Hub"),
+		FName("Arena_1"),
+		FName("V1"),
+		FName("V2"),
+		FName("MetroV2")
+	};
+	if (LevelOrder.Num() > 0)
+	{
+		UnlockedLevels.Add(LevelOrder[0]);
+		UnlockedLevels.Add(LevelOrder[1]);
+	}
 }
