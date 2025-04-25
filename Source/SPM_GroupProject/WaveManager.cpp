@@ -6,6 +6,7 @@
 #include "PlayerGameInstance.h"
 #include "TimerManager.h"
 #include "MissionSubsystem.h"
+#include "ChallengeSubsystem.h"
 
 AWaveManager::AWaveManager()
 {
@@ -58,6 +59,12 @@ void AWaveManager::StartNextWave()
 			Type.MinCount += (CurrentWaveIndex + 1)  * DefaultWaveDifficultyMultiplier;             // ökar minimum spawnas av varje enemy type
 			ActiveWaveData.MaxExtraCount += (CurrentWaveIndex + 1);            // ökar maximum spawns
 		}
+	}
+
+	//För challenges
+	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+	{
+		ChallengeSub->AssignNewChallenge(); 
 	}
 
 	EnemiesSpawnedInCurrentWave = 0;
