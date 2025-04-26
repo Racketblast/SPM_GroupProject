@@ -66,27 +66,24 @@ private:
 	FName WeaponName2 = "Rifle";
 	FName WeaponName3 = "Laser"; 
 	AActor* TargetActor;
-	
-
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AGun> GWeapon1;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AGun> GWeapon2;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AGun> GWeapon3; // Set this to HitscanGun subclass in the editor
+	UPROPERTY()
+	AGun* Weapon1Instance;
+	UPROPERTY()
+	AGun* Weapon2Instance;
+	UPROPERTY()
+	AGun* Weapon3Instance;
 	
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
 	class ULevelSequence* FadeInTransition;
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
 	class USoundBase* TeleportInSound;
-	UPROPERTY()
-	AGun* Weapon1Instance;
-
-	UPROPERTY()
-	AGun* Weapon2Instance;
-
-	UPROPERTY()
-	AGun* Weapon3Instance;
+	
 
 
 

@@ -1,7 +1,13 @@
+#include "WaveManager.h"
+#include "EngineUtils.h"  // Needed for TActorIterator
 #include "HitscanGun.h"
-#include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "PlayerCharacter.h"
+#include "GameFramework/Character.h"
+#include "UObject/UnrealType.h"
+#include "WaveManager.h"
+#include "Kismet/GameplayStatics.h"
+
 void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 {
 	if (CurrentAmmo <= 0) return;
@@ -20,6 +26,38 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 	if (GetWorld()->LineTraceSingleByChannel(Hit, FireLocation, End, ECC_Visibility, Params))
 	{
 		DrawDebugLine(GetWorld(), FireLocation, Hit.ImpactPoint, FColor::Red, false, 1.0f, 0, 1.0f);
+
+		AActor* HitActor = Hit.GetActor();
+		if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
+		{
+			static const FName AIHealthName = TEXT("AIHealth");
+
+			// Try to find the AIHealth int property
+			if (FIntProperty* HealthProp = FindFProperty<FIntProperty>(HitCharacter->GetClass(), AIHealthName))
+			{
+				int32 CurrentHealth = HealthProp->GetPropertyValue_InContainer(HitCharacter);
+				CurrentHealth -= static_cast<int32>(Damage); // Use this gun's damage value
+
+				if (CurrentHealth <= 0)
+				{
+					HitCharacter->Destroy();
+
+					// Find the WaveManager in the world and call OnEnemyKilled()
+					for (TActorIterator<AWaveManager> It(GetWorld()); It; ++It)
+					{
+						if (AWaveManager* WaveManager = *It)
+						{
+							WaveManager->OnEnemyKilled();
+							break;
+						}
+					}
+				}
+				else
+				{
+					HealthProp->SetPropertyValue_InContainer(HitCharacter, CurrentHealth);
+				}
+			}
+		}
 	}
 	else
 	{
@@ -28,3 +66,5 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 
 	CurrentAmmo--;
 }
+
+

@@ -4,6 +4,7 @@
 #include "Gun.h"
 #include "HitscanGun.generated.h"
 
+
 UCLASS()
 class SPM_GROUPPROJECT_API AHitscanGun : public AGun
 {
