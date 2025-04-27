@@ -12,6 +12,7 @@ enum class EChallengeType : uint8
 	None UMETA(DisplayName = "None"),
 	NoJump UMETA(DisplayName = "Don't Jump"),
 	PistolOnly UMETA(DisplayName = "Only Use Pistol"),
+	NoDamage UMETA(DisplayName = "Don't Take Any Damage"),
 	// Lägg till flera challenges här
 };
 
@@ -42,6 +43,13 @@ public:
 	void CompleteCurrentChallenge();
 	bool IsChallengeCompleted() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	void NotifyPlayerJumped();
+
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	bool HasFailedCurrentChallenge() const { return bHasFailedCurrentChallenge; }
+
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
 	FText GetChallengeDescription() const;
 
 private:
@@ -49,5 +57,9 @@ private:
 	FChallengeData CurrentChallenge;
 
 	TArray<FChallengeData> PossibleChallenges;
+	
+	bool bHasFailedCurrentChallenge = false;
+
+	EChallengeType LastChallengeType = EChallengeType::None;
 };
 
