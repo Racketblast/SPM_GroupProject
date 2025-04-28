@@ -3,21 +3,21 @@
 
 #include "MissionAndChallengeManager.h"
 #include "MissionSubsystem.h"
+#include "ChallengeSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 
-// Sets default values
+
 AMissionAndChallengeManager::AMissionAndChallengeManager()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 }
 
-// Called when the game starts or when spawned
 void AMissionAndChallengeManager::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Missions
 	if (UWorld* World = GetWorld())
 	{
 		if (UMissionSubsystem* MissionSubsystem = World->GetGameInstance()->GetSubsystem<UMissionSubsystem>())
@@ -25,12 +25,14 @@ void AMissionAndChallengeManager::BeginPlay()
 			MissionSubsystem->SetRequiredWavesToComplete(RequiredWavesToComplete);
 		}
 	}
-}
 
-// Called every frame
-void AMissionAndChallengeManager::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
+	// Challenges
+	if (UWorld* World = GetWorld())
+	{
+		if (UChallengeSubsystem* ChallengeSubsystem = World->GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+		{
+			ChallengeSubsystem->SetRewardMoneyAmount(ChallengeRewardMoneyAmount);
+		}
+	}
 }
 

@@ -18,12 +18,11 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	virtual void Tick(float DeltaTime) override;
-
 	// Missions
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mission")
 	int32 RequiredWavesToComplete = 3;
 
 	//Challenges
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge")
+	int32 ChallengeRewardMoneyAmount = 100;
 };

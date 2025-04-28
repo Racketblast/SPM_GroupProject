@@ -4,6 +4,7 @@
 #include "ChallengeSubsystem.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PlayerGameInstance.h"
+#include "MissionAndChallengeManager.h"
 
 void UChallengeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -95,6 +96,11 @@ void UChallengeSubsystem::ResetChallengeStatus()
 	bChallengeJustFailed = false;
 }
 
+void UChallengeSubsystem::SetRewardMoneyAmount(int32 MoneyAmount)
+{
+	RewardMoneyAmount = MoneyAmount;
+}
+
 void UChallengeSubsystem::GiveChallengeReward()
 {
 	EChallengeRewardType RewardType = EChallengeRewardType::Money; 
@@ -103,11 +109,10 @@ void UChallengeSubsystem::GiveChallengeReward()
 	{
 	case EChallengeRewardType::Money:
 		{
-			int32 MoneyAmount = 100; // Kan ändra mängden senare
 			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 			{
-				GI->Money += MoneyAmount;
-				UE_LOG(LogTemp, Warning, TEXT("Challenge reward: +%d money!"), MoneyAmount);
+				GI->Money += RewardMoneyAmount;
+				UE_LOG(LogTemp, Warning, TEXT("Challenge reward: +%d money!"), RewardMoneyAmount);
 			}
 			break;
 		}
@@ -118,6 +123,7 @@ void UChallengeSubsystem::GiveChallengeReward()
 	}
 }
 
+// Används i PlayerCharacter
 void UChallengeSubsystem::NotifyPlayerJumped()
 {
 	if (!bIsChallengeActive) return; // För att man inte ska kunna faila challengen under grace period.
@@ -129,10 +135,10 @@ void UChallengeSubsystem::NotifyPlayerJumped()
 	}
 }
 
-// Används ännu inte, måste kalla denna funktion från vart spelaren tar skada. 
+// Används i enemy AI blueprint
 void UChallengeSubsystem::NotifyPlayerDamaged()
 {
-	if (!bIsChallengeActive) return; // Ignore if we're not in an active wave.
+	if (!bIsChallengeActive) return; 
 
 	if (CurrentChallenge.Type == EChallengeType::NoDamage && !bHasFailedCurrentChallenge)
 	{
@@ -141,7 +147,7 @@ void UChallengeSubsystem::NotifyPlayerDamaged()
 	}
 }
 
-// Används ännu inte. 
+// Används i PlayerCharacter
 void UChallengeSubsystem::NotifyWeaponFired(FName WeaponName)
 {
 	if (!bIsChallengeActive) return;

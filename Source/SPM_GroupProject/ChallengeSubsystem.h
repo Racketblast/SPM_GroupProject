@@ -67,11 +67,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Challenge")
 	bool bChallengeJustCompleted = false;
-
-	// Called when a challenge is completed successfully
+	
 	void HandleChallengeSuccess();
-
-	// Called when a challenge is failed
+	
 	void HandleChallengeFailure();
 
 	UFUNCTION(BlueprintCallable, Category = "Challenge")
@@ -85,6 +83,9 @@ public:
 
 	void GiveChallengeReward();
 
+	UFUNCTION(BlueprintCallable, Category = "Mission")
+	void SetRewardMoneyAmount(int32 MoneyAmount);
+
 private:
 	UPROPERTY()
 	FChallengeData CurrentChallenge;
@@ -96,5 +97,8 @@ private:
 	EChallengeType LastChallengeType = EChallengeType::None;
 
 	bool bIsChallengeActive = true;
+
+	UPROPERTY()
+	int32 RewardMoneyAmount = 100;
 };
 
