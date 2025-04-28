@@ -28,6 +28,12 @@ void AWaveManager::BeginPlay()
 // Funktionen som startar waven. 
 void AWaveManager::StartNextWave()
 {
+	// För challenges, den rensar challenge resultat status för nästa wave
+	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+	{
+		ChallengeSub->ResetChallengeStatus();
+	}
+	
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
 		GI->bIsWave = true;
@@ -223,7 +229,14 @@ void AWaveManager::EndWave()
 	);
 
 	UE_LOG(LogTemp, Warning, TEXT("Grace period started: %d seconds"), GraceSecondsRemaining);
-	
+
+	// Challenges
+	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+	{
+		ChallengeSub->CompleteCurrentChallenge();
+	}
+
+	// Missions
 	if (UGameInstance* GI = GetGameInstance())
 	{
 		UMissionSubsystem* MissionSystem = GI->GetSubsystem<UMissionSubsystem>();

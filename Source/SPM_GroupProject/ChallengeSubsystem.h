@@ -7,6 +7,14 @@
 #include "ChallengeSubsystem.generated.h"
 
 UENUM(BlueprintType)
+enum class EChallengeRewardType : uint8
+{
+	None UMETA(DisplayName = "None"),
+	Money UMETA(DisplayName = "Money"),
+	// Lägg till fler reward typer senare, som ammo 
+};
+
+UENUM(BlueprintType)
 enum class EChallengeType : uint8
 {
 	None UMETA(DisplayName = "None"),
@@ -41,16 +49,41 @@ public:
 
 	void AssignNewChallenge();
 	void CompleteCurrentChallenge();
-	bool IsChallengeCompleted() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Challenge")
 	void NotifyPlayerJumped();
 
 	UFUNCTION(BlueprintCallable, Category = "Challenge")
-	bool HasFailedCurrentChallenge() const { return bHasFailedCurrentChallenge; }
+	void NotifyPlayerDamaged();
+
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	void NotifyWeaponFired(FName WeaponName);
 
 	UFUNCTION(BlueprintCallable, Category = "Challenge")
 	FText GetChallengeDescription() const;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Challenge")
+	bool bChallengeJustFailed = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Challenge")
+	bool bChallengeJustCompleted = false;
+
+	// Called when a challenge is completed successfully
+	void HandleChallengeSuccess();
+
+	// Called when a challenge is failed
+	void HandleChallengeFailure();
+
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	bool GetChallengeJustFailed() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	bool GetChallengeJustCompleted() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	void ResetChallengeStatus();
+
+	void GiveChallengeReward();
 
 private:
 	UPROPERTY()
@@ -61,5 +94,7 @@ private:
 	bool bHasFailedCurrentChallenge = false;
 
 	EChallengeType LastChallengeType = EChallengeType::None;
+
+	bool bIsChallengeActive = true;
 };
 

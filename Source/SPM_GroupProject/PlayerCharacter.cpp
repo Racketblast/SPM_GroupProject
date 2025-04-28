@@ -7,6 +7,7 @@
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
 #include "MissionSubsystem.h"
+#include "ChallengeSubsystem.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -125,6 +126,20 @@ void APlayerCharacter::Pitch(float Value)
 {
 	AddControllerPitchInput(Value);
 }
+
+//Jag gör detta endast för att kunna kalla på en funktion från UChallengeSubsystem, om ni kommer på ett bättre sätt så kan ni bara byta till det. Dock borde jump fungera på samma sätt som förut.
+void APlayerCharacter::Jump()
+{
+	// Notify Challenge Subsystem
+	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+	{
+		ChallengeSub->NotifyPlayerJumped();
+	}
+
+	Super::Jump(); // Den faktiska jump funktionen 
+}
+
+
 void APlayerCharacter::Shoot()
 {
 	if (!CurrentGun)
@@ -132,6 +147,20 @@ void APlayerCharacter::Shoot()
 	const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
 	FVector FireLocation = SocketTransform.GetLocation();
 	CurrentGun->Fire(FireLocation, PlayerCamera->GetComponentRotation());
+
+
+	// För challenge systemet.
+	if (UChallengeSubsystem* ChallengeSubsystem = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+	{
+		if (CurrentGun == Weapon1Instance)
+		{
+			ChallengeSubsystem->NotifyWeaponFired(WeaponName1); 
+		}
+		else
+		{
+			ChallengeSubsystem->NotifyWeaponFired(WeaponName2);
+		}
+	}
 }
 
 void APlayerCharacter::Reload()

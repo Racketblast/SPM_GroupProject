@@ -3,6 +3,7 @@
 
 #include "ChallengeSubsystem.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "PlayerGameInstance.h"
 
 void UChallengeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -33,19 +34,28 @@ void UChallengeSubsystem::AssignNewChallenge()
 	CurrentChallenge = PossibleChallenges[Index];
 	CurrentChallenge.bIsCompleted = false;
 	LastChallengeType = CurrentChallenge.Type; // För att undvika att spelaren får samma challenge på rad
+
+	bHasFailedCurrentChallenge = false;
+	bIsChallengeActive = true;
 	
 	UE_LOG(LogTemp, Warning, TEXT("New Challenge: %s"), *CurrentChallenge.Description.ToString());
 }
 
 void UChallengeSubsystem::CompleteCurrentChallenge()
 {
-	CurrentChallenge.bIsCompleted = true;
-	bHasFailedCurrentChallenge = false;
-}
+	if (!bIsChallengeActive) return;
 
-bool UChallengeSubsystem::IsChallengeCompleted() const
-{
-	return CurrentChallenge.bIsCompleted;
+	if (!bHasFailedCurrentChallenge)
+	{
+		HandleChallengeSuccess();
+	}
+	else
+	{
+		HandleChallengeFailure();
+	}
+
+	CurrentChallenge.bIsCompleted = true;
+	bIsChallengeActive = false;
 }
 
 FText UChallengeSubsystem::GetChallengeDescription() const
@@ -53,12 +63,95 @@ FText UChallengeSubsystem::GetChallengeDescription() const
 	return CurrentChallenge.Description;
 }
 
+bool UChallengeSubsystem::GetChallengeJustFailed() const
+{
+	return bChallengeJustFailed;
+}
+
+bool UChallengeSubsystem::GetChallengeJustCompleted() const
+{
+	return bChallengeJustCompleted;
+}
+
+void UChallengeSubsystem::HandleChallengeSuccess()
+{
+	bChallengeJustCompleted = true;
+	GiveChallengeReward();
+
+	UE_LOG(LogTemp, Log, TEXT("Challenge Completed Successfully!"));
+}
+
+void UChallengeSubsystem::HandleChallengeFailure()
+{
+	bHasFailedCurrentChallenge = true;
+	bChallengeJustFailed = true;
+
+	UE_LOG(LogTemp, Warning, TEXT("Challenge Failed!"));
+}
+
+void UChallengeSubsystem::ResetChallengeStatus()
+{
+	bChallengeJustCompleted = false;
+	bChallengeJustFailed = false;
+}
+
+void UChallengeSubsystem::GiveChallengeReward()
+{
+	EChallengeRewardType RewardType = EChallengeRewardType::Money; 
+
+	switch (RewardType)
+	{
+	case EChallengeRewardType::Money:
+		{
+			int32 MoneyAmount = 100; // Kan ändra mängden senare
+			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+			{
+				GI->Money += MoneyAmount;
+				UE_LOG(LogTemp, Warning, TEXT("Challenge reward: +%d money!"), MoneyAmount);
+			}
+			break;
+		}
+		// lägg till fler rewards senare
+
+	default:
+		break;
+	}
+}
 
 void UChallengeSubsystem::NotifyPlayerJumped()
 {
+	if (!bIsChallengeActive) return; // För att man inte ska kunna faila challengen under grace period.
+	
 	if (CurrentChallenge.Type == EChallengeType::NoJump && !bHasFailedCurrentChallenge)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Challenge Failed: Player jumped!"));
-		bHasFailedCurrentChallenge = true;
+		HandleChallengeFailure();
+	}
+}
+
+// Används ännu inte, måste kalla denna funktion från vart spelaren tar skada. 
+void UChallengeSubsystem::NotifyPlayerDamaged()
+{
+	if (!bIsChallengeActive) return; // Ignore if we're not in an active wave.
+
+	if (CurrentChallenge.Type == EChallengeType::NoDamage && !bHasFailedCurrentChallenge)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Challenge Failed: Player took damage!"));
+		HandleChallengeFailure();
+	}
+}
+
+// Används ännu inte. 
+void UChallengeSubsystem::NotifyWeaponFired(FName WeaponName)
+{
+	if (!bIsChallengeActive) return;
+    
+	if (CurrentChallenge.Type == EChallengeType::PistolOnly && !bHasFailedCurrentChallenge)
+	{
+		if (WeaponName != "Pistol") 
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Challenge Failed: Fired with wrong weapon: %s"), *WeaponName.ToString());
+			HandleChallengeFailure();
+		}
 	}
 }

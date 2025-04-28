@@ -56,6 +56,7 @@ protected:
 	void SelectWeapon1();
 	void SelectWeapon2();
 	void SelectWeapon3();
+	virtual void Jump() override; // La till detta för challenge systemet 
 
 	bool Weapon1Equipped = false;
 	bool Weapon2Equipped = false;
