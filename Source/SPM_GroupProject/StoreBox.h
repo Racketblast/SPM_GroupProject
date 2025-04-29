@@ -21,7 +21,7 @@ protected:
 	TSubclassOf<UUserWidget> BuyBoxWidgetClass;
 	
 	UPROPERTY(EditDefaultsOnly)
-	class USoundBase* OpenBuyMenu;
+	class USoundBase* OpenBuyMenuSound;
 
 	UPROPERTY(EditDefaultsOnly)
 	class UStaticMeshComponent* StaticMeshComponent;

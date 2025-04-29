@@ -9,6 +9,7 @@
 #include "MissionSubsystem.h"
 #include "ChallengeSubsystem.h"
 #include "StoreBox.h"
+#include "VendingMachine.h"
 #include "Blueprint/UserWidget.h"
 
 // Sets default values
@@ -31,6 +32,7 @@ void APlayerCharacter::BeginPlay()
 		GI->ApplyAllUpgradeFunctions(this);
 		SelectWeapon(GI->GetCurrentWeaponName());
 	}
+	PlayerHealth = PlayerMaxHealth;
 
 	if (FadeInTransition)
 	{
@@ -325,5 +327,19 @@ void APlayerCharacter::Use()
 		{
 			StoreBox->OpenStoreMenu();
 		}
+		//Use VendingMachine Function
+		if (AVendingMachine* VendingMachine = Cast<AVendingMachine>(TargetActor))
+		{
+			VendingMachine->UseVendingMachine();
+		}
+	}
+}
+
+void APlayerCharacter::HealPlayer(int32 HealAmount)
+{
+	PlayerHealth += HealAmount;
+	if (PlayerHealth > PlayerMaxHealth)
+	{
+		PlayerHealth = PlayerMaxHealth;
 	}
 }

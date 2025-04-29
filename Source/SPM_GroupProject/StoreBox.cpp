@@ -20,6 +20,12 @@ void AStoreBox::OpenStoreMenu()
 		if (UUserWidget* BuyBoxWidget = CreateWidget<UUserWidget>(GetWorld(), BuyBoxWidgetClass))
 		{
 			BuyBoxWidget->AddToViewport();
+			
+			if (OpenBuyMenuSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), OpenBuyMenuSound, GetActorLocation());
+			}
+			
 			if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
 			{
 				// Show mouse cursor if needed

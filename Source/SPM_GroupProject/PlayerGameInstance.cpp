@@ -221,7 +221,7 @@ void UPlayerGameInstance::UpgradePlayerStats(const EUpgradeType Upgrade, class A
 	switch (Upgrade)
 	{
 	case EUpgradeType::Health20:
-		Player->PlayerHealth += 20;
+		Player->PlayerMaxHealth += 20;
 		break;
 	case EUpgradeType::Speed20:
 		Player->GetCharacterMovement()->MaxWalkSpeed *= 1.2;

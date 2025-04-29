@@ -36,7 +36,9 @@ public:
 	int32 UseDistance = 300;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	int32 PlayerHealth = 100;
+	int32 PlayerHealth;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int32 PlayerMaxHealth = 100;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 PickedUpMoney;
@@ -46,6 +48,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SelectWeapon(FName Weapon);
+	
+	UFUNCTION(BlueprintCallable)
+	void HealPlayer(int32 HealAmount);
 protected:
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* PlayerCamera;
