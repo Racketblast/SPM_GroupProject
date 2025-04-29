@@ -64,8 +64,8 @@ protected:
 	bool Weapon1Equipped = false;
 	bool Weapon2Equipped = false;
 	bool Weapon3Equipped = false;
-	
 private:
+	
 	FName WeaponName1 = "Pistol";
 	FName WeaponName2 = "Rifle";
 	FName WeaponName3 = "Laser"; 

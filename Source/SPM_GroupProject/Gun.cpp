@@ -1,6 +1,7 @@
 // Gun.cpp
 #include "Gun.h"
 #include "PlayerCharacter.h"
+#include "PlayerGameInstance.h"
 
 void AGun::Reload()
 {
@@ -46,5 +47,25 @@ void AGun::Reload()
 void AGun::SetOwnerCharacter(APlayerCharacter* NewOwner)
 {
 	OwnerCharacter = NewOwner;
+}
+
+void AGun::CheckForUpgrades()
+{
+	if (bHasAppliedUpgrades) return;
+	
+	if (!bIsUpgraded)
+	{
+		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+		{
+			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(),0)))
+			{
+				for (EUpgradeType Upgrades : GI->UpgradeArray)
+				{
+					GI->UpgradeGunStats(Upgrades, Player);
+				}
+			}
+		}
+		bHasAppliedUpgrades = true;
+	}
 }
 
