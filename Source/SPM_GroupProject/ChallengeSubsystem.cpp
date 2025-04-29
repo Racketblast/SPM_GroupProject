@@ -4,18 +4,16 @@
 #include "ChallengeSubsystem.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PlayerGameInstance.h"
+#include "EngineUtils.h" 
 #include "MissionAndChallengeManager.h"
 
 void UChallengeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	// Lägg till olika challenges
-	PossibleChallenges.Add({ EChallengeType::NoJump, FText::FromString("Don't jump this wave."), false });
-	PossibleChallenges.Add({ EChallengeType::PistolOnly, FText::FromString("Only use the pistol this wave."), false });
-	PossibleChallenges.Add({ EChallengeType::NoDamage, FText::FromString("Don't take any damage this wave."), false });
-
-	AssignNewChallenge();
+	UE_LOG(LogTemp, Log, TEXT("ChallengeSubsystem initialized, waiting for manager to load challenge data."));
+	
+	//AssignNewChallenge();
 }
 
 void UChallengeSubsystem::AssignNewChallenge()
@@ -103,24 +101,48 @@ void UChallengeSubsystem::SetRewardMoneyAmount(int32 MoneyAmount)
 
 void UChallengeSubsystem::GiveChallengeReward()
 {
-	EChallengeRewardType RewardType = EChallengeRewardType::Money; 
+	int32* FoundReward = ChallengeRewardMap.Find(CurrentChallenge.Type);
+	int32 RewardAmount = FoundReward ? *FoundReward : RewardMoneyAmount; // Default reward
 
-	switch (RewardType)
+	if (!FoundReward)
 	{
-	case EChallengeRewardType::Money:
-		{
-			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
-			{
-				GI->Money += RewardMoneyAmount;
-				UE_LOG(LogTemp, Warning, TEXT("Challenge reward: +%d money!"), RewardMoneyAmount);
-			}
-			break;
-		}
-		// lägg till fler rewards senare
-
-	default:
-		break;
+		UE_LOG(LogTemp, Warning, TEXT("No custom reward found for challenge %s. Using default."), *UEnum::GetValueAsString(CurrentChallenge.Type));
 	}
+
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		GI->Money += RewardAmount;
+		UE_LOG(LogTemp, Warning, TEXT("Challenge reward: +%d money!"), RewardAmount);
+	}
+}
+
+void UChallengeSubsystem::LoadChallengeDataFromManager()
+{
+	if (UWorld* World = GetWorld())
+	{
+		for (TActorIterator<AMissionAndChallengeManager> It(World); It; ++It)
+		{
+			AMissionAndChallengeManager* Manager = *It;
+			if (Manager)
+			{
+				ChallengeRewardMap.Empty(); // Clear old data
+				PossibleChallenges.Empty(); // Clear old data
+
+				for (const FChallengeRewardData& Entry : Manager->ChallengeRewards)
+				{
+					PossibleChallenges.Add({ Entry.ChallengeType, Entry.ChallengeDescription, false });
+					ChallengeRewardMap.Add(Entry.ChallengeType, Entry.RewardAmount);
+				}
+
+				RewardMoneyAmount = Manager->DefaultChallengeRewardAmount;
+				UE_LOG(LogTemp, Warning, TEXT("Challenge data loaded from manager."));
+				UE_LOG(LogTemp, Warning, TEXT("Loaded %d challenges into the system."), PossibleChallenges.Num());
+				return;
+			}
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("No Challenge Manager found in this level."));
 }
 
 // Används i PlayerCharacter

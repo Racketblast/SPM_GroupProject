@@ -86,6 +86,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Mission")
 	void SetRewardMoneyAmount(int32 MoneyAmount);
 
+	void LoadChallengeDataFromManager();
+
 private:
 	UPROPERTY()
 	FChallengeData CurrentChallenge;
@@ -100,5 +102,7 @@ private:
 
 	UPROPERTY()
 	int32 RewardMoneyAmount = 100;
+
+	TMap<EChallengeType, int32> ChallengeRewardMap;
 };
 
