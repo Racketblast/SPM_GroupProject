@@ -43,6 +43,9 @@ public:
 	
 	UPROPERTY(BlueprintReadOnly)
 	class AGun* CurrentGun;
+
+	UFUNCTION(BlueprintCallable)
+	void SelectWeapon(FName Weapon);
 protected:
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* PlayerCamera;

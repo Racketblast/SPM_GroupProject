@@ -56,6 +56,14 @@ public:
 	bool HasBought(const FName Upgrade) const;
 
 	UFUNCTION(BlueprintCallable)
+	int32 GetUpgradeCost(const EUpgradeType Upgrade) const;
+	UFUNCTION(BlueprintCallable)
+	EUpgradeCategory GetUpgradeCategory(const EUpgradeType Upgrade) const;
+	UFUNCTION(BlueprintCallable)
+	void BuyUpgrade(const EUpgradeType Upgrade,USoundBase* CanBuySound = nullptr, USoundBase* CantBuySound = nullptr);
+	//int32 GetUpgradeCost(const FName Upgrade) const;
+
+	UFUNCTION(BlueprintCallable)
 	FName GetArrayName();
 	
 	// För att låsa upp levels, relaterat till MissionSubsystem
