@@ -16,6 +16,10 @@ ATeleporter::ATeleporter()
 	
 	CubeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CubeMeshComponent"));
 	CubeMeshComponent->SetupAttachment(GetRootComponent());
+	if (TargetLevel)
+	{
+		TargetLevelName = FName(*TargetLevel->GetName());
+	}
 }
 
 void ATeleporter::BeginPlay()
@@ -57,7 +61,7 @@ void ATeleporter::ChangeTexture()
 	//UE_LOG(LogTemp, Display, TEXT("Can Teleport: %s"), CachedGameInstance->TeleportKeyArray[TeleportKeyNumber] ? TEXT("true") : TEXT("false"));
 	//if it is a wave or if player does not have a key
 	//if (bOldWaveValue || !CachedGameInstance->TeleportKeyArray[TeleportKeyNumber])
-	if (bOldWaveValue || !CachedGameInstance->UnlockedLevels.Contains(TargetLevelName))
+	if (bOldWaveValue || !bHasAccess)
 	{
 		if (WaveMaterial)
 		{
