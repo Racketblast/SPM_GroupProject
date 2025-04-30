@@ -26,6 +26,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float RoundsPerSecond = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float RealoadSpeed = 10;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UMaterialInterface* CurrentSkinMat;
 
 	//Upgrade variables
