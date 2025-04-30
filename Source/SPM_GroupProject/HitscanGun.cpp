@@ -2,6 +2,7 @@
 #include "EngineUtils.h"  // Needed for TActorIterator
 #include "HitscanGun.h"
 #include "DrawDebugHelpers.h"
+#include "MoneyBox.h"
 #include "PlayerCharacter.h"
 #include "GameFramework/Character.h"
 #include "UObject/UnrealType.h"
@@ -40,6 +41,17 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 
 				if (CurrentHealth <= 0)
 				{
+					//Should not spawn moneybox
+					FActorSpawnParameters SpawnParams;
+					TSubclassOf<AMoneyBox> MoneyBoxClass = LoadClass<AMoneyBox>(nullptr, TEXT("/Game/Blueprints/BP_MoneyBox.BP_MoneyBox_C"));
+					if (MoneyBoxClass)
+					{
+						FTransform SpawnTransform = HitCharacter->GetTransform();
+						FVector NewLocation = SpawnTransform.GetLocation();
+						NewLocation.Z -= 100.0f;
+						SpawnTransform.SetLocation(NewLocation);
+						GetWorld()->SpawnActor<AMoneyBox>(MoneyBoxClass, SpawnTransform, SpawnParams);
+					}
 					HitCharacter->Destroy();
 
 					// Find the WaveManager in the world and call OnEnemyKilled()
