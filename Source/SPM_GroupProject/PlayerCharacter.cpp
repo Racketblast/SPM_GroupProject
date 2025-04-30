@@ -8,6 +8,9 @@
 #include "LevelSequencePlayer.h"
 #include "MissionSubsystem.h"
 #include "ChallengeSubsystem.h"
+#include "StoreBox.h"
+#include "VendingMachine.h"
+#include "Blueprint/UserWidget.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -26,16 +29,10 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 	if (UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
-		if (GI->GetCurrentWeaponName() == WeaponName1)
-		{
-			APlayerCharacter::SelectWeapon1();
-		}
-		else if (GI->GetCurrentWeaponName() == WeaponName2)
-		{
-			APlayerCharacter::SelectWeapon2();
-		}
-		GI->GetAllUpgradeFunctions(this);
+		GI->ApplyAllUpgradeFunctions(this);
+		SelectWeapon(GI->GetCurrentWeaponName());
 	}
+	PlayerHealth = PlayerMaxHealth;
 
 	if (FadeInTransition)
 	{
@@ -232,7 +229,9 @@ void APlayerCharacter::SelectWeapon1()
 				Weapon1Instance->SetActorEnableCollision(true);
 				CurrentGun = Weapon1Instance;
 			}
+			CurrentGun->CheckForUpgrades();
 		}
+		
 	}
 }
 
@@ -267,6 +266,7 @@ void APlayerCharacter::SelectWeapon2()
 				Weapon2Instance->SetActorEnableCollision(true);
 				CurrentGun = Weapon2Instance;
 			}
+			CurrentGun->CheckForUpgrades();
 		}
 	}
 }
@@ -314,13 +314,32 @@ void APlayerCharacter::Use()
 				}
 			}
 		}
-	// Buying function
-	if (const ABuyBox *BuyBox = Cast<ABuyBox>(TargetActor))
-	{
-		if (GI)
+		// Buying function
+		if (const ABuyBox *BuyBox = Cast<ABuyBox>(TargetActor))
 		{
-			GI->BuyUpgrade(BuyBox->TargetUpgradeName, BuyBox->BuySound, BuyBox->CantBuySound);
+			if (GI)
+			{
+				GI->BuyUpgrade(BuyBox->TargetUpgradeName, BuyBox->BuySound, BuyBox->CantBuySound);
+			}
+		}
+		//Open store Function
+		if (AStoreBox* StoreBox = Cast<AStoreBox>(TargetActor))
+		{
+			StoreBox->OpenStoreMenu();
+		}
+		//Use VendingMachine Function
+		if (AVendingMachine* VendingMachine = Cast<AVendingMachine>(TargetActor))
+		{
+			VendingMachine->UseVendingMachine();
 		}
 	}
+}
+
+void APlayerCharacter::HealPlayer(int32 HealAmount)
+{
+	PlayerHealth += HealAmount;
+	if (PlayerHealth > PlayerMaxHealth)
+	{
+		PlayerHealth = PlayerMaxHealth;
 	}
 }

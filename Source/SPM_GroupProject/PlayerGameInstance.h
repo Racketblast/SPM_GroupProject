@@ -18,6 +18,10 @@ enum class EUpgradeType : uint8
 	Health20    UMETA(DisplayName = "20 Health"),
 	Speed20  UMETA(DisplayName = "Speed 20%"),
 	Jump50    UMETA(DisplayName = "50% Jump"),
+	PistolDamage10 UMETA(DisplayName = "10% PistolDamage"),
+	RifleDamage10 UMETA(DisplayName = "10% RifleDamage"),
+	PistolFiringSpeed10 UMETA(DisplayName = "10% PistolFiringSpeed"),
+	RifleFiringSpeed10 UMETA(DisplayName = "10% RifleFiringSpeed"),
 	// Add more as needed
 };
 
@@ -84,14 +88,13 @@ public:
 	void SetCurrentWeapon(const FName Weapon);
 	
 	UFUNCTION(BlueprintCallable)
-	void GetAllUpgradeFunctions(class APlayerCharacter* Player = nullptr);
+	void ApplyAllUpgradeFunctions(class APlayerCharacter* Player);
 
-	UFUNCTION(BlueprintCallable)
-	void GetSpecificUpgradeFunction(EUpgradeType Upgrade, class APlayerCharacter* Player = nullptr);
-
-
+	
+	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player);
+	void UpgradePlayerStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
+	void UpgradeGunStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 private:
-	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player = nullptr);
 	
 	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);
 	

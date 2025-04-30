@@ -19,6 +19,20 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 TotalAmmo = 90;
+
+	//Right now these do nothing, but it should be used for all weapons
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float WeaponDamage = 20;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float RoundsPerSecond = 10;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UMaterialInterface* CurrentSkinMat;
+
+	//Upgrade variables
+	UPROPERTY()
+	bool bHasAppliedUpgrades = false;
+	bool bIsUpgraded = false;
+	void CheckForUpgrades();
 protected:
 	UPROPERTY()
 	APlayerCharacter* OwnerCharacter;
@@ -29,7 +43,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 CurrentAmmo = MaxAmmo;
 	
-
 
 
 };
