@@ -41,6 +41,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly)
 	class UMaterialInterface* PortalMaterial;
+
+	UPROPERTY(EditAnywhere)
+	FLinearColor BoarderColor = {0,0,3,0};
 	
 	UPROPERTY()
 	class UMaterialInstanceDynamic* PortalMaterialInstance;

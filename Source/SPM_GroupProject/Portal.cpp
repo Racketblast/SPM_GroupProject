@@ -36,6 +36,7 @@ APortal::APortal()
 	ForwardDirection = CreateDefaultSubobject<UArrowComponent>(TEXT("ForwardDirection"));
 	ForwardDirection->SetupAttachment(PortalSceneComponent);
 	PortalSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("PortalSoundComponent"));
+	PortalSoundComponent->SetupAttachment(PortalSceneComponent);
 
 	TargetDeltaTime = 1.0f / FPS;
 	AccumulatedTime = 0.0f;
@@ -68,9 +69,10 @@ void APortal::BeginPlay()
 	SetClipPlanes();
 
 	FVector NewVector = ForwardDirection->GetForwardVector() * TextureOffsetAmount;
-	FLinearColor NewColor = UKismetMathLibrary::MakeColor(NewVector.X, NewVector.Y, NewVector.Z);
-	PortalMaterialInstance->SetVectorParameterValue(FName("OffsetDistance"), NewColor);
-	
+	FLinearColor NewPosition = UKismetMathLibrary::MakeColor(NewVector.X, NewVector.Y, NewVector.Z);
+	PortalMaterialInstance->SetVectorParameterValue(FName("TextureOffset"), NewPosition);
+
+	PortalMaterialInstance->SetVectorParameterValue(FName("FrameColor"), BoarderColor);
 }
 
 void APortal::OnTriggerCloseBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -312,11 +314,9 @@ void APortal::Teleport(AActor* OtherActor)
 	//Retains velocity even when flipped
 	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor))
 	{
-		UE_LOG(LogTemp,Warning,TEXT("BeforeVector%s"), *Player->GetCharacterMovement()->Velocity.ToString());
 		FVector CurrentVelocity = Player->GetCharacterMovement()->Velocity;
 		FVector NewVelocity = UpdateVelocity(CurrentVelocity);
 		Player->GetCharacterMovement()->Velocity = NewVelocity;
-		UE_LOG(LogTemp,Warning,TEXT("AfterVector%s"), *Player->GetCharacterMovement()->Velocity.ToString());
 	}
 	else
 	{
