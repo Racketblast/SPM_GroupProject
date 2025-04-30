@@ -51,6 +51,9 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void HealPlayer(int32 HealAmount);
+
+	UFUNCTION(BlueprintCallable)
+	AGun* GetWeaponInstance(const FName WeaponName) const;
 protected:
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* PlayerCamera;
@@ -69,6 +72,7 @@ protected:
 	bool Weapon1Equipped = false;
 	bool Weapon2Equipped = false;
 	bool Weapon3Equipped = false;
+	
 private:
 	
 	FName WeaponName1 = "Pistol";
