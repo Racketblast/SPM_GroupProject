@@ -78,6 +78,13 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 				}
 			}
 		}
+		else if (HitActor)
+		{
+			if (HitActor->FindFunction("OnLineTraceHit"))
+			{
+				HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
+			}
+		}
 	}
 	else
 	{
@@ -102,6 +109,3 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 		}
 	}
 }
-
-
-
