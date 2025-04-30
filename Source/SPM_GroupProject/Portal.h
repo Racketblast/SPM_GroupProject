@@ -89,7 +89,6 @@ private:
 
 	float TargetDeltaTime;
 	float AccumulatedTime;
-	UPROPERTY(VisibleAnywhere)
 	bool bPlayerInRange = false;
 
 	//For blending materials
