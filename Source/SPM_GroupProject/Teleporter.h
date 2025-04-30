@@ -14,8 +14,8 @@ class SPM_GROUPPROJECT_API ATeleporter : public AActor
 public:
 	ATeleporter();
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
-	UWorld* TargetLevel;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Teleport")
+	TSoftObjectPtr<UWorld> TargetLevel;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleport")
 	FName TargetLevelName;
