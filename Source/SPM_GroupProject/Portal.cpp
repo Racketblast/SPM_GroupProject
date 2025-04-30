@@ -6,6 +6,7 @@
 #include "HeadMountedDisplayTypes.h"
 #include "PlayerCharacter.h"
 #include "Components/ArrowComponent.h"
+#include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -34,8 +35,7 @@ APortal::APortal()
 	PortalTriggerVolume->SetupAttachment(PortalSceneComponent);
 	ForwardDirection = CreateDefaultSubobject<UArrowComponent>(TEXT("ForwardDirection"));
 	ForwardDirection->SetupAttachment(PortalSceneComponent);
-	
-	EnterPortalSound = CreateDefaultSubobject<USoundBase>(TEXT("EnterPortalSound"));
+	PortalSoundComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("PortalSoundComponent"));
 
 	TargetDeltaTime = 1.0f / FPS;
 	AccumulatedTime = 0.0f;
@@ -70,6 +70,7 @@ void APortal::BeginPlay()
 	FVector NewVector = ForwardDirection->GetForwardVector() * TextureOffsetAmount;
 	FLinearColor NewColor = UKismetMathLibrary::MakeColor(NewVector.X, NewVector.Y, NewVector.Z);
 	PortalMaterialInstance->SetVectorParameterValue(FName("OffsetDistance"), NewColor);
+	
 }
 
 void APortal::OnTriggerCloseBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -213,6 +214,10 @@ void APortal::ShouldTeleport()
 			//Not only for player, maby only for player
 			if (IsPointCrossingPortal(OverlapActor->GetActorLocation(), GetActorLocation(), ForwardDirection->GetForwardVector()))
 			{
+				if (PortalSoundComponent)
+				{
+					PortalSoundComponent->Play();
+				}
 				Teleport(OverlapActor);
 			}
 		}

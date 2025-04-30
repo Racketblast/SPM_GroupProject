@@ -35,9 +35,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly)
 	class UBoxComponent* PortalDistanceTriggerVolume;
-		
+	
 	UPROPERTY(EditDefaultsOnly)
-	class USoundBase* EnterPortalSound;
+	class UAudioComponent* PortalSoundComponent;
 	
 	UPROPERTY(EditDefaultsOnly)
 	class UMaterialInterface* PortalMaterial;
@@ -52,6 +52,7 @@ protected:
 	class UTextureRenderTarget2D* PortalRenderTarget;
 	UPROPERTY()
 	UTextureRenderTarget2D* PortalFarawayRenderTarget;
+	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class APortal* LinkedPortal = this;
