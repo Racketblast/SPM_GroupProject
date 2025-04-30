@@ -36,7 +36,7 @@ private: // Recoil settings (editable per weapon)
 	float RecoilYawMin = 0.5f;
 
 	UPROPERTY(EditAnywhere, Category = "Recoil")
-	float RecoilYawMax = 0.5f;
+	float RecoilYawMax = -0.5f;
 	// Header file
 
 

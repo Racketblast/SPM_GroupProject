@@ -13,6 +13,9 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 	const float CurrentTime = GetWorld()->GetTimeSeconds();
 	const float TimeBetweenShots = 1.0f / RoundsPerSecond;
 
+	// Example: Line trace or spawn projectile
+	
+
 	if (CurrentTime - LastFireTime < TimeBetweenShots || CurrentAmmo <= 0)
 	{
 		return; // Still in cooldown or no ammo
@@ -21,7 +24,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 	LastFireTime = CurrentTime;
 
 	FVector ShotDirection = FireRotation.Vector();
-	FVector End = FireLocation + (ShotDirection * Range);
+	FVector End = FireLocation + (FireRotation.Vector() * Range);
 
 	FHitResult Hit;
 	FCollisionQueryParams Params;
