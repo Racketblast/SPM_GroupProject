@@ -44,4 +44,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge")
 	TArray<FChallengeRewardData> ChallengeRewards;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge")
+	float ClearWaveTimeLimit = 30.0f;
 };

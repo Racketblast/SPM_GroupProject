@@ -6,12 +6,13 @@
 #include "PlayerGameInstance.h"
 #include "EngineUtils.h" 
 #include "MissionAndChallengeManager.h"
+#include "PlayerCharacter.h"
 
 void UChallengeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	UE_LOG(LogTemp, Log, TEXT("ChallengeSubsystem initialized, waiting for manager to load challenge data."));
+	UE_LOG(LogTemp, Warning, TEXT("ChallengeSubsystem initialized, waiting for manager to load challenge data."));
 	
 	//AssignNewChallenge();
 }
@@ -111,7 +112,11 @@ void UChallengeSubsystem::GiveChallengeReward()
 
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
-		GI->Money += RewardAmount;
+		if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
+		{
+			Player->PickedUpMoney += RewardAmount;
+		}
+		//GI->Money += RewardAmount;
 		UE_LOG(LogTemp, Warning, TEXT("Challenge reward: +%d money!"), RewardAmount);
 	}
 }
@@ -125,8 +130,8 @@ void UChallengeSubsystem::LoadChallengeDataFromManager()
 			AMissionAndChallengeManager* Manager = *It;
 			if (Manager)
 			{
-				ChallengeRewardMap.Empty(); // Clear old data
-				PossibleChallenges.Empty(); // Clear old data
+				ChallengeRewardMap.Empty(); // Rensar bort gammal data
+				PossibleChallenges.Empty(); // Rensar bort gammal data
 
 				for (const FChallengeRewardData& Entry : Manager->ChallengeRewards)
 				{
@@ -183,3 +188,83 @@ void UChallengeSubsystem::NotifyWeaponFired(FName WeaponName)
 		}
 	}
 }
+
+// För tids baserad challenge
+void UChallengeSubsystem::StartWaveChallenge()
+{
+	if (CurrentChallenge.Type != EChallengeType::ClearWaveInTime)
+		return;
+	
+	bHasFailedCurrentChallenge = false;
+	bIsChallengeActive = true;
+	
+	if (CurrentChallenge.Type == EChallengeType::ClearWaveInTime)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			// Få time limiten från manager
+			for (TActorIterator<AMissionAndChallengeManager> It(World); It; ++It)
+			{
+				AMissionAndChallengeManager* Manager = *It;
+				if (Manager)
+				{
+					CurrentWaveTimeLimit = Manager->ClearWaveTimeLimit;
+					break;
+				}
+			}
+
+			// Starta timeren
+			World->GetTimerManager().SetTimer(
+				TimerHandle_WaveTimeLimit,
+				this,
+				&UChallengeSubsystem::HandleWaveTimeExpired,
+				CurrentWaveTimeLimit,
+				false
+			);
+
+			UE_LOG(LogTemp, Warning, TEXT("Time-based challenge started! Time limit: %.1f seconds"), CurrentWaveTimeLimit);
+		}
+	}
+}
+
+void UChallengeSubsystem::HandleWaveTimeExpired()
+{
+	if (bIsChallengeActive && !bHasFailedCurrentChallenge)
+	{
+		if (CurrentChallenge.Type == EChallengeType::ClearWaveInTime)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Challenge Failed: Wave not cleared in time!"));
+			HandleChallengeFailure();
+		}
+	}
+}
+
+void UChallengeSubsystem::NotifyWaveCleared()
+{
+	if (!bIsChallengeActive || bHasFailedCurrentChallenge)
+		return;
+	
+	if (CurrentChallenge.Type == EChallengeType::ClearWaveInTime)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_WaveTimeLimit);
+		HandleChallengeSuccess();
+	}
+}
+
+// för widget
+float UChallengeSubsystem::GetRemainingChallengeTime() const
+{
+	if (CurrentChallenge.Type == EChallengeType::ClearWaveInTime && bIsChallengeActive)
+	{
+		float TimeRemaining = GetWorld()->GetTimerManager().GetTimerRemaining(TimerHandle_WaveTimeLimit);
+		return FMath::Max(TimeRemaining, 0.f);
+	}
+	return -1.f; 
+}
+
+// för widget
+bool UChallengeSubsystem::ShouldShowChallengeTimer() const
+{
+	return CurrentChallenge.Type == EChallengeType::ClearWaveInTime && bIsChallengeActive;
+}
+
