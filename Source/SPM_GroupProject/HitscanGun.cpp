@@ -1,6 +1,6 @@
+#include "HitscanGun.h"
 #include "WaveManager.h"
 #include "EngineUtils.h"  // Needed for TActorIterator
-#include "HitscanGun.h"
 #include "DrawDebugHelpers.h"
 #include "MoneyBox.h"
 #include "PlayerCharacter.h"
@@ -8,10 +8,17 @@
 #include "UObject/UnrealType.h"
 #include "WaveManager.h"
 #include "Kismet/GameplayStatics.h"
-
 void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 {
-	if (CurrentAmmo <= 0) return;
+	const float CurrentTime = GetWorld()->GetTimeSeconds();
+	const float TimeBetweenShots = 1.0f / RoundsPerSecond;
+
+	if (CurrentTime - LastFireTime < TimeBetweenShots || CurrentAmmo <= 0)
+	{
+		return; // Still in cooldown or no ammo
+	}
+
+	LastFireTime = CurrentTime;
 
 	FVector ShotDirection = FireRotation.Vector();
 	FVector End = FireLocation + (ShotDirection * Range);
@@ -29,6 +36,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 		DrawDebugLine(GetWorld(), FireLocation, Hit.ImpactPoint, FColor::Red, false, 1.0f, 0, 1.0f);
 
 		AActor* HitActor = Hit.GetActor();
+		LastHitActor = Hit.GetActor();
 		if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
 		{
 			static const FName AIHealthName = TEXT("AIHealth");
@@ -37,7 +45,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 			if (FIntProperty* HealthProp = FindFProperty<FIntProperty>(HitCharacter->GetClass(), AIHealthName))
 			{
 				int32 CurrentHealth = HealthProp->GetPropertyValue_InContainer(HitCharacter);
-				CurrentHealth -= static_cast<int32>(Damage); // Use this gun's damage value
+				CurrentHealth -= static_cast<int32>(WeaponDamage); // Use this gun's damage value
 
 				if (CurrentHealth <= 0)
 				{
@@ -77,6 +85,23 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 	}
 
 	CurrentAmmo--;
+	if (OwnerCharacter)
+	{
+		APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
+		if (PC)
+		{
+			float RecoilPitch = FMath::FRandRange(RecoilPitchMin, RecoilPitchMax);
+			float RecoilYaw = FMath::FRandRange(RecoilYawMin, RecoilYawMax);
+
+			FRotator ControlRotation = PC->GetControlRotation();
+			ControlRotation.Pitch -= RecoilPitch;
+
+			ControlRotation.Yaw += RecoilYaw;
+
+			PC->SetControlRotation(ControlRotation);
+		}
+	}
 }
+
 
 

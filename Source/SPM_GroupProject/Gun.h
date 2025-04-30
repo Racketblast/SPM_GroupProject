@@ -24,7 +24,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float WeaponDamage = 20;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float RoundsPerSecond = 10;
+	float RoundsPerSecond = 1;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float RealoadSpeed = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
