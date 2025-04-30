@@ -4,18 +4,17 @@
 #include "ChallengeSubsystem.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PlayerGameInstance.h"
+#include "EngineUtils.h" 
 #include "MissionAndChallengeManager.h"
+#include "PlayerCharacter.h"
 
 void UChallengeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	// Lägg till olika challenges
-	PossibleChallenges.Add({ EChallengeType::NoJump, FText::FromString("Don't jump this wave."), false });
-	PossibleChallenges.Add({ EChallengeType::PistolOnly, FText::FromString("Only use the pistol this wave."), false });
-	PossibleChallenges.Add({ EChallengeType::NoDamage, FText::FromString("Don't take any damage this wave."), false });
-
-	AssignNewChallenge();
+	UE_LOG(LogTemp, Warning, TEXT("ChallengeSubsystem initialized, waiting for manager to load challenge data."));
+	
+	//AssignNewChallenge();
 }
 
 void UChallengeSubsystem::AssignNewChallenge()
@@ -103,24 +102,52 @@ void UChallengeSubsystem::SetRewardMoneyAmount(int32 MoneyAmount)
 
 void UChallengeSubsystem::GiveChallengeReward()
 {
-	EChallengeRewardType RewardType = EChallengeRewardType::Money; 
+	int32* FoundReward = ChallengeRewardMap.Find(CurrentChallenge.Type);
+	int32 RewardAmount = FoundReward ? *FoundReward : RewardMoneyAmount; // Default reward
 
-	switch (RewardType)
+	if (!FoundReward)
 	{
-	case EChallengeRewardType::Money:
-		{
-			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
-			{
-				GI->Money += RewardMoneyAmount;
-				UE_LOG(LogTemp, Warning, TEXT("Challenge reward: +%d money!"), RewardMoneyAmount);
-			}
-			break;
-		}
-		// lägg till fler rewards senare
-
-	default:
-		break;
+		UE_LOG(LogTemp, Warning, TEXT("No custom reward found for challenge %s. Using default."), *UEnum::GetValueAsString(CurrentChallenge.Type));
 	}
+
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
+		{
+			Player->PickedUpMoney += RewardAmount;
+		}
+		//GI->Money += RewardAmount;
+		UE_LOG(LogTemp, Warning, TEXT("Challenge reward: +%d money!"), RewardAmount);
+	}
+}
+
+void UChallengeSubsystem::LoadChallengeDataFromManager()
+{
+	if (UWorld* World = GetWorld())
+	{
+		for (TActorIterator<AMissionAndChallengeManager> It(World); It; ++It)
+		{
+			AMissionAndChallengeManager* Manager = *It;
+			if (Manager)
+			{
+				ChallengeRewardMap.Empty(); // Rensar bort gammal data
+				PossibleChallenges.Empty(); // Rensar bort gammal data
+
+				for (const FChallengeRewardData& Entry : Manager->ChallengeRewards)
+				{
+					PossibleChallenges.Add({ Entry.ChallengeType, Entry.ChallengeDescription, false });
+					ChallengeRewardMap.Add(Entry.ChallengeType, Entry.RewardAmount);
+				}
+
+				RewardMoneyAmount = Manager->DefaultChallengeRewardAmount;
+				UE_LOG(LogTemp, Warning, TEXT("Challenge data loaded from manager."));
+				UE_LOG(LogTemp, Warning, TEXT("Loaded %d challenges into the system."), PossibleChallenges.Num());
+				return;
+			}
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("No Challenge Manager found in this level."));
 }
 
 // Används i PlayerCharacter
@@ -161,3 +188,83 @@ void UChallengeSubsystem::NotifyWeaponFired(FName WeaponName)
 		}
 	}
 }
+
+// För tids baserad challenge
+void UChallengeSubsystem::StartWaveChallenge()
+{
+	if (CurrentChallenge.Type != EChallengeType::ClearWaveInTime)
+		return;
+	
+	bHasFailedCurrentChallenge = false;
+	bIsChallengeActive = true;
+	
+	if (CurrentChallenge.Type == EChallengeType::ClearWaveInTime)
+	{
+		if (UWorld* World = GetWorld())
+		{
+			// Få time limiten från manager
+			for (TActorIterator<AMissionAndChallengeManager> It(World); It; ++It)
+			{
+				AMissionAndChallengeManager* Manager = *It;
+				if (Manager)
+				{
+					CurrentWaveTimeLimit = Manager->ClearWaveTimeLimit;
+					break;
+				}
+			}
+
+			// Starta timeren
+			World->GetTimerManager().SetTimer(
+				TimerHandle_WaveTimeLimit,
+				this,
+				&UChallengeSubsystem::HandleWaveTimeExpired,
+				CurrentWaveTimeLimit,
+				false
+			);
+
+			UE_LOG(LogTemp, Warning, TEXT("Time-based challenge started! Time limit: %.1f seconds"), CurrentWaveTimeLimit);
+		}
+	}
+}
+
+void UChallengeSubsystem::HandleWaveTimeExpired()
+{
+	if (bIsChallengeActive && !bHasFailedCurrentChallenge)
+	{
+		if (CurrentChallenge.Type == EChallengeType::ClearWaveInTime)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Challenge Failed: Wave not cleared in time!"));
+			HandleChallengeFailure();
+		}
+	}
+}
+
+void UChallengeSubsystem::NotifyWaveCleared()
+{
+	if (!bIsChallengeActive || bHasFailedCurrentChallenge)
+		return;
+	
+	if (CurrentChallenge.Type == EChallengeType::ClearWaveInTime)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle_WaveTimeLimit);
+		HandleChallengeSuccess();
+	}
+}
+
+// för widget
+float UChallengeSubsystem::GetRemainingChallengeTime() const
+{
+	if (CurrentChallenge.Type == EChallengeType::ClearWaveInTime && bIsChallengeActive)
+	{
+		float TimeRemaining = GetWorld()->GetTimerManager().GetTimerRemaining(TimerHandle_WaveTimeLimit);
+		return FMath::Max(TimeRemaining, 0.f);
+	}
+	return -1.f; 
+}
+
+// för widget
+bool UChallengeSubsystem::ShouldShowChallengeTimer() const
+{
+	return CurrentChallenge.Type == EChallengeType::ClearWaveInTime && bIsChallengeActive;
+}
+
