@@ -22,10 +22,13 @@ void AAmmoBox::CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedCo
 		{
 			if (Player->CurrentGun)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("AmmoBoxTriggered"));
-				Player->CurrentGun->TotalAmmo += AmmoAmount;
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), CollectablePickUpSound, GetActorLocation());
-				Destroy();
+				if (AGun* Weapon = Player->GetWeaponInstance(ToWeapon))
+				{
+					UE_LOG(LogTemp, Warning, TEXT("AmmoBoxTriggered"));
+					Weapon->TotalAmmo += AmmoAmount;
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CollectablePickUpSound, GetActorLocation());
+					Destroy();	
+				}
 			}
 		}
 	}

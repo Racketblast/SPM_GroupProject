@@ -343,3 +343,20 @@ void APlayerCharacter::HealPlayer(int32 HealAmount)
 		PlayerHealth = PlayerMaxHealth;
 	}
 }
+
+AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
+{
+	if (WeaponName == "Pistol")
+	{
+		return Weapon1Instance;
+	}
+	if (WeaponName == "Rifle")
+	{
+		return Weapon2Instance;
+	}
+	if (WeaponName == "Shotgun")
+	{
+		return Weapon3Instance;
+	}
+		return nullptr;
+}
