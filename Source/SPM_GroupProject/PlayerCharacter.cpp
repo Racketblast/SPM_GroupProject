@@ -10,6 +10,7 @@
 #include "ChallengeSubsystem.h"
 #include "StoreBox.h"
 #include "VendingMachine.h"
+#include "Rifle.h"
 #include "Blueprint/UserWidget.h"
 
 // Sets default values
@@ -51,6 +52,10 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (Weapon2Equipped && CurrentGun && CurrentGun->IsA<ARifle>() && bIsShooting)
+	{
+		Shoot();
+	}
 
 	const FVector Start = PlayerCamera->GetComponentLocation();
 	const FVector End = Start + (PlayerCamera->GetForwardVector() * UseDistance);
@@ -101,7 +106,23 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCom
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Yaw", this, &APlayerCharacter::Yaw);
-	PlayerInputComponent->BindAxis("Pitch", this, &APlayerCharacter::Pitch);
+	PlayerInputComponent->BindAxis("Pitch", this, &APlayerCharacter::Pitch);PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &APlayerCharacter::StartShooting);
+	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &APlayerCharacter::StopShooting);
+	
+}
+// Called when the player starts holding the shoot button
+void APlayerCharacter::StartShooting()
+{
+	if (Weapon2Equipped && CurrentGun && CurrentGun->IsA<ARifle>())
+	{
+		bIsShooting = true; // Player starts shooting
+	}
+}
+
+// Called when the player releases the shoot button
+void APlayerCharacter::StopShooting()
+{
+	bIsShooting = false; // Player stops shooting
 }
 
 void APlayerCharacter::MoveForward(float Value)

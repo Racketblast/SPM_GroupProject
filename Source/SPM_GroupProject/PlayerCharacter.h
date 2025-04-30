@@ -67,6 +67,8 @@ protected:
 	void SelectWeapon1();
 	void SelectWeapon2();
 	void SelectWeapon3();
+	void StartShooting();
+	void StopShooting();
 	virtual void Jump() override; // La till detta för challenge systemet 
 
 	bool Weapon1Equipped = false;
@@ -91,7 +93,7 @@ private:
 	AGun* Weapon2Instance;
 	UPROPERTY()
 	AGun* Weapon3Instance;
-	
+	bool bIsShooting = false; // True when the player is holding the shoot button
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
 	class ULevelSequence* FadeInTransition;
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
