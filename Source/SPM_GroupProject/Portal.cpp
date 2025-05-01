@@ -3,7 +3,6 @@
 
 #include "Portal.h"
 
-#include "HeadMountedDisplayTypes.h"
 #include "PlayerCharacter.h"
 #include "Components/ArrowComponent.h"
 #include "Components/AudioComponent.h"
@@ -12,7 +11,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetRenderingLibrary.h"
-#include "Util/ColorConstants.h"
 
 #define FPS 60
 

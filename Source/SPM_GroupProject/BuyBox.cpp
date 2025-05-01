@@ -3,10 +3,6 @@
 
 #include "BuyBox.h"
 
-#include "PlayerGameInstance.h"
-#include "Components/BoxComponent.h"
-#include "Kismet/GameplayStatics.h"
-
 
 
 ABuyBox::ABuyBox()

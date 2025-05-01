@@ -12,7 +12,6 @@
 #include "StoreBox.h"
 #include "VendingMachine.h"
 #include "Rifle.h"
-#include "Blueprint/UserWidget.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
 
