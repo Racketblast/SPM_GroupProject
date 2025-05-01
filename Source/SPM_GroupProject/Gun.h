@@ -19,20 +19,27 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 TotalAmmo = 90;
-
-	//Right now these do nothing, but it should be used for all weapons
+	AGun();  // 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float WeaponDamage = 20;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float RoundsPerSecond = 10;
+	float RoundsPerSecond = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float RealoadSpeed = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UMaterialInterface* CurrentSkinMat;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USceneComponent* MuzzlePoint;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* WeaponMesh;
+	USceneComponent* GetMuzzlePoint() const { return MuzzlePoint; }
 	//Upgrade variables
 	UPROPERTY()
 	bool bHasAppliedUpgrades = false;
 	bool bIsUpgraded = false;
 	void CheckForUpgrades();
+	
+
 protected:
 	UPROPERTY()
 	APlayerCharacter* OwnerCharacter;

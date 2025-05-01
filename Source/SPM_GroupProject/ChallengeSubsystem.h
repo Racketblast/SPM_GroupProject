@@ -21,6 +21,7 @@ enum class EChallengeType : uint8
 	NoJump UMETA(DisplayName = "Don't Jump"),
 	PistolOnly UMETA(DisplayName = "Only Use Pistol"),
 	NoDamage UMETA(DisplayName = "Don't Take Any Damage"),
+	ClearWaveInTime UMETA(DisplayName = "Clear the wave within time"),
 	// Lägg till flera challenges här
 };
 
@@ -83,8 +84,24 @@ public:
 
 	void GiveChallengeReward();
 
-	UFUNCTION(BlueprintCallable, Category = "Mission")
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
 	void SetRewardMoneyAmount(int32 MoneyAmount);
+
+	void LoadChallengeDataFromManager();
+
+	// För tids baserad challenge
+	FTimerHandle TimerHandle_WaveTimeLimit;
+	float CurrentWaveTimeLimit = 0.0f;
+
+	void StartWaveChallenge();
+	void HandleWaveTimeExpired();
+	void NotifyWaveCleared();
+
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	float GetRemainingChallengeTime() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	bool ShouldShowChallengeTimer() const;
 
 private:
 	UPROPERTY()
@@ -100,5 +117,7 @@ private:
 
 	UPROPERTY()
 	int32 RewardMoneyAmount = 100;
+
+	TMap<EChallengeType, int32> ChallengeRewardMap;
 };
 

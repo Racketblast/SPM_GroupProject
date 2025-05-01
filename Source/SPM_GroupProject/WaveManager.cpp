@@ -70,7 +70,8 @@ void AWaveManager::StartNextWave()
 	//För challenges
 	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
 	{
-		ChallengeSub->AssignNewChallenge(); 
+		ChallengeSub->AssignNewChallenge();
+		ChallengeSub->StartWaveChallenge();
 	}
 
 	EnemiesSpawnedInCurrentWave = 0;
@@ -234,6 +235,7 @@ void AWaveManager::EndWave()
 	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
 	{
 		ChallengeSub->CompleteCurrentChallenge();
+		ChallengeSub->NotifyWaveCleared();
 	}
 
 	// Missions

@@ -10,6 +10,7 @@
 #include "ChallengeSubsystem.h"
 #include "StoreBox.h"
 #include "VendingMachine.h"
+#include "Rifle.h"
 #include "Blueprint/UserWidget.h"
 
 // Sets default values
@@ -51,6 +52,10 @@ void APlayerCharacter::BeginPlay()
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (Weapon2Equipped && CurrentGun && CurrentGun->IsA<ARifle>() && bIsShooting)
+	{
+		Shoot();
+	}
 
 	const FVector Start = PlayerCamera->GetComponentLocation();
 	const FVector End = Start + (PlayerCamera->GetForwardVector() * UseDistance);
@@ -101,7 +106,23 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCom
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Yaw", this, &APlayerCharacter::Yaw);
-	PlayerInputComponent->BindAxis("Pitch", this, &APlayerCharacter::Pitch);
+	PlayerInputComponent->BindAxis("Pitch", this, &APlayerCharacter::Pitch);PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &APlayerCharacter::StartShooting);
+	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &APlayerCharacter::StopShooting);
+	
+}
+// Called when the player starts holding the shoot button
+void APlayerCharacter::StartShooting()
+{
+	if (Weapon2Equipped && CurrentGun && CurrentGun->IsA<ARifle>())
+	{
+		bIsShooting = true; // Player starts shooting
+	}
+}
+
+// Called when the player releases the shoot button
+void APlayerCharacter::StopShooting()
+{
+	bIsShooting = false; // Player stops shooting
 }
 
 void APlayerCharacter::MoveForward(float Value)
@@ -141,17 +162,22 @@ void APlayerCharacter::Shoot()
 {
 	if (!CurrentGun)
 		return;
-	const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
-	FVector FireLocation = SocketTransform.GetLocation();
-	CurrentGun->Fire(FireLocation, PlayerCamera->GetComponentRotation());
 
+	USceneComponent* Muzzle = CurrentGun->GetMuzzlePoint();
+	if (!Muzzle)
+		return;
 
-	// För challenge systemet.
+	FVector FireLocation = Muzzle->GetComponentLocation();
+	FRotator FireRotation = PlayerCamera->GetComponentRotation();
+
+	CurrentGun->Fire(FireLocation, FireRotation);
+
+	// Challenge system
 	if (UChallengeSubsystem* ChallengeSubsystem = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
 	{
 		if (CurrentGun == Weapon1Instance)
 		{
-			ChallengeSubsystem->NotifyWeaponFired(WeaponName1); 
+			ChallengeSubsystem->NotifyWeaponFired(WeaponName1);
 		}
 		else
 		{
@@ -159,6 +185,7 @@ void APlayerCharacter::Shoot()
 		}
 	}
 }
+
 
 void APlayerCharacter::Reload()
 {
@@ -207,7 +234,7 @@ void APlayerCharacter::SelectWeapon1()
 				Weapon1Instance = GetWorld()->SpawnActor<AGun>(GWeapon1);
 				if (Weapon1Instance)
 				{
-					Weapon1Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
+					Weapon1Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
 					Weapon1Instance->SetOwnerCharacter(this);
 
 					// Example: Give Weapon1 infinite reloads
@@ -249,7 +276,7 @@ void APlayerCharacter::SelectWeapon2()
 				Weapon2Instance = GetWorld()->SpawnActor<AGun>(GWeapon2);
 				if (Weapon2Instance)
 				{
-					Weapon2Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
+					Weapon2Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
 					Weapon2Instance->SetOwnerCharacter(this);
 				}
 			}
@@ -342,4 +369,21 @@ void APlayerCharacter::HealPlayer(int32 HealAmount)
 	{
 		PlayerHealth = PlayerMaxHealth;
 	}
+}
+
+AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
+{
+	if (WeaponName == "Pistol")
+	{
+		return Weapon1Instance;
+	}
+	if (WeaponName == "Rifle")
+	{
+		return Weapon2Instance;
+	}
+	if (WeaponName == "Shotgun")
+	{
+		return Weapon3Instance;
+	}
+		return nullptr;
 }

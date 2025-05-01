@@ -3,6 +3,24 @@
 #include "PlayerCharacter.h"
 #include "PlayerGameInstance.h"
 
+
+AGun::AGun()
+{
+	PrimaryActorTick.bCanEverTick = false;
+
+	// Create components using *this*, since we're inside the constructor
+	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
+	SetRootComponent(WeaponMesh);  // Make WeaponMesh the root
+
+	MuzzlePoint = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzlePoint"));
+	MuzzlePoint->SetupAttachment(WeaponMesh);  // Attach muzzle to weapon
+
+	// Optional: Forward offset of 50 units
+	MuzzlePoint->SetRelativeLocation(FVector(50.f, 0.f, 0.f));
+}
+
+
+
 void AGun::Reload()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Attempting reload. CurrentAmmo: %d, bHasInfiniteReloads: %d"), 
