@@ -101,6 +101,8 @@ private:
 	
 
 
+	class UAIPerceptionStimuliSourceComponent* StimulusSource;
+	void SetupStimulusSource();
 
 
 };

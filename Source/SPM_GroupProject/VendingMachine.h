@@ -11,7 +11,7 @@ enum class EVendingMachineSpewOut : uint8
 {
 	None        UMETA(DisplayName = "None"),
 	Health        UMETA(DisplayName = "Health"),
-	Ammo        UMETA(DisplayName = "Ammo"),
+	AmmoRifle	UMETA(DisplayName = "Ammo Rifle"),
 	// Add more as needed
 };
 UCLASS()

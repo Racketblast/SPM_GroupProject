@@ -8,10 +8,13 @@
 #include "LevelSequencePlayer.h"
 #include "MissionSubsystem.h"
 #include "ChallengeSubsystem.h"
+#include "DebugCube.h"
 #include "StoreBox.h"
 #include "VendingMachine.h"
 #include "Rifle.h"
 #include "Blueprint/UserWidget.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISense_Sight.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -22,6 +25,8 @@ APlayerCharacter::APlayerCharacter()
 	PlayerCamera->SetupAttachment(RootComponent);
 	PlayerCamera->bUsePawnControlRotation = true;
 	GetMesh()->SetupAttachment(PlayerCamera);
+	
+	SetupStimulusSource();
 }
 
 // Called when the game starts or when spawned
@@ -155,6 +160,16 @@ void APlayerCharacter::Jump()
 	}
 
 	Super::Jump(); // Den faktiska jump funktionen 
+}
+
+void APlayerCharacter::SetupStimulusSource()
+{
+	StimulusSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus"));
+	if (StimulusSource)
+	{
+		StimulusSource->RegisterForSense(TSubclassOf<UAISense_Sight>());
+		StimulusSource->RegisterWithPerceptionSystem();
+	}
 }
 
 
@@ -358,6 +373,10 @@ void APlayerCharacter::Use()
 		if (AVendingMachine* VendingMachine = Cast<AVendingMachine>(TargetActor))
 		{
 			VendingMachine->UseVendingMachine();
+		}
+		if (ADebugCube* DebugCube = Cast<ADebugCube>(TargetActor))
+		{
+			DebugCube->EnableAllLevels();
 		}
 	}
 }

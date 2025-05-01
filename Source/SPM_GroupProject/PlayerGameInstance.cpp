@@ -222,6 +222,7 @@ void UPlayerGameInstance::UpgradePlayerStats(const EUpgradeType Upgrade, class A
 	{
 	case EUpgradeType::Health20:
 		Player->PlayerMaxHealth += 20;
+		Player->PlayerHealth = Player->PlayerMaxHealth;
 		break;
 	case EUpgradeType::Speed20:
 		Player->GetCharacterMovement()->MaxWalkSpeed *= 1.2;
@@ -236,39 +237,40 @@ void UPlayerGameInstance::UpgradePlayerStats(const EUpgradeType Upgrade, class A
 
 void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APlayerCharacter* Player)
 {
-	switch (Upgrade)
+	if (Player->CurrentGun)
 	{
-	case EUpgradeType::PistolDamage10:
-		if (Cast<AProjectileGun>(Player->CurrentGun))
+		switch (Upgrade)
 		{
-			UE_LOG(LogTemp,Warning,TEXT("Applied pistoldamage"));
-			Player->CurrentGun->WeaponDamage *= 1.1;
-			Player->CurrentGun->bIsUpgraded = true;
+		case EUpgradeType::PistolDamage10:
+			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
+			{
+				Player->GetWeaponInstance("Pistol")->WeaponDamage *= 1.1;
+				Player->CurrentGun->bIsUpgraded = true;
+			}
+			break;
+		case EUpgradeType::RifleDamage10:
+			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
+			{
+				Player->GetWeaponInstance("Rifle")->WeaponDamage *= 1.1;
+				Player->CurrentGun->bIsUpgraded = true;
+			}
+			break;
+		case EUpgradeType::PistolFiringSpeed10:
+			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
+			{
+				Player->GetWeaponInstance("Pistol")->RoundsPerSecond *= 1.1;
+			}
+			break;
+		case EUpgradeType::RifleFiringSpeed10:
+			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
+			{
+				Player->GetWeaponInstance("Rifle")->RoundsPerSecond *= 1.1;
+				Player->CurrentGun->bIsUpgraded = true;
+			}
+			break;
+		default:
+			break;
 		}
-		break;
-	case EUpgradeType::RifleDamage10:
-		if (Cast<AHitscanGun>(Player->CurrentGun))
-		{
-			Player->CurrentGun->WeaponDamage *= 1.1;
-			Player->CurrentGun->bIsUpgraded = true;
-		}
-		break;
-	case EUpgradeType::PistolFiringSpeed10:
-		if (Cast<AProjectileGun>(Player->CurrentGun))
-		{
-			Player->CurrentGun->RoundsPerSecond *= 1.1;
-			Player->CurrentGun->bIsUpgraded = true;
-		}
-		break;
-	case EUpgradeType::RifleFiringSpeed10:
-		if (Cast<AHitscanGun>(Player->CurrentGun))
-		{
-			Player->CurrentGun->RoundsPerSecond *= 1.1;
-			Player->CurrentGun->bIsUpgraded = true;
-		}
-		break;
-	default:
-		break;
 	}
 }
 
