@@ -16,10 +16,6 @@ ATeleporter::ATeleporter()
 	
 	CubeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CubeMeshComponent"));
 	CubeMeshComponent->SetupAttachment(GetRootComponent());
-	if (TargetLevel)
-	{
-		TargetLevelName = FName(*TargetLevel->GetName());
-	}
 }
 
 void ATeleporter::BeginPlay()
