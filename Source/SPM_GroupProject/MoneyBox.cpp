@@ -4,11 +4,7 @@
 #include "MoneyBox.h"
 #include "PlayerCharacter.h"
 #include "PlayerGameInstance.h"
-#include "AssetTypeActions/AssetDefinition_SoundBase.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Called when the game starts or when spawned
