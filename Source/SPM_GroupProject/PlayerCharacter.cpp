@@ -8,6 +8,7 @@
 #include "LevelSequencePlayer.h"
 #include "MissionSubsystem.h"
 #include "ChallengeSubsystem.h"
+#include "DebugCube.h"
 #include "StoreBox.h"
 #include "VendingMachine.h"
 #include "Rifle.h"
@@ -358,6 +359,10 @@ void APlayerCharacter::Use()
 		if (AVendingMachine* VendingMachine = Cast<AVendingMachine>(TargetActor))
 		{
 			VendingMachine->UseVendingMachine();
+		}
+		if (ADebugCube* DebugCube = Cast<ADebugCube>(TargetActor))
+		{
+			DebugCube->EnableAllLevels();
 		}
 	}
 }
