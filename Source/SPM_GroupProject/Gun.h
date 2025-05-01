@@ -1,5 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// Gun.h
 #pragma once
 
 #include "CoreMinimal.h"
@@ -10,17 +9,48 @@ UCLASS()
 class SPM_GROUPPROJECT_API AGun : public AActor
 {
 	GENERATED_BODY()
+
+public:
+	virtual void Fire(FVector FireLocation, FRotator FireRotation) PURE_VIRTUAL(AGun::Fire, );
+	virtual void Reload();
+	void SetOwnerCharacter(class APlayerCharacter* NewOwner);
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun")
+	bool bHasInfiniteReloads = false;
 	
-public:	
-	// Sets default values for this actor's properties
-	AGun();
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 TotalAmmo = 90;
+	AGun();  // 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float WeaponDamage = 20;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float RoundsPerSecond = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float RealoadSpeed = 10;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UMaterialInterface* CurrentSkinMat;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USceneComponent* MuzzlePoint;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* WeaponMesh;
+	USceneComponent* GetMuzzlePoint() const { return MuzzlePoint; }
+	//Upgrade variables
+	UPROPERTY()
+	bool bHasAppliedUpgrades = false;
+	bool bIsUpgraded = false;
+	void CheckForUpgrades();
+	
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+	UPROPERTY()
+	APlayerCharacter* OwnerCharacter;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 CurrentAmmo = MaxAmmo;
+	
+
 
 };
+

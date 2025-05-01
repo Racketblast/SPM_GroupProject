@@ -2,52 +2,72 @@
 #include "PlayerGameInstance.h"
 #include "BuyBox.h"
 #include "Teleporter.h"
-#include "Projectile.h"
-//#include "ProjectileSpawner.h"
 #include "Gun.h"
-#include "Engine/StaticMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
+#include "MissionSubsystem.h"
+#include "ChallengeSubsystem.h"
+#include "DebugCube.h"
+#include "StoreBox.h"
+#include "VendingMachine.h"
+#include "Rifle.h"
+#include "Blueprint/UserWidget.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISense_Sight.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("PlayerCamera"));
 	PlayerCamera->SetupAttachment(RootComponent);
 	PlayerCamera->bUsePawnControlRotation = true;
 	GetMesh()->SetupAttachment(PlayerCamera);
+	
+	SetupStimulusSource();
 }
 
 // Called when the game starts or when spawned
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	if (UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
-		if (GI->CurrentWeapon == WeaponName1)
+		GI->ApplyAllUpgradeFunctions(this);
+		SelectWeapon(GI->GetCurrentWeaponName());
+	}
+	PlayerHealth = PlayerMaxHealth;
+
+	if (FadeInTransition)
+	{
+		if (TeleportInSound)
 		{
-			APlayerCharacter::SelectWeapon1();
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportInSound, GetActorLocation());
 		}
-		else if (GI->CurrentWeapon == WeaponName2)
-		{
-			APlayerCharacter::SelectWeapon2();
-		}
+		FMovieSceneSequencePlaybackSettings Settings;
+		ALevelSequenceActor *OutActor;
+		ULevelSequencePlayer *SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), FadeInTransition, Settings, OutActor);
+		SequencePlayer->Play();
 	}
 }
-
 
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
+	if (Weapon2Equipped && CurrentGun && CurrentGun->IsA<ARifle>() && bIsShooting)
+	{
+		Shoot();
+	}
+
 	const FVector Start = PlayerCamera->GetComponentLocation();
 	const FVector End = Start + (PlayerCamera->GetForwardVector() * UseDistance);
-	//DrawDebugLine for use
-	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false);
+	// DrawDebugLine for use
+	// DrawDebugLine(GetWorld(), Start, End, FColor::Red, false);
 
-	//Drawdebugline for socket
+	// Drawdebugline for socket
 	/*const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
 	FRotator SocketRot = SocketTransform.GetRotation().Rotator();
 	FRotator SpawnRotation(SocketRot.Pitch + 12, GetActorRotation().Yaw, SocketRot.Roll);
@@ -63,7 +83,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 		FColor::Green,
 		false     // Thickness
 	);*/
-	
+
 	FHitResult HitResult;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
@@ -76,39 +96,50 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		TargetActor = nullptr;
 	}
-
 }
 
 // Called to bind functionality to input
-void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::Jump);
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &APlayerCharacter::Shoot);
-	PlayerInputComponent->BindAction("Use", IE_Pressed,this, &APlayerCharacter::Use);
-	PlayerInputComponent->BindAction("Reload", IE_Pressed,this, &APlayerCharacter::Reload);
-	PlayerInputComponent->BindAction("SelectWeapon1", IE_Pressed,this, &APlayerCharacter::SelectWeapon1);
-	PlayerInputComponent->BindAction("SelectWeapon2", IE_Pressed,this, &APlayerCharacter::SelectWeapon2);
-	PlayerInputComponent->BindAxis("MoveForward",this, &APlayerCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight",this, &APlayerCharacter::MoveRight);
-	PlayerInputComponent->BindAxis("Yaw",this, &APlayerCharacter::Yaw);
-	PlayerInputComponent->BindAxis("Pitch",this, &APlayerCharacter::Pitch);
+	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &APlayerCharacter::Use);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &APlayerCharacter::Reload);
+	PlayerInputComponent->BindAction("SelectWeapon1", IE_Pressed, this, &APlayerCharacter::SelectWeapon1);
+	PlayerInputComponent->BindAction("SelectWeapon2", IE_Pressed, this, &APlayerCharacter::SelectWeapon2);
+	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
+	PlayerInputComponent->BindAxis("Yaw", this, &APlayerCharacter::Yaw);
+	PlayerInputComponent->BindAxis("Pitch", this, &APlayerCharacter::Pitch);PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &APlayerCharacter::StartShooting);
+	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &APlayerCharacter::StopShooting);
 	
+}
+// Called when the player starts holding the shoot button
+void APlayerCharacter::StartShooting()
+{
+	if (Weapon2Equipped && CurrentGun && CurrentGun->IsA<ARifle>())
+	{
+		bIsShooting = true; // Player starts shooting
+	}
+}
+
+// Called when the player releases the shoot button
+void APlayerCharacter::StopShooting()
+{
+	bIsShooting = false; // Player stops shooting
 }
 
 void APlayerCharacter::MoveForward(float Value)
 {
 	FVector ForwardDirection = GetActorForwardVector();
 	AddMovementInput(ForwardDirection, Value);
-
 }
 void APlayerCharacter::MoveRight(float Value)
 {
 	FVector RightDirection = GetActorRightVector();
 	AddMovementInput(RightDirection, Value);
-
 }
-
 
 void APlayerCharacter::Yaw(float Value)
 {
@@ -118,142 +149,187 @@ void APlayerCharacter::Pitch(float Value)
 {
 	AddControllerPitchInput(Value);
 }
-void APlayerCharacter::Shoot()
+
+//Jag gör detta endast för att kunna kalla på en funktion från UChallengeSubsystem, om ni kommer på ett bättre sätt så kan ni bara byta till det. Dock borde jump fungera på samma sätt som förut.
+void APlayerCharacter::Jump()
 {
-	if (CurrentAmmo > 0)
+	// Notify Challenge Subsystem
+	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
 	{
-		
-		if (Weapon1Equipped)
-		{
-			const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
-			FRotator SocketRot = SocketTransform.GetRotation().Rotator();
-			FRotator SpawnRotation( SocketRot.Pitch+12, GetActorRotation().Yaw,  SocketRot.Roll);
-			GetWorld()->SpawnActor<AProjectile>(Projectile1, SocketTransform.GetLocation(), SpawnRotation);
-		}
-		if (Weapon2Equipped)
-		{
-			const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
-			FRotator SocketRot = SocketTransform.GetRotation().Rotator();
-			FRotator SpawnRotation( SocketRot.Pitch+12, GetActorRotation().Yaw,  SocketRot.Roll);
-			GetWorld()->SpawnActor<AProjectile>(Projectile2, SocketTransform.GetLocation(), SpawnRotation);
-		}
-		CurrentAmmo--;
+		ChallengeSub->NotifyPlayerJumped();
+	}
+
+	Super::Jump(); // Den faktiska jump funktionen 
+}
+
+void APlayerCharacter::SetupStimulusSource()
+{
+	StimulusSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus"));
+	if (StimulusSource)
+	{
+		StimulusSource->RegisterForSense(TSubclassOf<UAISense_Sight>());
+		StimulusSource->RegisterWithPerceptionSystem();
 	}
 }
+
+
+void APlayerCharacter::Shoot()
+{
+	if (!CurrentGun)
+		return;
+
+	USceneComponent* Muzzle = CurrentGun->GetMuzzlePoint();
+	if (!Muzzle)
+		return;
+
+	FVector FireLocation = Muzzle->GetComponentLocation();
+	FRotator FireRotation = PlayerCamera->GetComponentRotation();
+
+	CurrentGun->Fire(FireLocation, FireRotation);
+
+	// Challenge system
+	if (UChallengeSubsystem* ChallengeSubsystem = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+	{
+		if (CurrentGun == Weapon1Instance)
+		{
+			ChallengeSubsystem->NotifyWeaponFired(WeaponName1);
+		}
+		else
+		{
+			ChallengeSubsystem->NotifyWeaponFired(WeaponName2);
+		}
+	}
+}
+
 
 void APlayerCharacter::Reload()
 {
-	if (Weapon2Equipped)
+	if (CurrentGun) // Ensure the player has a current weapon
 	{
-		if (ExtraMags <= 0){
-			return;
-		}else
-		{
-			ExtraMags--;
-		}
-		
+		// Call the Reload function on the weapon
+		CurrentGun->Reload();
+		UE_LOG(LogTemp, Warning, TEXT("Player reload triggered"));
 	}
-	CurrentAmmo = CurrentMaxAmmo;
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No weapon equipped to reload"));
+	}
 }
+
+void APlayerCharacter::SelectWeapon(FName Weapon)
+{
+	if (UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		if (GI->GetCurrentWeaponName() == WeaponName1)
+		{
+			APlayerCharacter::SelectWeapon1();
+		}
+		else if (GI->GetCurrentWeaponName() == WeaponName2)
+		{
+			APlayerCharacter::SelectWeapon2();
+		}
+	}
+}
+
 
 void APlayerCharacter::SelectWeapon1()
 {
-	if (UPlayerGameInstance* PlayerGameInstance = Cast<UPlayerGameInstance>(GetGameInstance()))
+	if (UPlayerGameInstance *PlayerGameInstance = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
 		if (!Weapon1Equipped && PlayerGameInstance->HasBought(WeaponName1))
 		{
-			if (Weapon2Equipped)
-			{
-				CurrentGun->Destroy();
-				UE_LOG(LogTemp, Warning, TEXT("Gun Destroyed"));
-			}
-			PlayerGameInstance->CurrentWeapon = WeaponName1;
-     
-			if (CurrentMaxAmmo > 0)
-			{
-				Ammo2 = CurrentAmmo;
-			}
-     
+			PlayerGameInstance->SetCurrentWeapon(WeaponName1);
+
 			Weapon1Equipped = true;
 			Weapon2Equipped = false;
 
-			CurrentAmmo = Ammo1;
-			CurrentMaxAmmo = MaxAmmo1;
-     
-			if (!GetMesh()->DoesSocketExist(TEXT("hand_lSocket")))
+			// Spawn the weapon if it's not already in the world
+			if (!Weapon1Instance)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("hand_lSocket not found on mesh."));
-				return;
+				Weapon1Instance = GetWorld()->SpawnActor<AGun>(GWeapon1);
+				if (Weapon1Instance)
+				{
+					Weapon1Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
+					Weapon1Instance->SetOwnerCharacter(this);
+
+					// Example: Give Weapon1 infinite reloads
+					Weapon1Instance->bHasInfiniteReloads = true;
+				}
 			}
 
-			// Get the socket transform from the mesh
-			const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
-			AGun* SpawnedGun = GetWorld()->SpawnActor<AGun>(GWeapon1);
-			if (SpawnedGun)
+			// Hide the other gun
+			if (Weapon2Instance)
 			{
-				SpawnedGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
-				CurrentGun = SpawnedGun;
+				Weapon2Instance->SetActorHiddenInGame(true);
+				Weapon2Instance->SetActorEnableCollision(false);
 			}
+
+			// Enable current gun
+			if (Weapon1Instance)
+			{
+				Weapon1Instance->SetActorHiddenInGame(false);
+				Weapon1Instance->SetActorEnableCollision(true);
+				CurrentGun = Weapon1Instance;
+			}
+			CurrentGun->CheckForUpgrades();
 		}
+		
 	}
 }
 
 void APlayerCharacter::SelectWeapon2()
 {
-	if (UPlayerGameInstance* PlayerGameInstance = Cast<UPlayerGameInstance>(GetGameInstance()))
+	if (UPlayerGameInstance *PlayerGameInstance = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
 		if (!Weapon2Equipped && PlayerGameInstance->HasBought(WeaponName2))
-		{if (Weapon1Equipped)
 		{
-			CurrentGun->Destroy();
-			UE_LOG(LogTemp, Warning, TEXT("Gun Destroyed"));
-		}
-			PlayerGameInstance->CurrentWeapon = WeaponName2;
-     
-			if (CurrentMaxAmmo > 0)
-			{
-				Ammo1 = CurrentAmmo;
-			}
-     
+			PlayerGameInstance->SetCurrentWeapon(WeaponName2);
 			Weapon2Equipped = true;
 			Weapon1Equipped = false;
-
-			CurrentAmmo = Ammo2;
-			CurrentMaxAmmo = MaxAmmo2;
-     
-			if (!GetMesh()->DoesSocketExist(TEXT("hand_lSocket")))
+			if (!Weapon2Instance)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("hand_lSocket not found on mesh."));
-				return;
+				Weapon2Instance = GetWorld()->SpawnActor<AGun>(GWeapon2);
+				if (Weapon2Instance)
+				{
+					Weapon2Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
+					Weapon2Instance->SetOwnerCharacter(this);
+				}
 			}
 
-			// Get the socket transform from the mesh
-			const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
-			AGun* SpawnedGun = GetWorld()->SpawnActor<AGun>(GWeapon2);
-			if (SpawnedGun)
+			if (Weapon1Instance)
 			{
-				SpawnedGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_lSocket"));
-				CurrentGun = SpawnedGun;
+				Weapon1Instance->SetActorHiddenInGame(true);
+				Weapon1Instance->SetActorEnableCollision(false);
 			}
+
+			if (Weapon2Instance)
+			{
+				Weapon2Instance->SetActorHiddenInGame(false);
+				Weapon2Instance->SetActorEnableCollision(true);
+				CurrentGun = Weapon2Instance;
+			}
+			CurrentGun->CheckForUpgrades();
 		}
 	}
 }
 
-//TODO: Make this a switch case and put it in it's own class
+// TODO: Make this a switch case and put it in it's own class
 void APlayerCharacter::Use()
 {
 	if (TargetActor)
 	{
-		UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-		//Teleporting function
-		if (ATeleporter* Teleporter = Cast<ATeleporter>(TargetActor))
+		UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		// Teleporting function
+		if (ATeleporter *Teleporter = Cast<ATeleporter>(TargetActor))
 		{
 			if (GI)
 			{
-				//Checks if in wave and if you have the key
-				if (!GI->bIsWave && GI->TeleportKeyArray[Teleporter->TeleportKeyNumber])
+				// If you can teleport
+				// Checks if in wave and if you have the key
+				// if (!GI->bIsWave && GI->TeleportKeyArray[Teleporter->TeleportKeyNumber])
+				if (!GI->bIsWave && GI->UnlockedLevels.Contains(Teleporter->TargetLevelName))
 				{
-					if (Teleporter->TargetLevelName != "Hub")
+					/*if (Teleporter->TargetLevelName != "Hub")
 					{
 						GI->Level += 1;
 						if (GI->TeleportKeyArray.IsValidIndex(GI->Level))
@@ -261,46 +337,72 @@ void APlayerCharacter::Use()
 							GI->TeleportKeyArray[GI->Level] = true;
 						}
 					}
-					UGameplayStatics::OpenLevel(this, Teleporter->TargetLevelName);
-				}
-			}
-		}
-		//Buying function
-		if (const ABuyBox* BuyBox = Cast<ABuyBox>(TargetActor))
-		{
-			if (GI)
-			{
-				if (!GI->HasBought(BuyBox->TargetUpgradeName))
-				{
-					if (BuyBox->TargetUpgradeCost <= GI->Money)
+					*/
+					GI->Money += PickedUpMoney;
+					
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Teleporter->TeleportSound, Teleporter->GetActorLocation());
+
+					// För level unlock 
+					if (UMissionSubsystem* MissionSub = GI->GetSubsystem<UMissionSubsystem>())
 					{
-						GI->Money -= BuyBox->TargetUpgradeCost;
-						GI->UpgradeArray.Add(BuyBox->TargetUpgradeName);
-						GI->CurrentWeapon = BuyBox->TargetUpgradeName;
-						if (GI->CurrentWeapon == WeaponName1)
-						{
-							APlayerCharacter::SelectWeapon1();
-						}
-						else if (GI->CurrentWeapon == WeaponName2)
-						{
-							APlayerCharacter::SelectWeapon2();
-						}
-                 
+						MissionSub->TryUnlockLevel();
 					}
+
+					Teleporter->Teleport();
 				}
 				else
 				{
-					GI->CurrentWeapon = BuyBox->TargetUpgradeName;
-					if (GI->CurrentWeapon == WeaponName1)
-					{
-						APlayerCharacter::SelectWeapon1();
-					}
-					else if (GI->CurrentWeapon == WeaponName2)
-					{
-						APlayerCharacter::SelectWeapon2();
-					}
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Teleporter->CantTeleportSound, Teleporter->GetActorLocation());
 				}
 			}
 		}
+		// Buying function
+		if (const ABuyBox *BuyBox = Cast<ABuyBox>(TargetActor))
+		{
+			if (GI)
+			{
+				GI->BuyUpgrade(BuyBox->TargetUpgradeName, BuyBox->BuySound, BuyBox->CantBuySound);
+			}
+		}
+		//Open store Function
+		if (AStoreBox* StoreBox = Cast<AStoreBox>(TargetActor))
+		{
+			StoreBox->OpenStoreMenu();
+		}
+		//Use VendingMachine Function
+		if (AVendingMachine* VendingMachine = Cast<AVendingMachine>(TargetActor))
+		{
+			VendingMachine->UseVendingMachine();
+		}
+		if (ADebugCube* DebugCube = Cast<ADebugCube>(TargetActor))
+		{
+			DebugCube->EnableAllLevels();
+		}
 	}
+}
+
+void APlayerCharacter::HealPlayer(int32 HealAmount)
+{
+	PlayerHealth += HealAmount;
+	if (PlayerHealth > PlayerMaxHealth)
+	{
+		PlayerHealth = PlayerMaxHealth;
+	}
+}
+
+AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
+{
+	if (WeaponName == "Pistol")
+	{
+		return Weapon1Instance;
+	}
+	if (WeaponName == "Rifle")
+	{
+		return Weapon2Instance;
+	}
+	if (WeaponName == "Shotgun")
+	{
+		return Weapon3Instance;
+	}
+		return nullptr;
 }

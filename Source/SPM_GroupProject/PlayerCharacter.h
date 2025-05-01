@@ -1,7 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-
+#include "HitscanGun.h"
+#include "Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
 #include "CoreMinimal.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
@@ -33,11 +35,25 @@ public:
 	UPROPERTY(EditAnywhere)
 	int32 UseDistance = 300;
 	
-	UPROPERTY(BlueprintReadWrite)
-	int32 ExtraMags = 2;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int32 PlayerHealth;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int32 PlayerMaxHealth = 100;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	int32 PlayerHealth = 100;
+	int32 PickedUpMoney;
+	
+	UPROPERTY(BlueprintReadOnly)
+	class AGun* CurrentGun;
+
+	UFUNCTION(BlueprintCallable)
+	void SelectWeapon(FName Weapon);
+	
+	UFUNCTION(BlueprintCallable)
+	void HealPlayer(int32 HealAmount);
+
+	UFUNCTION(BlueprintCallable)
+	AGun* GetWeaponInstance(const FName WeaponName) const;
 protected:
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* PlayerCamera;
@@ -50,33 +66,43 @@ protected:
 	void Reload();
 	void SelectWeapon1();
 	void SelectWeapon2();
+	void SelectWeapon3();
+	void StartShooting();
+	void StopShooting();
+	virtual void Jump() override; // La till detta för challenge systemet 
+
 	bool Weapon1Equipped = false;
 	bool Weapon2Equipped = false;
-	
-	UPROPERTY(BlueprintReadWrite)
-	int32 CurrentMaxAmmo;
-	UPROPERTY(BlueprintReadWrite)
-	int32 CurrentAmmo;
+	bool Weapon3Equipped = false;
 	
 private:
+	
 	FName WeaponName1 = "Pistol";
 	FName WeaponName2 = "Rifle";
-	int32 MaxAmmo1 = 9;
-	int32 MaxAmmo2 = 30;
-	int32 Ammo1 = MaxAmmo1;
-	int32 Ammo2 = MaxAmmo2;
-	
+	FName WeaponName3 = "Laser"; 
 	AActor* TargetActor;
-	
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AProjectile> Projectile1;
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AProjectile> Projectile2;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AGun> GWeapon1;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AGun> GWeapon2;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class AGun> GWeapon3; // Set this to HitscanGun subclass in the editor
 	UPROPERTY()
-	AGun* CurrentGun;
+	AGun* Weapon1Instance;
+	UPROPERTY()
+	AGun* Weapon2Instance;
+	UPROPERTY()
+	AGun* Weapon3Instance;
+	bool bIsShooting = false; // True when the player is holding the shoot button
+	UPROPERTY(EditDefaultsOnly, Category="Transition")
+	class ULevelSequence* FadeInTransition;
+	UPROPERTY(EditDefaultsOnly, Category="Transition")
+	class USoundBase* TeleportInSound;
+	
+
+
+	class UAIPerceptionStimuliSourceComponent* StimulusSource;
+	void SetupStimulusSource();
+
+
 };

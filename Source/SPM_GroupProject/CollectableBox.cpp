@@ -84,7 +84,7 @@ float ACollectableBox::GetDistanceMoved() const
 void ACollectableBox::CollectableBoxTriggered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Happen"));
+	UE_LOG(LogTemp, Warning, TEXT("Picked Up Something"));
 	CollectableBoxTriggeredFunction(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 }
 

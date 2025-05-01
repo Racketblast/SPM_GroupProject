@@ -5,6 +5,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "PlayerGameInstance.h"
 #include "TimerManager.h"
+#include "MissionSubsystem.h"
+#include "ChallengeSubsystem.h"
 
 AWaveManager::AWaveManager()
 {
@@ -26,6 +28,12 @@ void AWaveManager::BeginPlay()
 // Funktionen som startar waven. 
 void AWaveManager::StartNextWave()
 {
+	// För challenges, den rensar challenge resultat status för nästa wave
+	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+	{
+		ChallengeSub->ResetChallengeStatus();
+	}
+	
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
 		GI->bIsWave = true;
@@ -57,6 +65,13 @@ void AWaveManager::StartNextWave()
 			Type.MinCount += (CurrentWaveIndex + 1)  * DefaultWaveDifficultyMultiplier;             // ökar minimum spawnas av varje enemy type
 			ActiveWaveData.MaxExtraCount += (CurrentWaveIndex + 1);            // ökar maximum spawns
 		}
+	}
+
+	//För challenges
+	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+	{
+		ChallengeSub->AssignNewChallenge();
+		ChallengeSub->StartWaveChallenge();
 	}
 
 	EnemiesSpawnedInCurrentWave = 0;
@@ -215,6 +230,23 @@ void AWaveManager::EndWave()
 	);
 
 	UE_LOG(LogTemp, Warning, TEXT("Grace period started: %d seconds"), GraceSecondsRemaining);
+
+	// Challenges
+	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+	{
+		ChallengeSub->CompleteCurrentChallenge();
+		ChallengeSub->NotifyWaveCleared();
+	}
+
+	// Missions
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		UMissionSubsystem* MissionSystem = GI->GetSubsystem<UMissionSubsystem>();
+		if (MissionSystem)
+		{
+			MissionSystem->OnWaveCompleted(CurrentWaveIndex);
+		}
+	}
 }
 
 int32 AWaveManager::GetCurrentWaveNumber() const

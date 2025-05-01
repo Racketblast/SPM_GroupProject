@@ -3,7 +3,11 @@
 
 #include "Teleporter.h"
 
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
+#include "MovieSceneSequencePlaybackSettings.h"
 #include "PlayerGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ATeleporter::ATeleporter()
@@ -48,13 +52,14 @@ void ATeleporter::Tick(float DeltaTime)
 
 void ATeleporter::ChangeTexture()
 {
-	UE_LOG(LogTemp, Display, TEXT("Can Teleport: %s"), CachedGameInstance->TeleportKeyArray[TeleportKeyNumber] ? TEXT("true") : TEXT("false"));
+	bool bHasAccess = CachedGameInstance->UnlockedLevels.Contains(TargetLevelName);
+	//UE_LOG(LogTemp, Display, TEXT("Can Teleport: %s"), CachedGameInstance->TeleportKeyArray[TeleportKeyNumber] ? TEXT("true") : TEXT("false"));
 	//if it is a wave or if player does not have a key
-	if (bOldWaveValue || !CachedGameInstance->TeleportKeyArray[TeleportKeyNumber])
+	//if (bOldWaveValue || !CachedGameInstance->TeleportKeyArray[TeleportKeyNumber])
+	if (bOldWaveValue || !bHasAccess)
 	{
 		if (WaveMaterial)
 		{
-			UE_LOG(LogTemp, Display, TEXT("Who Cant Teleport: %s"), *GetName());
 			CubeMeshComponent->SetMaterial(0, WaveMaterial);
 		}
 	}
@@ -62,8 +67,28 @@ void ATeleporter::ChangeTexture()
 	{
 		if (GracePeriodMaterial)
 		{
-			UE_LOG(LogTemp, Display, TEXT("Who Can Teleport: %s"), *GetName());
 			CubeMeshComponent->SetMaterial(0, GracePeriodMaterial);
 		}
 	}
+}
+
+void ATeleporter::Teleport()
+{
+	if (FadeOutTransition)
+	{
+		FMovieSceneSequencePlaybackSettings Settings;
+		ALevelSequenceActor* OutActor;
+		ULevelSequencePlayer* SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), FadeOutTransition, Settings, OutActor);
+		SequencePlayer->Play();
+
+		if (SequencePlayer)
+		{
+			SequencePlayer->OnFinished.AddDynamic(this, &ATeleporter::ChangeLevel);
+		}
+	}
+}
+
+void ATeleporter::ChangeLevel()
+{
+	UGameplayStatics::OpenLevel(this, TargetLevelName);
 }

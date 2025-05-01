@@ -13,19 +13,27 @@ class SPM_GROUPPROJECT_API ATeleporter : public AActor
 	
 public:
 	ATeleporter();
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
-	FName TargetLevelName;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
-	int32 TeleportKeyNumber = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Teleport")
+	FName TargetLevelName = "Hub";
+	
+	UPROPERTY(EditDefaultsOnly, Category="Teleport")
+	class USoundBase* TeleportSound;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Teleport")
+	USoundBase* CantTeleportSound;
+
+	UPROPERTY(EditDefaultsOnly, Category="Teleport")
+	class ULevelSequence* FadeOutTransition;
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
 	void ChangeTexture();
-	
+
+	UFUNCTION()
+	void Teleport();
 
 protected:
 	// Called when the game starts or when spawned
@@ -39,8 +47,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
 	UMaterialInterface* GracePeriodMaterial;
+	
 private:
 	class UPlayerGameInstance* CachedGameInstance;
 	bool bOldWaveValue;
 
+	UFUNCTION()
+	void ChangeLevel();
 };
