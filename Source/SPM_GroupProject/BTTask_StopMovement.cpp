@@ -17,10 +17,7 @@ EBTNodeResult::Type UBTTask_StopMovement::ExecuteTask(UBehaviorTreeComponent& Ow
 		{
 			// Stop the character's movement
 			AICharacter->GetCharacterMovement()->StopMovementImmediately();
-
-			// Log or debug message (later you can trigger shooting here)
-			UKismetSystemLibrary::PrintString(GetWorld(), TEXT("AI stopped and ready to shoot"), true, true, FLinearColor::Red, 2.0f);
-
+			
 			return EBTNodeResult::Succeeded;
 		}
 	}
