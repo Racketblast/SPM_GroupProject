@@ -13,12 +13,9 @@ class SPM_GROUPPROJECT_API ATeleporter : public AActor
 	
 public:
 	ATeleporter();
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Teleport")
-	TSoftObjectPtr<UWorld> TargetLevel;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Teleport")
-	FName TargetLevelName;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Teleport")
+	FName TargetLevelName = "Hub";
 	
 	UPROPERTY(EditDefaultsOnly, Category="Teleport")
 	class USoundBase* TeleportSound;
