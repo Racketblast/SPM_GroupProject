@@ -69,12 +69,13 @@ private:
 	void OnTriggerCloseEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	void SetClipPlanes();
+	FVector MirrorAndTransformDirection(const FTransform& SourceTransform, const FTransform& TargetTransform, const FVector& Direction);
 	void UpdatePortalCapture();
 	void CheckViewportSize() const;
 
 	UFUNCTION()
 	void SetPortalMaterial();
-
+	
 	void ChangePortalMaterial(float DeltaTime);
 
 	FVector UpdateVelocity(FVector Velocity);

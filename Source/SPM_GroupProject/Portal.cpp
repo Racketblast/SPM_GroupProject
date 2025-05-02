@@ -54,15 +54,14 @@ void APortal::BeginPlay()
 	if (PortalDistanceTriggerVolume)
 	{
 		PortalDistanceTriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &APortal::OnTriggerCloseBeginOverlap);
-	}
-	if (PortalDistanceTriggerVolume)
-	{
 		PortalDistanceTriggerVolume->OnComponentEndOverlap.AddDynamic(this, &APortal::OnTriggerCloseEndOverlap);
 	}
 	
 	PortalCaptureComponent->bCaptureEveryFrame = false;
 	PortalNormalCaptureComponent->bCaptureEveryFrame = false;
-	PortalNormalCaptureComponent->CaptureScene();
+	PortalCaptureComponent->bCaptureOnMovement = false;
+	PortalNormalCaptureComponent->bCaptureOnMovement = false;
+	
 
 	SetClipPlanes();
 
@@ -77,33 +76,32 @@ void APortal::OnTriggerCloseBeginOverlap(UPrimitiveComponent* OverlappedComp, AA
 {
 	if (OtherActor && OtherActor->IsA<APlayerCharacter>())
 	{
-		if (PortalMeshComponent && PortalMaterialInstance)
-		{
-			bBlendingToFaraway = false;
-		}
+		bBlendingToFaraway = false;
 		bPlayerInRange = true;
+		LinkedPortal->PortalCaptureComponent->bCaptureEveryFrame = true;
 	}
 }
 
 void APortal::OnTriggerCloseEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	LinkedPortal->PortalCaptureComponent->bCaptureEveryFrame = false;
 	if (OtherActor && OtherActor->IsA<APlayerCharacter>())
 	{
-		bPlayerInRange = false;
 		bBlendingToFaraway = true;
+		bPlayerInRange = false;
+		LinkedPortal->PortalCaptureComponent->bCaptureEveryFrame = false;
 	}
 }
 
 void APortal::SetClipPlanes()
 {
+	int32 ClipPlaneOffset = -3;
 	PortalCaptureComponent->bEnableClipPlane = true;
-	FVector ClipFixVector = ForwardDirection->GetForwardVector() * (-3);
+	FVector ClipFixVector = ForwardDirection->GetForwardVector() * (ClipPlaneOffset);
 	PortalCaptureComponent->ClipPlaneBase = PortalMeshComponent->GetComponentLocation() + ClipFixVector;
 	PortalCaptureComponent->ClipPlaneNormal = ForwardDirection->GetForwardVector();
 
 	PortalNormalCaptureComponent->bEnableClipPlane = true;
-	ClipFixVector = ForwardDirection->GetForwardVector() * (-3);
+	ClipFixVector = ForwardDirection->GetForwardVector() * (ClipPlaneOffset);
 	PortalNormalCaptureComponent->ClipPlaneBase = PortalMeshComponent->GetComponentLocation() + ClipFixVector;
 	PortalNormalCaptureComponent->ClipPlaneNormal = ForwardDirection->GetForwardVector();
 }
@@ -157,6 +155,15 @@ void APortal::ChangePortalMaterial(float DeltaTime)
 	}
 }
 
+FVector APortal::MirrorAndTransformDirection(const FTransform& SourceTransform, const FTransform& TargetTransform, const FVector& Direction)
+{
+	FVector InverseDirection = UKismetMathLibrary::InverseTransformDirection(SourceTransform,Direction);
+	InverseDirection = UKismetMathLibrary::MirrorVectorByNormal(InverseDirection,{1,0,0});
+	InverseDirection = UKismetMathLibrary::MirrorVectorByNormal(InverseDirection,{0,1,0});
+	return UKismetMathLibrary::TransformDirection(TargetTransform, InverseDirection);
+}
+
+
 void APortal::UpdatePortalCapture()
 {
 	if (!PlayerCamera || !LinkedPortal || !LinkedPortal->PortalCaptureComponent)
@@ -171,22 +178,11 @@ void APortal::UpdatePortalCapture()
 	FVector LinkedLocation = UKismetMathLibrary::TransformLocation(LinkedPortal->GetActorTransform(),InverseLocation);
 	
 	FRotator PlayerCameraRotation = PlayerCamera->GetCameraRotation();
-	FVector InverseRotation = UKismetMathLibrary::InverseTransformDirection(GetActorTransform(), FRotationMatrix(PlayerCameraRotation).GetUnitAxis(EAxis::X));
-	InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{1,0,0});
-	InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{0,1,0});
-	FVector ForwardRotation = UKismetMathLibrary::TransformDirection(LinkedPortal->GetActorTransform(), InverseRotation);
-	
-	InverseRotation = UKismetMathLibrary::InverseTransformDirection(GetActorTransform(), FRotationMatrix(PlayerCameraRotation).GetUnitAxis(EAxis::Y));
-	InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{1,0,0});
-	InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{0,1,0});
-	FVector RightRotation = UKismetMathLibrary::TransformDirection(LinkedPortal->GetActorTransform(),InverseRotation);
-
-	InverseRotation = UKismetMathLibrary::InverseTransformDirection(GetActorTransform(), FRotationMatrix(PlayerCameraRotation).GetUnitAxis(EAxis::Z));
-	InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{1,0,0});
-	InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{0,1,0});
-	FVector UpRotation = UKismetMathLibrary::TransformDirection(LinkedPortal->GetActorTransform(),InverseRotation);
-	
-	FRotator LinkedRotation = UKismetMathLibrary::MakeRotationFromAxes(ForwardRotation, RightRotation, UpRotation);
+	FVector CameraForwardDirection = MirrorAndTransformDirection(GetActorTransform(), LinkedPortal->GetActorTransform(), FRotationMatrix(PlayerCameraRotation).GetUnitAxis(EAxis::X));
+	FVector CameraRightDirection = MirrorAndTransformDirection(GetActorTransform(), LinkedPortal->GetActorTransform(), FRotationMatrix(PlayerCameraRotation).GetUnitAxis(EAxis::Y));
+	FVector CameraUpDirection = MirrorAndTransformDirection(GetActorTransform(), LinkedPortal->GetActorTransform(), FRotationMatrix(PlayerCameraRotation).GetUnitAxis(EAxis::Z));
+		
+	FRotator LinkedRotation = UKismetMathLibrary::MakeRotationFromAxes(CameraForwardDirection, CameraRightDirection, CameraUpDirection);
 	
 	LinkedPortal->PortalCaptureComponent->SetWorldLocationAndRotation(LinkedLocation, LinkedRotation);
 }
@@ -265,23 +261,12 @@ void APortal::Teleport(AActor* OtherActor)
 	FVector InverseLocation = UKismetMathLibrary::InverseTransformLocation(ReverseTransform, OtherActor->GetActorLocation());
 	FVector NewLocation = UKismetMathLibrary::TransformLocation(LinkedPortal->GetActorTransform(), InverseLocation);
 
-	FRotator OtherRotation = OtherActor->GetActorRotation();
-	FVector InverseRotation = UKismetMathLibrary::InverseTransformDirection(GetActorTransform(),FRotationMatrix(OtherRotation).GetUnitAxis(EAxis::X));
-	InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{1,0,0});
-	InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{0,1,0});
-	FVector ForwardRotation = UKismetMathLibrary::TransformDirection(LinkedPortal->GetActorTransform(), InverseRotation);
+	FRotator OtherActorRotation = OtherActor->GetActorRotation();
+	FVector OtherActorForwardDirection = MirrorAndTransformDirection(GetActorTransform(), LinkedPortal->GetActorTransform(), FRotationMatrix(OtherActorRotation).GetUnitAxis(EAxis::X));
+	FVector OtherActorRightDirection = MirrorAndTransformDirection(GetActorTransform(), LinkedPortal->GetActorTransform(), FRotationMatrix(OtherActorRotation).GetUnitAxis(EAxis::Y));
+	FVector OtherActorUpDirection = MirrorAndTransformDirection(GetActorTransform(), LinkedPortal->GetActorTransform(), FRotationMatrix(OtherActorRotation).GetUnitAxis(EAxis::Z));
 	
-	InverseRotation = UKismetMathLibrary::InverseTransformDirection(GetActorTransform(),FRotationMatrix(OtherRotation).GetUnitAxis(EAxis::Y));
-	InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{1,0,0});
-	InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{0,1,0});
-	FVector RightRotation = UKismetMathLibrary::TransformDirection(LinkedPortal->GetActorTransform(), InverseRotation);
-	
-	InverseRotation = UKismetMathLibrary::InverseTransformDirection(GetActorTransform(),FRotationMatrix(OtherRotation).GetUnitAxis(EAxis::Z));
-	InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{1,0,0});
-	InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{0,1,0});
-	FVector UpRotation = UKismetMathLibrary::TransformDirection(LinkedPortal->GetActorTransform(), InverseRotation);
-	
-	FRotator NewRotation = UKismetMathLibrary::MakeRotationFromAxes(ForwardRotation, RightRotation, UpRotation);
+	FRotator NewRotation = UKismetMathLibrary::MakeRotationFromAxes(OtherActorForwardDirection, OtherActorRightDirection, OtherActorUpDirection);
 	
 	FTransform NewTransform = UKismetMathLibrary::MakeTransform(NewLocation, NewRotation, OtherActor->GetActorScale());
 	OtherActor->SetActorTransform(NewTransform);
@@ -290,23 +275,12 @@ void APortal::Teleport(AActor* OtherActor)
 	{
 		APlayerController* Controller = UGameplayStatics::GetPlayerController(this,0);
 
-		OtherRotation = Controller->GetControlRotation();
-		InverseRotation = UKismetMathLibrary::InverseTransformDirection(GetActorTransform(),FRotationMatrix(OtherRotation).GetUnitAxis(EAxis::X));
-		InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{1,0,0});
-		InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{0,1,0});
-		ForwardRotation = UKismetMathLibrary::TransformDirection(LinkedPortal->GetActorTransform(), InverseRotation);
+		FRotator ControllerRotation = Controller->GetControlRotation();
+		FVector ControllerForwardDirection = MirrorAndTransformDirection(GetActorTransform(), LinkedPortal->GetActorTransform(), FRotationMatrix(ControllerRotation).GetUnitAxis(EAxis::X));
+		FVector ControllerRightDirection = MirrorAndTransformDirection(GetActorTransform(), LinkedPortal->GetActorTransform(), FRotationMatrix(ControllerRotation).GetUnitAxis(EAxis::Y));
+		FVector ControllerUpDirection = MirrorAndTransformDirection(GetActorTransform(), LinkedPortal->GetActorTransform(), FRotationMatrix(ControllerRotation).GetUnitAxis(EAxis::Z));
 	
-		InverseRotation = UKismetMathLibrary::InverseTransformDirection(GetActorTransform(),FRotationMatrix(OtherRotation).GetUnitAxis(EAxis::Y));
-		InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{1,0,0});
-		InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{0,1,0});
-		RightRotation = UKismetMathLibrary::TransformDirection(LinkedPortal->GetActorTransform(), InverseRotation);
-	
-		InverseRotation = UKismetMathLibrary::InverseTransformDirection(GetActorTransform(),FRotationMatrix(OtherRotation).GetUnitAxis(EAxis::Z));
-		InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{1,0,0});
-		InverseRotation = UKismetMathLibrary::MirrorVectorByNormal(InverseRotation,{0,1,0});
-		UpRotation = UKismetMathLibrary::TransformDirection(LinkedPortal->GetActorTransform(), InverseRotation);
-	
-		NewRotation = UKismetMathLibrary::MakeRotationFromAxes(ForwardRotation, RightRotation, UpRotation);
+		NewRotation = UKismetMathLibrary::MakeRotationFromAxes(ControllerForwardDirection, ControllerRightDirection, ControllerUpDirection);
 		Controller->SetControlRotation(NewRotation);
 	}
 	//Retains velocity even when flipped
@@ -348,24 +322,16 @@ void APortal::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	AccumulatedTime += DeltaTime;
-	
 	ChangePortalMaterial(DeltaTime);
+	
+	if (!bPlayerInRange || !PlayerCamera || !LinkedPortal)
+		return;
+	AccumulatedTime += DeltaTime;
 
 	// Check if we've reached the target FPS time interval
-	if (AccumulatedTime < TargetDeltaTime)
-		return;
-	AccumulatedTime -= TargetDeltaTime;
-
-	// Your portal logic here
-	if (!PlayerCamera || !LinkedPortal)
-		return;
-	if (bPlayerInRange)
+	if (AccumulatedTime >= TargetDeltaTime)
 	{
-		if (!LinkedPortal->PortalCaptureComponent->bCaptureEveryFrame)
-		{
-			LinkedPortal->PortalCaptureComponent->bCaptureEveryFrame = true;
-		}
+		AccumulatedTime -= TargetDeltaTime;
 		UpdatePortalCapture();
 		CheckViewportSize();
 		ShouldTeleport();

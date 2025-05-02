@@ -80,7 +80,6 @@ private:
 	FName WeaponName1 = "Pistol";
 	FName WeaponName2 = "Rifle";
 	FName WeaponName3 = "Laser"; 
-	AActor* TargetActor;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AGun> GWeapon1;
 	UPROPERTY(EditAnywhere)

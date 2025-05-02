@@ -61,8 +61,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 		Shoot();
 	}
 
-	const FVector Start = PlayerCamera->GetComponentLocation();
-	const FVector End = Start + (PlayerCamera->GetForwardVector() * UseDistance);
 	// DrawDebugLine for use
 	// DrawDebugLine(GetWorld(), Start, End, FColor::Red, false);
 
@@ -83,18 +81,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 		false     // Thickness
 	);*/
 
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
-	{
-		TargetActor = HitResult.GetActor();
-	}
-	else
-	{
-		TargetActor = nullptr;
-	}
+	
 }
 
 // Called to bind functionality to input
@@ -110,7 +97,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCom
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Yaw", this, &APlayerCharacter::Yaw);
-	PlayerInputComponent->BindAxis("Pitch", this, &APlayerCharacter::Pitch);PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &APlayerCharacter::StartShooting);
+	PlayerInputComponent->BindAxis("Pitch", this, &APlayerCharacter::Pitch);
+	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &APlayerCharacter::StartShooting);
 	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &APlayerCharacter::StopShooting);
 	
 }
@@ -315,6 +303,21 @@ void APlayerCharacter::SelectWeapon2()
 // TODO: Make this a switch case and put it in it's own class
 void APlayerCharacter::Use()
 {
+	AActor* TargetActor;
+	const FVector Start = PlayerCamera->GetComponentLocation();
+	const FVector End = Start + (PlayerCamera->GetForwardVector() * UseDistance);
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		TargetActor = HitResult.GetActor();
+	}
+	else
+	{
+		TargetActor = nullptr;
+	}
 	if (TargetActor)
 	{
 		UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
@@ -324,19 +327,9 @@ void APlayerCharacter::Use()
 			if (GI)
 			{
 				// If you can teleport
-				// Checks if in wave and if you have the key
-				// if (!GI->bIsWave && GI->TeleportKeyArray[Teleporter->TeleportKeyNumber])
+				// Checks if in wave and if you have level unlocked
 				if (!GI->bIsWave && GI->UnlockedLevels.Contains(Teleporter->TargetLevelName))
 				{
-					/*if (Teleporter->TargetLevelName != "Hub")
-					{
-						GI->Level += 1;
-						if (GI->TeleportKeyArray.IsValidIndex(GI->Level))
-						{
-							GI->TeleportKeyArray[GI->Level] = true;
-						}
-					}
-					*/
 					GI->Money += PickedUpMoney;
 					
 					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Teleporter->TeleportSound, Teleporter->GetActorLocation());
@@ -356,7 +349,7 @@ void APlayerCharacter::Use()
 			}
 		}
 		// Buying function
-		if (const ABuyBox *BuyBox = Cast<ABuyBox>(TargetActor))
+		else if (const ABuyBox *BuyBox = Cast<ABuyBox>(TargetActor))
 		{
 			if (GI)
 			{
@@ -364,16 +357,16 @@ void APlayerCharacter::Use()
 			}
 		}
 		//Open store Function
-		if (AStoreBox* StoreBox = Cast<AStoreBox>(TargetActor))
+		else if (AStoreBox* StoreBox = Cast<AStoreBox>(TargetActor))
 		{
 			StoreBox->OpenStoreMenu();
 		}
 		//Use VendingMachine Function
-		if (AVendingMachine* VendingMachine = Cast<AVendingMachine>(TargetActor))
+		else if (AVendingMachine* VendingMachine = Cast<AVendingMachine>(TargetActor))
 		{
 			VendingMachine->UseVendingMachine();
 		}
-		if (ADebugCube* DebugCube = Cast<ADebugCube>(TargetActor))
+		else if (ADebugCube* DebugCube = Cast<ADebugCube>(TargetActor))
 		{
 			DebugCube->EnableAllLevels();
 		}
