@@ -54,6 +54,11 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	AGun* GetWeaponInstance(const FName WeaponName) const;
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	UPROPERTY(Blueprintable)
+	bool bIsDead = false;
 protected:
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* PlayerCamera;
@@ -93,15 +98,22 @@ private:
 	UPROPERTY()
 	AGun* Weapon3Instance;
 	bool bIsShooting = false; // True when the player is holding the shoot button
+	
+	//All of this goes when gamemode is a c++ class
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
 	class ULevelSequence* FadeInTransition;
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
+	class ULevelSequence* FadeOutTransition;
+	UPROPERTY(EditDefaultsOnly, Category="Transition")
 	class USoundBase* TeleportInSound;
+	UPROPERTY(EditDefaultsOnly, Category="Transition")
+	class USoundBase* TeleportOutSound;
 	
-
 
 	class UAIPerceptionStimuliSourceComponent* StimulusSource;
 	void SetupStimulusSource();
 
-
+	// this one has gotta go when gamemode is a c++ class
+	UFUNCTION()
+	void Respawn();
 };

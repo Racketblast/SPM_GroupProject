@@ -3,7 +3,9 @@
 
 #include "StoreBox.h"
 
+#include "PlayerCharacter.h"
 #include "Blueprint/UserWidget.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -28,8 +30,13 @@ void AStoreBox::OpenStoreMenu()
 			
 			if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
 			{
-				// Show mouse cursor if needed
+				PlayerController->SetIgnoreMoveInput(true);
+				PlayerController->SetIgnoreLookInput(true);
+				
 				PlayerController->bShowMouseCursor = true;
+				int32 ViewportX, ViewportY;
+				PlayerController->GetViewportSize(ViewportX, ViewportY);
+				PlayerController->SetMouseLocation(ViewportX/2, ViewportY/2);
 				PlayerController->SetInputMode(FInputModeUIOnly());
 			}
 		}

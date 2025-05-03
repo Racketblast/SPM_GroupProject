@@ -14,6 +14,7 @@
 #include "Rifle.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -34,6 +35,12 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 	if (UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
+		//Adds a pistol if player does not have one each time player is loaded
+		if (!GI->UpgradeArray.Contains(EUpgradeType::Pistol))
+		{
+			GI->UpgradeArray.Add(EUpgradeType::Pistol);
+			GI->SetCurrentWeapon(EUpgradeType::Pistol);
+		}
 		GI->ApplyAllUpgradeFunctions(this);
 		SelectWeapon(GI->GetCurrentWeaponName());
 	}
@@ -207,11 +214,11 @@ void APlayerCharacter::SelectWeapon(FName Weapon)
 {
 	if (UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
-		if (GI->GetCurrentWeaponName() == WeaponName1)
+		if (Weapon == WeaponName1)
 		{
 			APlayerCharacter::SelectWeapon1();
 		}
-		else if (GI->GetCurrentWeaponName() == WeaponName2)
+		else if (Weapon == WeaponName2)
 		{
 			APlayerCharacter::SelectWeapon2();
 		}
@@ -375,10 +382,13 @@ void APlayerCharacter::Use()
 
 void APlayerCharacter::HealPlayer(int32 HealAmount)
 {
-	PlayerHealth += HealAmount;
-	if (PlayerHealth > PlayerMaxHealth)
+	if (!bIsDead)
 	{
-		PlayerHealth = PlayerMaxHealth;
+		PlayerHealth += HealAmount;
+		if (PlayerHealth > PlayerMaxHealth)
+		{
+			PlayerHealth = PlayerMaxHealth;
+		}
 	}
 }
 
@@ -397,4 +407,49 @@ AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
 		return Weapon3Instance;
 	}
 		return nullptr;
+}
+
+float APlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	if (!bIsDead)
+	{
+		PlayerHealth -= DamageAmount;
+		if (PlayerHealth <= 0)
+		{
+			PlayerHealth = 0;
+			bIsDead = true;
+			DisableInput(nullptr);
+			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		
+			if (TeleportInSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportOutSound, GetActorLocation());
+			}
+			if (FadeOutTransition)
+			{
+				FMovieSceneSequencePlaybackSettings Settings;
+				ALevelSequenceActor* OutActor;
+				ULevelSequencePlayer* SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), FadeOutTransition, Settings, OutActor);
+				SequencePlayer->Play();
+
+				if (SequencePlayer)
+				{
+					SequencePlayer->OnFinished.AddDynamic(this, &APlayerCharacter::Respawn);
+				}
+			}
+			else
+			{
+				Respawn();
+			}
+		}
+	}
+	
+	return DamageAmount;
+}
+
+void APlayerCharacter::Respawn()
+{
+	UGameplayStatics::OpenLevel(this, "Hub");
 }
