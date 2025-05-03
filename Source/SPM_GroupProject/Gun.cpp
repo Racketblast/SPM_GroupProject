@@ -23,42 +23,57 @@ AGun::AGun()
 
 void AGun::Reload()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Attempting reload. CurrentAmmo: %d, bHasInfiniteReloads: %d"), 
-		   CurrentAmmo, bHasInfiniteReloads);
+	if (bIsReloading)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Reload already in progress!"));
+		return;
+	}
 
+	if (CurrentAmmo == MaxAmmo)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Ammo already full."));
+		return;
+	}
+
+	if (!bHasInfiniteReloads && TotalAmmo <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No extra mags left! Reload cannot be performed."));
+		return;
+	}
+
+	bIsReloading = true;
+
+	UE_LOG(LogTemp, Warning, TEXT("Reload started..."));
+
+	// Start a 2-second timer to finish the reload
+	GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, this, &AGun::FinishReload, 2.0f, false);
+}
+void AGun::FinishReload()
+{
 	if (bHasInfiniteReloads)
 	{
-		// Infinite reloads - reset the ammo to max value
 		CurrentAmmo = MaxAmmo;
-		UE_LOG(LogTemp, Warning, TEXT("Infinite reload: CurrentAmmo set to MaxAmmo: %d"), CurrentAmmo);
-	}
-	else if (TotalAmmo > 0)
-	{
-		int missingAmmo = MaxAmmo - CurrentAmmo;
-		if (missingAmmo < TotalAmmo)
-		{
-			CurrentAmmo = MaxAmmo;
-			TotalAmmo = TotalAmmo - missingAmmo;
-		}
-		else
-		{
-			CurrentAmmo = CurrentAmmo + TotalAmmo;
-			TotalAmmo = 0;
-		}
-		// Regular reload (decrease extra mags, reset to max ammo)
-		
-		//CurrentAmmo = MaxAmmo;
-		
 	}
 	else
 	{
-		// No extra mags left
-		UE_LOG(LogTemp, Warning, TEXT("No extra mags left! Reload cannot be performed"));
+		int missingAmmo = MaxAmmo - CurrentAmmo;
+		if (missingAmmo <= TotalAmmo)
+		{
+			CurrentAmmo = MaxAmmo;
+			TotalAmmo -= missingAmmo;
+		}
+		else
+		{
+			CurrentAmmo += TotalAmmo;
+			TotalAmmo = 0;
+		}
 	}
 
-	// Final log to confirm ammo count after reload
-	UE_LOG(LogTemp, Warning, TEXT("Reload complete. CurrentAmmo: %d"), CurrentAmmo);
+	bIsReloading = false;
+
+	UE_LOG(LogTemp, Warning, TEXT("Reload complete. CurrentAmmo: %d, TotalAmmo: %d"), CurrentAmmo, TotalAmmo);
 }
+
 
 
 
