@@ -87,6 +87,10 @@ private:
 	//For warpDistance basically. Plus means that you can go through it and not teleport, if Minus means that you go through the portal further away
 	//What it actually does is pushing the material backwards (negative value) or forwards (plus value)
 	float TextureOffsetAmount = -17;
+
+	//Divides the viewport resolution
+	UPROPERTY(EditDefaultsOnly)
+	float ViewpointResolutionDivider = 1;
 	
 	//Teleport variables
 	FVector LastPosition;

@@ -116,8 +116,8 @@ void APortal::SetPortalMaterial()
 	
 	int32 ViewportX, ViewportY;
 	UGameplayStatics::GetPlayerController(GetWorld(),0)->GetViewportSize(ViewportX, ViewportY);
-	PortalRenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(this,ViewportX,ViewportY, RTF_RGBA16f);
-	PortalFarawayRenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(this,ViewportX/2,ViewportY/2, RTF_RGBA16f);
+	PortalRenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(this,ViewportX/ViewpointResolutionDivider,ViewportY/ViewpointResolutionDivider, RTF_RGBA16f);
+	PortalFarawayRenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(this,ViewportX/ViewpointResolutionDivider,ViewportY/ViewpointResolutionDivider, RTF_RGBA16f);
 	
 	if (PortalMaterialInstance)
 	{
@@ -191,6 +191,8 @@ void APortal::CheckViewportSize() const
 {
 	int32 ViewportX, ViewportY;
 	UGameplayStatics::GetPlayerController(GetWorld(),0)->GetViewportSize(ViewportX, ViewportY);
+	ViewportX /= ViewpointResolutionDivider;
+	ViewportY /= ViewpointResolutionDivider;
 	if (ViewportX == PortalRenderTarget->SizeX && ViewportY == PortalRenderTarget->SizeY)
 	{
 		return;
