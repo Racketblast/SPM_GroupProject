@@ -50,6 +50,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 CurrentAmmo = MaxAmmo;
 	
+	bool bIsReloading = false;
+
+	FTimerHandle ReloadTimerHandle;
+
+	UFUNCTION()
+	void FinishReload();
 
 
 };

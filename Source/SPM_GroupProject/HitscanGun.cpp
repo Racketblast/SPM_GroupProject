@@ -10,6 +10,10 @@
 #include "Kismet/GameplayStatics.h"
 void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 {
+	if (bIsReloading)
+	{
+		return;
+	}
 	const float CurrentTime = GetWorld()->GetTimeSeconds();
 	const float TimeBetweenShots = 1.0f / RoundsPerSecond;
 

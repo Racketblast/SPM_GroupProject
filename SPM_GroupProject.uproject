@@ -25,7 +25,7 @@
 		},
 		{
 			"Name": "NiagaraUIRenderer",
-			"Enabled": true,
+			"Enabled": false,
 			"SupportedTargetPlatforms": [
 				"Win64",
 				"Android"
