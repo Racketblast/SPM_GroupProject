@@ -56,9 +56,6 @@ public:
 	AGun* GetWeaponInstance(const FName WeaponName) const;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-
-	UPROPERTY(Blueprintable)
-	bool bIsDead = false;
 protected:
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* PlayerCamera;
@@ -81,6 +78,8 @@ protected:
 	bool Weapon3Equipped = false;
 	
 private:
+	UPROPERTY(Blueprintable)
+	bool bIsDead = false;
 	
 	FName WeaponName1 = "Pistol";
 	FName WeaponName2 = "Rifle";
