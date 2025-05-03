@@ -12,7 +12,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetRenderingLibrary.h"
 
-#define FPS 60
+#define FPS 40
 
 // Sets default values
 APortal::APortal()
@@ -70,6 +70,8 @@ void APortal::BeginPlay()
 	PortalMaterialInstance->SetVectorParameterValue(FName("TextureOffset"), NewPosition);
 
 	PortalMaterialInstance->SetVectorParameterValue(FName("FrameColor"), BoarderColor);
+
+	PortalCaptureComponent->SetComponentTickInterval(0.04);
 }
 
 void APortal::OnTriggerCloseBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
