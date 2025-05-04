@@ -36,9 +36,9 @@ void APlayerCharacter::BeginPlay()
 	if (UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
 		//Adds a pistol if player does not have one each time player is loaded
-		if (!GI->UpgradeArray.Contains(EUpgradeType::Pistol))
+		if (!GI->UpgradeMap.Contains(EUpgradeType::Pistol))
 		{
-			GI->UpgradeArray.Add(EUpgradeType::Pistol);
+			GI->UpgradeMap.Add(EUpgradeType::Pistol,GI->SetDefaultUpgradeInfo(EUpgradeType::Pistol));
 			GI->SetCurrentWeapon(EUpgradeType::Pistol);
 		}
 		GI->ApplyAllUpgradeFunctions(this);
@@ -57,6 +57,8 @@ void APlayerCharacter::BeginPlay()
 		ULevelSequencePlayer *SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), FadeInTransition, Settings, OutActor);
 		SequencePlayer->Play();
 	}
+
+	BasePlayerMaxHealth = PlayerMaxHealth;
 }
 
 // Called every frame

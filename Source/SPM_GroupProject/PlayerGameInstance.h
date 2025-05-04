@@ -35,6 +35,18 @@ enum class EUpgradeCategory : uint8
 	WeaponStats  UMETA(DisplayName = "Weapon Stats")
 };
 
+USTRUCT(BlueprintType)
+struct FUpgradeInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	EUpgradeCategory UpgradeCategory = EUpgradeCategory::None;
+	int32 UpgradeCost = 0;
+	int32 UpgradeOwned = 1;
+	int32 TotalUpgradeOwned = 1;
+};
+
 UCLASS()
 class SPM_GROUPPROJECT_API UPlayerGameInstance : public UGameInstance
 {
@@ -51,21 +63,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EUpgradeType CurrentWeapon;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<EUpgradeType> UpgradeArray;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<bool> TeleportKeyArray = {true,false,false,false};
+	TMap<EUpgradeType,FUpgradeInfo> UpgradeMap;
 
 	UFUNCTION(BlueprintCallable)
 	bool HasBought(const EUpgradeType Upgrade) const;
 	bool HasBought(const FName Upgrade) const;
 
 	UFUNCTION(BlueprintCallable)
-	int32 GetUpgradeCost(const EUpgradeType Upgrade) const;
-	UFUNCTION(BlueprintCallable)
-	EUpgradeCategory GetUpgradeCategory(const EUpgradeType Upgrade) const;
+	FUpgradeInfo SetDefaultUpgradeInfo(const EUpgradeType Upgrade) const;
 	UFUNCTION(BlueprintCallable)
 	void BuyUpgrade(const EUpgradeType Upgrade,USoundBase* CanBuySound = nullptr, USoundBase* CantBuySound = nullptr);
-	//int32 GetUpgradeCost(const FName Upgrade) const;
 
 	UFUNCTION(BlueprintCallable)
 	FName GetArrayName();
@@ -97,5 +104,4 @@ public:
 private:
 	
 	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);
-	
 };

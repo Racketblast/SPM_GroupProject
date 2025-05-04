@@ -6,17 +6,18 @@
 #include "PlayerCharacter.h"
 #include "ProjectileGun.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Slate/SGameLayerManager.h"
 
 bool UPlayerGameInstance::HasBought(const EUpgradeType Upgrade) const
 {
-	return UpgradeArray.Contains(Upgrade);
+	return UpgradeMap.Contains(Upgrade);
 }
 
 bool UPlayerGameInstance::HasBought(const FName Upgrade) const
 {
-	for (EUpgradeType UpgradeType : UpgradeArray)
+	for (const TPair<EUpgradeType, FUpgradeInfo>& UpgradeType : UpgradeMap)
 	{
-		if (FName(*StaticEnum<EUpgradeType>()->GetNameStringByValue(static_cast<int64>(UpgradeType))) == Upgrade)
+		if (FName(*StaticEnum<EUpgradeType>()->GetNameStringByValue(static_cast<int64>(UpgradeType.Key))) == Upgrade)
 		{
 			return true;
 		}
@@ -24,67 +25,48 @@ bool UPlayerGameInstance::HasBought(const FName Upgrade) const
 	return false;
 }
 
-int32 UPlayerGameInstance::GetUpgradeCost(const EUpgradeType Upgrade) const
+FUpgradeInfo UPlayerGameInstance::SetDefaultUpgradeInfo(const EUpgradeType Upgrade) const
 {
 	switch (Upgrade)
 	{
 	case EUpgradeType::Pistol:
-		return 0;
+		return {EUpgradeCategory::Weapon,0,0,1};
 	case EUpgradeType::Rifle:
-		return 20;
+		return {EUpgradeCategory::Weapon,20,0,1};
 	case EUpgradeType::Health20:
-		return 100;
+		return {EUpgradeCategory::PlayerStats,100,0,10};
 	case EUpgradeType::Speed20:
-		return 100;
+		return {EUpgradeCategory::PlayerStats,100,0,1};
 	case EUpgradeType::Jump50:
-		return 200;
+		return {EUpgradeCategory::PlayerStats,200,0,1};
 	case EUpgradeType::PistolDamage10:
-		return 20;
+		return {EUpgradeCategory::WeaponStats,20,0,5};
 	case EUpgradeType::RifleDamage10:
-		return 20;
+		return {EUpgradeCategory::WeaponStats,20,0,5};
 	case EUpgradeType::PistolFiringSpeed10:
-		return 100;
+		return {EUpgradeCategory::WeaponStats,100,0,5};
 	case EUpgradeType::RifleFiringSpeed10:
-		return 100;
+		return {EUpgradeCategory::WeaponStats,100,0,5};
 	default:
-		return 0;
-	}
-}
-
-EUpgradeCategory UPlayerGameInstance::GetUpgradeCategory(const EUpgradeType Upgrade) const
-{
-	switch (Upgrade)
-	{
-	case EUpgradeType::Pistol:
-		return EUpgradeCategory::Weapon;
-	case EUpgradeType::Rifle:
-		return EUpgradeCategory::Weapon;
-	case EUpgradeType::Health20:
-		return EUpgradeCategory::PlayerStats;
-	case EUpgradeType::Speed20:
-		return EUpgradeCategory::PlayerStats;
-	case EUpgradeType::Jump50:
-		return EUpgradeCategory::PlayerStats;
-	case EUpgradeType::PistolDamage10:
-		return EUpgradeCategory::WeaponStats;
-	case EUpgradeType::RifleDamage10:
-		return EUpgradeCategory::WeaponStats;
-	case EUpgradeType::PistolFiringSpeed10:
-		return EUpgradeCategory::WeaponStats;
-	case EUpgradeType::RifleFiringSpeed10:
-		return EUpgradeCategory::WeaponStats;
-	default:
-		return EUpgradeCategory::None;
+		return {EUpgradeCategory::None,0,0,1};
 	}
 }
 
 void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* CanBuySound, USoundBase* CantBuySound)
 {
-	// If you don't own the product
-	if (!HasBought(Upgrade))
+	// Gets the info from the object in the map if you have it, if not then it will use the default values
+	FUpgradeInfo* UpgradeInfo = UpgradeMap.Find(Upgrade);
+	if (!UpgradeInfo)
+	{
+		FUpgradeInfo TempInfo = SetDefaultUpgradeInfo(Upgrade);
+		UpgradeInfo = &TempInfo;
+	}
+	
+	// If you don't own the product or all of the possible to buy
+	if (UpgradeInfo->UpgradeOwned < UpgradeInfo->TotalUpgradeOwned)
 	{
 		// If you can buy the product
-		if (GetUpgradeCost(Upgrade) <= Money)
+		if (UpgradeInfo->UpgradeCost <= Money)
 		{
 			if (CanBuySound)
 			{
@@ -93,12 +75,18 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CanBuySound, Player->GetActorLocation());
 				}
 			}
-			Money -= GetUpgradeCost(Upgrade);
-			UpgradeArray.Add(Upgrade);
+			Money -= UpgradeInfo->UpgradeCost;
+			UpgradeInfo->UpgradeOwned++;
+			UpgradeInfo->UpgradeCost *= 1.2;
+			//Adds the upgrade to the map if it is not in there 
+			if (!UpgradeMap.Contains(Upgrade))
+			{
+				UpgradeMap.Add(Upgrade, *UpgradeInfo);
+			}
 			
 			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
 			{
-				if (GetUpgradeCategory(Upgrade) == EUpgradeCategory::Weapon)
+				if (UpgradeInfo->UpgradeCategory == EUpgradeCategory::Weapon)
 				{
 					SetCurrentWeapon(Upgrade);
 					Player->SelectWeapon(*ConvertUpgradeTypeToString(Upgrade));
@@ -126,7 +114,7 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 	// If you own the product
 	else
 	{
-		if (GetUpgradeCategory(Upgrade) == EUpgradeCategory::Weapon)
+		if (UpgradeInfo->UpgradeCategory == EUpgradeCategory::Weapon)
 		{
 			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
 			{
@@ -155,9 +143,9 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 FName UPlayerGameInstance::GetArrayName()
 {
 	FString CombinedString;
-	for (EUpgradeType Upgrade : UpgradeArray)
+	for (const TPair<EUpgradeType, FUpgradeInfo>& Upgrade : UpgradeMap)
 	{
-		CombinedString += ConvertUpgradeTypeToString(Upgrade) + ", ";
+		CombinedString += ConvertUpgradeTypeToString(Upgrade.Key) + ", ";
 	}
 	return FName(*CombinedString);
 }
@@ -174,11 +162,11 @@ void UPlayerGameInstance::SetCurrentWeapon(const EUpgradeType Weapon)
 
 void UPlayerGameInstance::SetCurrentWeapon(const FName Weapon)
 {
-	for (EUpgradeType UpgradeType : UpgradeArray)
+	for (const TPair<EUpgradeType, FUpgradeInfo>& UpgradeType : UpgradeMap)
 	{
-		if (Weapon == ConvertUpgradeTypeToString(UpgradeType))
+		if (Weapon == ConvertUpgradeTypeToString(UpgradeType.Key))
 		{
-			CurrentWeapon = UpgradeType;
+			CurrentWeapon = UpgradeType.Key;
 		}
 	}
 }
@@ -187,10 +175,10 @@ void UPlayerGameInstance::ApplyAllUpgradeFunctions(APlayerCharacter* Player)
 {
 	if (!Player)
 		return;
-	for (const EUpgradeType Upgrade : UpgradeArray)
+	for (const TPair<EUpgradeType, FUpgradeInfo>& Upgrade : UpgradeMap)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Upgrade %s"), *ConvertUpgradeTypeToString(Upgrade));
-		UseUpgradeFunction(Upgrade, Player);
+		UE_LOG(LogTemp, Warning, TEXT("Upgrade %s"), *ConvertUpgradeTypeToString(Upgrade.Key));
+		UseUpgradeFunction(Upgrade.Key, Player);
 	}
 }
 
@@ -198,37 +186,42 @@ void UPlayerGameInstance::UseUpgradeFunction(const EUpgradeType Upgrade, APlayer
 {
 	if (Player != nullptr)
 	{
-		switch (GetUpgradeCategory(Upgrade))
+		FUpgradeInfo* UpgradeInfo = UpgradeMap.Find(Upgrade);
+		if (UpgradeInfo)
 		{
-		case EUpgradeCategory::Weapon:
-			break;
-		case EUpgradeCategory::PlayerAbilities:
-			break;
-		case EUpgradeCategory::PlayerStats:
-			UpgradePlayerStats(Upgrade, Player);
-			break;
-		case EUpgradeCategory::WeaponStats:
-			UpgradeGunStats(Upgrade, Player);
-			break;
-		default:
-			break;
+			switch (UpgradeInfo->UpgradeCategory)
+			{
+			case EUpgradeCategory::Weapon:
+				break;
+			case EUpgradeCategory::PlayerAbilities:
+				break;
+			case EUpgradeCategory::PlayerStats:
+				UpgradePlayerStats(Upgrade, Player);
+				break;
+			case EUpgradeCategory::WeaponStats:
+				UpgradeGunStats(Upgrade, Player);
+				break;
+			default:
+				break;
+			}
 		}
 	}
 }
 
 void UPlayerGameInstance::UpgradePlayerStats(const EUpgradeType Upgrade, class APlayerCharacter* Player)
 {
+	FUpgradeInfo* UpgradeInfo = UpgradeMap.Find(Upgrade);
 	switch (Upgrade)
 	{
 	case EUpgradeType::Health20:
-		Player->PlayerMaxHealth += 20;
+		Player->PlayerMaxHealth = Player->BasePlayerMaxHealth + 20 * UpgradeInfo->UpgradeOwned;
 		Player->PlayerHealth = Player->PlayerMaxHealth;
 		break;
 	case EUpgradeType::Speed20:
-		Player->GetCharacterMovement()->MaxWalkSpeed *= 1.2;
+		Player->GetCharacterMovement()->MaxWalkSpeed *= 1 + 0.2 * UpgradeInfo->UpgradeOwned;
 		break;
 	case EUpgradeType::Jump50:
-		Player->GetCharacterMovement()->JumpZVelocity *= 1.5;
+		Player->GetCharacterMovement()->JumpZVelocity *= 1 + 0.5 * UpgradeInfo->UpgradeOwned;
 		break;
 	default:
 		break;
@@ -237,6 +230,7 @@ void UPlayerGameInstance::UpgradePlayerStats(const EUpgradeType Upgrade, class A
 
 void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APlayerCharacter* Player)
 {
+	FUpgradeInfo* UpgradeInfo = UpgradeMap.Find(Upgrade);
 	if (Player->CurrentGun)
 	{
 		switch (Upgrade)
@@ -244,27 +238,28 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 		case EUpgradeType::PistolDamage10:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
 			{
-				Player->GetWeaponInstance("Pistol")->WeaponDamage *= 1.1;
+				Player->GetWeaponInstance("Pistol")->WeaponDamage = Player->GetWeaponInstance("Pistol")->BaseWeaponDamage * (1 + 0.1 * UpgradeInfo->UpgradeOwned);
 				Player->CurrentGun->bIsUpgraded = true;
 			}
 			break;
 		case EUpgradeType::RifleDamage10:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
 			{
-				Player->GetWeaponInstance("Rifle")->WeaponDamage *= 1.1;
+				Player->GetWeaponInstance("Rifle")->WeaponDamage = Player->GetWeaponInstance("Rifle")->BaseWeaponDamage * (1 + 0.1 * UpgradeInfo->UpgradeOwned);
 				Player->CurrentGun->bIsUpgraded = true;
 			}
 			break;
 		case EUpgradeType::PistolFiringSpeed10:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
 			{
-				Player->GetWeaponInstance("Pistol")->RoundsPerSecond *= 1.1;
+				Player->GetWeaponInstance("Pistol")->RoundsPerSecond = Player->GetWeaponInstance("Pistol")->BaseRoundsPerSecond * (1 + 0.1 * UpgradeInfo->UpgradeOwned);
+				Player->CurrentGun->bIsUpgraded = true;
 			}
 			break;
 		case EUpgradeType::RifleFiringSpeed10:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
 			{
-				Player->GetWeaponInstance("Rifle")->RoundsPerSecond *= 1.1;
+				Player->GetWeaponInstance("Rifle")->RoundsPerSecond = Player->GetWeaponInstance("Rifle")->BaseRoundsPerSecond * (1 + 0.1 * UpgradeInfo->UpgradeOwned);
 				Player->CurrentGun->bIsUpgraded = true;
 			}
 			break;
@@ -280,6 +275,7 @@ FString UPlayerGameInstance::ConvertUpgradeTypeToString(const EUpgradeType Type)
 	EnumString.RemoveFromStart(TEXT("EUpgradeType::"));
 	return EnumString;
 }
+
 UPlayerGameInstance::UPlayerGameInstance()
 {
 	// Sätter upp level order, aka vilken level är numer 1 o.s.v

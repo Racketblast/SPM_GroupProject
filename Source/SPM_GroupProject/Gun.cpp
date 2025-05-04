@@ -92,13 +92,20 @@ void AGun::CheckForUpgrades()
 		{
 			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(),0)))
 			{
-				for (EUpgradeType Upgrades : GI->UpgradeArray)
+				for (const TPair<EUpgradeType, FUpgradeInfo>& Upgrade : GI->UpgradeMap)
 				{
-					GI->UpgradeGunStats(Upgrades, Player);
+					GI->UpgradeGunStats(Upgrade.Key, Player);
 				}
 			}
 		}
 		bHasAppliedUpgrades = true;
 	}
+}
+
+void AGun::BeginPlay()
+{
+	Super::BeginPlay();
+	BaseWeaponDamage = WeaponDamage;
+	BaseRoundsPerSecond = RoundsPerSecond;
 }
 

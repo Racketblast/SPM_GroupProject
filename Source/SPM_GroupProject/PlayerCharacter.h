@@ -35,10 +35,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	int32 UseDistance = 300;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	int32 PlayerHealth;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 PlayerMaxHealth = 100;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int32 BasePlayerMaxHealth;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 PickedUpMoney;
@@ -112,7 +114,7 @@ private:
 	class UAIPerceptionStimuliSourceComponent* StimulusSource;
 	void SetupStimulusSource();
 
-	// this one has gotta go when gamemode is a c++ class
+	// this one has got to go when gamemode is a c++ class
 	UFUNCTION()
 	void Respawn();
 };
