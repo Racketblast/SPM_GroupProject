@@ -1,21 +1,19 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Portal.h"
+#include "PortalV2.h"
 
 #include "PlayerCharacter.h"
 #include "Components/ArrowComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
-#include "Components/SceneCaptureComponent2D.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Kismet/KismetRenderingLibrary.h"
 
 #define FPS 40
 
 // Sets default values
-APortal::APortal()
+APortalV2::APortalV2()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -23,10 +21,8 @@ APortal::APortal()
 	PortalSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("PortalSceneComponent"));
 	PortalMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PortalMeshComponent"));
 	PortalMeshComponent->SetupAttachment(PortalSceneComponent);
-	PortalCaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("PortalCaptureComponent"));
-	PortalCaptureComponent->SetupAttachment(PortalSceneComponent);
-	PortalNormalCaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("PortalNormalCaptureComponent"));
-	PortalNormalCaptureComponent->SetupAttachment(PortalSceneComponent);
+	PortalPositionComponent = CreateDefaultSubobject<USceneComponent>(TEXT("PortalPositionComponent"));
+	PortalPositionComponent->SetupAttachment(PortalSceneComponent);
 	PortalDistanceTriggerVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("PortalDistanceTriggerVolume"));
 	PortalDistanceTriggerVolume->SetupAttachment(PortalSceneComponent);
 	PortalTriggerVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("PortalTriggerVolume"));
@@ -41,7 +37,7 @@ APortal::APortal()
 }
 
 // Called when the game starts or when spawned
-void APortal::BeginPlay()
+void APortalV2::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -53,102 +49,45 @@ void APortal::BeginPlay()
 
 	if (PortalDistanceTriggerVolume)
 	{
-		PortalDistanceTriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &APortal::OnTriggerCloseBeginOverlap);
-		PortalDistanceTriggerVolume->OnComponentEndOverlap.AddDynamic(this, &APortal::OnTriggerCloseEndOverlap);
+		PortalDistanceTriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &APortalV2::OnTriggerCloseBeginOverlap);
+		PortalDistanceTriggerVolume->OnComponentEndOverlap.AddDynamic(this, &APortalV2::OnTriggerCloseEndOverlap);
 	}
-	PortalCaptureComponent->bCaptureEveryFrame = false;
-	PortalNormalCaptureComponent->bCaptureEveryFrame = false;
-	PortalCaptureComponent->bCaptureOnMovement = false;
-	PortalNormalCaptureComponent->bCaptureOnMovement = false;
 	
-
-	SetClipPlanes();
-
 	FVector NewVector = ForwardDirection->GetForwardVector() * TextureOffsetAmount;
 	FLinearColor NewPosition = UKismetMathLibrary::MakeColor(NewVector.X, NewVector.Y, NewVector.Z);
 	PortalMaterialInstance->SetVectorParameterValue(FName("TextureOffset"), NewPosition);
-
-	PortalMaterialInstance->SetVectorParameterValue(FName("FrameColor"), BoarderColor);
-
-	//We do this because one of the portals are not loaded in yet
-	FTimerHandle CaptureDelayHandle;
-	GetWorldTimerManager().SetTimer(CaptureDelayHandle, this, &APortal::DelayedInitialCapture, 0.1f, false);
 	
-	PortalCaptureComponent->SetComponentTickInterval(0.04);
+	PortalMaterialInstance->SetVectorParameterValue(FName("PortalColor"), PortalColor);
 }
 
-void APortal::OnTriggerCloseBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void APortalV2::OnTriggerCloseBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor && OtherActor->IsA<APlayerCharacter>())
 	{
 		bBlendingToFaraway = false;
 		bPlayerInRange = true;
-		LinkedPortal->PortalCaptureComponent->bCaptureEveryFrame = true;
 	}
 }
 
-void APortal::OnTriggerCloseEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void APortalV2::OnTriggerCloseEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if (OtherActor && OtherActor->IsA<APlayerCharacter>())
 	{
 		bBlendingToFaraway = true;
 		bPlayerInRange = false;
-		LinkedPortal->PortalCaptureComponent->bCaptureEveryFrame = false;
 	}
 }
 
-void APortal::SetClipPlanes()
-{
-	int32 ClipPlaneOffset = -3;
-	PortalCaptureComponent->bEnableClipPlane = true;
-	FVector ClipFixVector = ForwardDirection->GetForwardVector() * (ClipPlaneOffset);
-	PortalCaptureComponent->ClipPlaneBase = PortalMeshComponent->GetComponentLocation() + ClipFixVector;
-	PortalCaptureComponent->ClipPlaneNormal = ForwardDirection->GetForwardVector();
-
-	PortalNormalCaptureComponent->bEnableClipPlane = true;
-	ClipFixVector = ForwardDirection->GetForwardVector() * (ClipPlaneOffset);
-	PortalNormalCaptureComponent->ClipPlaneBase = PortalMeshComponent->GetComponentLocation() + ClipFixVector;
-	PortalNormalCaptureComponent->ClipPlaneNormal = ForwardDirection->GetForwardVector();
-}
-
-void APortal::SetPortalMaterial()
+void APortalV2::SetPortalMaterial()
 {
 	if (PortalMaterial)
 	{
 		PortalMaterialInstance = UMaterialInstanceDynamic::Create(PortalMaterial, this);
 		PortalMeshComponent->SetMaterial(0, PortalMaterialInstance);
 	}
-	
-	int32 ViewportX, ViewportY;
-	UGameplayStatics::GetPlayerController(GetWorld(),0)->GetViewportSize(ViewportX, ViewportY);
-	PortalRenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(this,ViewportX/ViewpointResolutionDivider,ViewportY/ViewpointResolutionDivider, RTF_RGBA16f);
-	PortalFarawayRenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(this,ViewportX/ViewpointResolutionDivider,ViewportY/ViewpointResolutionDivider, RTF_RGBA16f);
-	
-	if (PortalMaterialInstance)
-	{
-		PortalMaterialInstance->SetTextureParameterValue(FName("RenderTarget"), PortalRenderTarget);
-		PortalMaterialInstance->SetTextureParameterValue(FName("FarawayRenderTarget"), PortalFarawayRenderTarget);
-	}
-
-	if (LinkedPortal)
-	{
-		if (LinkedPortal->PortalCaptureComponent)
-		{
-			LinkedPortal->PortalCaptureComponent->TextureTarget = PortalRenderTarget;
-			LinkedPortal->PortalNormalCaptureComponent->TextureTarget = PortalFarawayRenderTarget;
-		}
-	}
 }
 
-void APortal::DelayedInitialCapture()
-{
-	if (PortalNormalCaptureComponent)
-	{
-		PortalNormalCaptureComponent->CaptureScene();
-	}
-}
-
-void APortal::ChangePortalMaterial(float DeltaTime)
+void APortalV2::ChangePortalMaterial(float DeltaTime)
 {
 	if (bBlendingToFaraway && DistanceBlendAlpha != 1)
 	{
@@ -168,7 +107,7 @@ void APortal::ChangePortalMaterial(float DeltaTime)
 	}
 }
 
-FVector APortal::MirrorAndTransformDirection(const FTransform& SourceTransform, const FTransform& TargetTransform, const FVector& Direction)
+FVector APortalV2::MirrorAndTransformDirection(const FTransform& SourceTransform, const FTransform& TargetTransform, const FVector& Direction)
 {
 	FVector InverseDirection = UKismetMathLibrary::InverseTransformDirection(SourceTransform,Direction);
 	InverseDirection = UKismetMathLibrary::MirrorVectorByNormal(InverseDirection,{1,0,0});
@@ -177,9 +116,9 @@ FVector APortal::MirrorAndTransformDirection(const FTransform& SourceTransform, 
 }
 
 
-void APortal::UpdatePortalCapture()
+void APortalV2::UpdatePortalPosition()
 {
-	if (!PlayerCamera || !LinkedPortal || !LinkedPortal->PortalCaptureComponent)
+	if (!PlayerCamera || !LinkedPortal || !LinkedPortal->PortalPositionComponent)
 	return;
 	
 	FVector ScaleVector = GetActorScale();
@@ -197,24 +136,10 @@ void APortal::UpdatePortalCapture()
 		
 	FRotator LinkedRotation = UKismetMathLibrary::MakeRotationFromAxes(CameraForwardDirection, CameraRightDirection, CameraUpDirection);
 	
-	LinkedPortal->PortalCaptureComponent->SetWorldLocationAndRotation(LinkedLocation, LinkedRotation);
+	LinkedPortal->PortalPositionComponent->SetWorldLocationAndRotation(LinkedLocation, LinkedRotation);
 }
 
-void APortal::CheckViewportSize() const
-{
-	int32 ViewportX, ViewportY;
-	UGameplayStatics::GetPlayerController(GetWorld(),0)->GetViewportSize(ViewportX, ViewportY);
-	ViewportX /= ViewpointResolutionDivider;
-	ViewportY /= ViewpointResolutionDivider;
-	if (ViewportX == PortalRenderTarget->SizeX && ViewportY == PortalRenderTarget->SizeY)
-	{
-		return;
-	}
-	UE_LOG(LogTemp, Display, TEXT("Resizing"));
-	PortalRenderTarget->ResizeTarget(ViewportX, ViewportY);
-}
-
-void APortal::ShouldTeleport()
+void APortalV2::ShouldTeleport()
 {
 	TArray<AActor*> Overlaps;
 	PortalTriggerVolume->GetOverlappingActors(Overlaps);
@@ -235,7 +160,7 @@ void APortal::ShouldTeleport()
 	}
 }
 
-bool APortal::IsPointCrossingPortal(FVector Point, FVector PortalLocation, FVector PortalNormal)
+bool APortalV2::IsPointCrossingPortal(FVector Point, FVector PortalLocation, FVector PortalNormal)
 {
 	float CrossingDot = UKismetMathLibrary::Dot_VectorVector(PortalNormal, Point-PortalLocation);
 	bool bIsInFront = false;
@@ -260,7 +185,7 @@ bool APortal::IsPointCrossingPortal(FVector Point, FVector PortalLocation, FVect
 	return bIsCrossing;
 }
 
-void APortal::Teleport(AActor* OtherActor)
+void APortalV2::Teleport(AActor* OtherActor)
 {
 	if (!OtherActor || !LinkedPortal)
 		return;
@@ -315,7 +240,7 @@ void APortal::Teleport(AActor* OtherActor)
 	}
 }
 
-FVector APortal::UpdateVelocity(FVector Velocity)
+FVector APortalV2::UpdateVelocity(FVector Velocity)
 {
 	const float OriginalSpeed = Velocity.Size();
 
@@ -332,7 +257,7 @@ FVector APortal::UpdateVelocity(FVector Velocity)
 
 
 // Called every frame
-void APortal::Tick(float DeltaTime)
+void APortalV2::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
@@ -345,8 +270,7 @@ void APortal::Tick(float DeltaTime)
 	if (AccumulatedTime >= TargetDeltaTime)
 	{
 		AccumulatedTime -= TargetDeltaTime;
-		UpdatePortalCapture();
-		CheckViewportSize();
+		UpdatePortalPosition();
 		ShouldTeleport();
 	}
 }
