@@ -8,6 +8,7 @@
 #include "MovieSceneSequencePlaybackSettings.h"
 #include "PlayerGameInstance.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraComponent.h"
 
 // Sets default values
 ATeleporter::ATeleporter()
@@ -16,6 +17,10 @@ ATeleporter::ATeleporter()
 	
 	CubeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CubeMeshComponent"));
 	CubeMeshComponent->SetupAttachment(GetRootComponent());
+
+	TeleportSkyBeam = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TeleportSkyBeam"));
+	TeleportSkyBeam->SetupAttachment(CubeMeshComponent);
+	TeleportSkyBeam->bAutoActivate = false;
 }
 
 void ATeleporter::BeginPlay()
@@ -53,14 +58,16 @@ void ATeleporter::Tick(float DeltaTime)
 void ATeleporter::ChangeTexture()
 {
 	bool bHasAccess = CachedGameInstance->UnlockedLevels.Contains(TargetLevelName);
-	//UE_LOG(LogTemp, Display, TEXT("Can Teleport: %s"), CachedGameInstance->TeleportKeyArray[TeleportKeyNumber] ? TEXT("true") : TEXT("false"));
-	//if it is a wave or if player does not have a key
-	//if (bOldWaveValue || !CachedGameInstance->TeleportKeyArray[TeleportKeyNumber])
+	//if it is a wave or if player does not have access to the level
 	if (bOldWaveValue || !bHasAccess)
 	{
 		if (WaveMaterial)
 		{
 			CubeMeshComponent->SetMaterial(0, WaveMaterial);
+		}
+		if (TeleportSkyBeam && UGameplayStatics::GetCurrentLevelName(this,true) != TEXT("Hub"))
+		{
+			TeleportSkyBeam->Deactivate(); // Turn off effect if access denied
 		}
 	}
 	else
@@ -68,6 +75,10 @@ void ATeleporter::ChangeTexture()
 		if (GracePeriodMaterial)
 		{
 			CubeMeshComponent->SetMaterial(0, GracePeriodMaterial);
+		}
+		if (TeleportSkyBeam && UGameplayStatics::GetCurrentLevelName(this,true) != TEXT("Hub"))
+		{
+			TeleportSkyBeam->Activate(); // Turn on effect if access granted
 		}
 	}
 }

@@ -25,6 +25,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category="Teleport")
 	class ULevelSequence* FadeOutTransition;
+
+	UPROPERTY(EditDefaultsOnly, Category="Teleport")
+	class UNiagaraComponent* TeleportSkyBeam;
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
