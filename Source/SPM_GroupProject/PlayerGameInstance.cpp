@@ -35,6 +35,8 @@ FUpgradeInfo UPlayerGameInstance::SetDefaultUpgradeInfo(const EUpgradeType Upgra
 		return {EUpgradeCategory::Weapon,20,0,1};
 	case EUpgradeType::Health20:
 		return {EUpgradeCategory::PlayerStats,100,0,10};
+	case EUpgradeType::HealthMax:
+		return {EUpgradeCategory::PlayerStats,0,0,1};
 	case EUpgradeType::Speed20:
 		return {EUpgradeCategory::PlayerStats,100,0,1};
 	case EUpgradeType::Jump50:
@@ -114,6 +116,7 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 	// If you own the product
 	else
 	{
+		//Switch weapons
 		if (UpgradeInfo->UpgradeCategory == EUpgradeCategory::Weapon)
 		{
 			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
@@ -127,6 +130,7 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 				Player->SelectWeapon(*ConvertUpgradeTypeToString(Upgrade));
 			}
 		}
+		//Can't switch weapons
 		else
 		{
 			if (CantBuySound)
@@ -217,6 +221,10 @@ void UPlayerGameInstance::UpgradePlayerStats(const EUpgradeType Upgrade, class A
 		Player->PlayerMaxHealth = Player->BasePlayerMaxHealth + 20 * UpgradeInfo->UpgradeOwned;
 		Player->PlayerHealth = Player->PlayerMaxHealth;
 		break;
+	case EUpgradeType::HealthMax:
+		Player->PlayerMaxHealth = 1000000;
+		Player->PlayerHealth = Player->PlayerMaxHealth;
+		break;
 	case EUpgradeType::Speed20:
 		Player->GetCharacterMovement()->MaxWalkSpeed *= 1 + 0.2 * UpgradeInfo->UpgradeOwned;
 		break;
@@ -292,5 +300,7 @@ UPlayerGameInstance::UPlayerGameInstance()
 	{
 		UnlockedLevels.Add(LevelOrder[0]);
 		UnlockedLevels.Add(LevelOrder[1]);
+		UnlockedLevels.Add(LevelOrder[2]);
+		UnlockedLevels.Add(LevelOrder[3]);
 	}
 }

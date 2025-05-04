@@ -4,6 +4,8 @@
 #include "DebugCube.h"
 
 #include "PlayerGameInstance.h"
+#include "Kismet/GameplayStatics.h"
+#include "Slate/SGameLayerManager.h"
 
 // Sets default values
 ADebugCube::ADebugCube()
@@ -13,6 +15,17 @@ ADebugCube::ADebugCube()
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	StaticMeshComponent->SetupAttachment(GetRootComponent());
 
+}
+
+void ADebugCube::DoAllFunctions()
+{
+	if (UseSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, UseSound, GetActorLocation());
+	}
+	EnableAllLevels();
+	GivePlayerMaxHealth();
+	GivePlayerMaxMoney();
 }
 
 void ADebugCube::EnableAllLevels()
@@ -30,6 +43,28 @@ void ADebugCube::EnableAllLevels()
 				GI->UnlockedLevels.Add(GI->LevelOrder[3]);
 				GI->UnlockedLevels.Add(GI->LevelOrder[4]);
 			}
+		}
+	}
+}
+
+void ADebugCube::GivePlayerMaxHealth()
+{
+	if (bHealth)
+	{
+		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+		{
+			GI->BuyUpgrade(EUpgradeType::HealthMax);
+		}
+	}
+}
+
+void ADebugCube::GivePlayerMaxMoney()
+{
+	if (bMoney)
+	{
+		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+		{
+			GI->Money += 1000000;
 		}
 	}
 }

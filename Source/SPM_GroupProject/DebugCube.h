@@ -17,8 +17,18 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="Debug")
 	bool bLevel = false;
-	void EnableAllLevels();
+	UPROPERTY(EditAnywhere, Category="Debug")
+	bool bHealth = false;
+	UPROPERTY(EditAnywhere, Category="Debug")
+	bool bMoney = false;
+	void DoAllFunctions();
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	class UStaticMeshComponent* StaticMeshComponent;
+	UPROPERTY(EditDefaultsOnly, Category="Debug")
+	class USoundBase* UseSound;
+	
+	void EnableAllLevels();
+	void GivePlayerMaxHealth();
+	void GivePlayerMaxMoney();
 };

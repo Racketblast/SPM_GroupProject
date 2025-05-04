@@ -377,7 +377,7 @@ void APlayerCharacter::Use()
 		}
 		else if (ADebugCube* DebugCube = Cast<ADebugCube>(TargetActor))
 		{
-			DebugCube->EnableAllLevels();
+			DebugCube->DoAllFunctions();
 		}
 	}
 }
