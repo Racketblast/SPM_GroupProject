@@ -58,17 +58,17 @@ void UChallengeSubsystem::CompleteCurrentChallenge()
 	bIsChallengeActive = false;
 }
 
-FText UChallengeSubsystem::GetChallengeDescription() const
+FText UChallengeSubsystem::GetChallengeDescription() const // Används för widget
 {
 	return CurrentChallenge.Description;
 }
 
-bool UChallengeSubsystem::GetChallengeJustFailed() const
+bool UChallengeSubsystem::GetChallengeJustFailed() const  // Används för widget
 {
 	return bChallengeJustFailed;
 }
 
-bool UChallengeSubsystem::GetChallengeJustCompleted() const
+bool UChallengeSubsystem::GetChallengeJustCompleted() const // Används för widget
 {
 	return bChallengeJustCompleted;
 }
@@ -79,6 +79,15 @@ void UChallengeSubsystem::HandleChallengeSuccess()
 	GiveChallengeReward();
 
 	UE_LOG(LogTemp, Log, TEXT("Challenge Completed Successfully!"));
+	ResetChallengeStatus(); // För att bara aktivera en animation för en sekund och sedan sätta tillbaka variablerna till false.
+
+	/*GetWorld()->GetTimerManager().SetTimer( // Endast för testing, ta bort sen
+	ResetChallengeStatusTimerHandle,
+	this,
+	&UChallengeSubsystem::ResetChallengeStatus,
+	2.0f,  
+	false  
+	);*/
 }
 
 void UChallengeSubsystem::HandleChallengeFailure()
@@ -87,6 +96,7 @@ void UChallengeSubsystem::HandleChallengeFailure()
 	bChallengeJustFailed = true;
 
 	UE_LOG(LogTemp, Warning, TEXT("Challenge Failed!"));
+	ResetChallengeStatus(); // För att bara aktivera en animation för en sekund och sedan sätta tillbaka variablerna till false. 
 }
 
 void UChallengeSubsystem::ResetChallengeStatus()

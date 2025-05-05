@@ -28,11 +28,11 @@ void AWaveManager::BeginPlay()
 // Funktionen som startar waven. 
 void AWaveManager::StartNextWave()
 {
-	// För challenges, den rensar challenge resultat status för nästa wave
-	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+	// För challenges, den rensar challenge resultat status för nästa wave, detta är endast för widget. 
+	/*if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
 	{
 		ChallengeSub->ResetChallengeStatus();
-	}
+	}*/
 	
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{

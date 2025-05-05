@@ -89,6 +89,8 @@ public:
 
 	void LoadChallengeDataFromManager();
 
+	FTimerHandle ResetChallengeStatusTimerHandle; // Endast för testing, ta bort den. 
+
 	// För tids baserad challenge
 	FTimerHandle TimerHandle_WaveTimeLimit;
 	float CurrentWaveTimeLimit = 0.0f;
