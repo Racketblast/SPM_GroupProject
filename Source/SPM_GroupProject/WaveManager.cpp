@@ -21,6 +21,11 @@ void AWaveManager::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	// För att se till att man har en challenge för den första waven
+	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+	{
+		ChallengeSub->PreviewNextChallenge(); 
+	}
 
 	StartNextWave();
 }
@@ -70,7 +75,7 @@ void AWaveManager::StartNextWave()
 	//För challenges
 	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
 	{
-		ChallengeSub->AssignNewChallenge();
+		ChallengeSub->ActivateCurrentChallenge();
 		ChallengeSub->StartWaveChallenge();
 	}
 
@@ -236,6 +241,7 @@ void AWaveManager::EndWave()
 	{
 		ChallengeSub->CompleteCurrentChallenge();
 		ChallengeSub->NotifyWaveCleared();
+		ChallengeSub->PreviewNextChallenge();
 	}
 
 	// Missions

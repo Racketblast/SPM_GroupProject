@@ -17,11 +17,10 @@ void UChallengeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	//AssignNewChallenge();
 }
 
-void UChallengeSubsystem::AssignNewChallenge()
+void UChallengeSubsystem::PreviewNextChallenge()
 {
 	if (PossibleChallenges.Num() == 0) return;
-
-	//int32 Index = UKismetMathLibrary::RandomInteger(PossibleChallenges.Num());
+	
 	int32 Index = -1;
 
 	// Loopar tills vi får en challenge som vi inte hade på waven innan. 
@@ -36,9 +35,14 @@ void UChallengeSubsystem::AssignNewChallenge()
 	LastChallengeType = CurrentChallenge.Type; // För att undvika att spelaren får samma challenge på rad
 
 	bHasFailedCurrentChallenge = false;
-	bIsChallengeActive = true;
+	bIsChallengeActive = false;
 	
 	UE_LOG(LogTemp, Warning, TEXT("New Challenge: %s"), *CurrentChallenge.Description.ToString());
+}
+
+void UChallengeSubsystem::ActivateCurrentChallenge()
+{
+	bIsChallengeActive = true;
 }
 
 void UChallengeSubsystem::CompleteCurrentChallenge()
@@ -202,6 +206,8 @@ void UChallengeSubsystem::NotifyWeaponFired(FName WeaponName)
 // För tids baserad challenge
 void UChallengeSubsystem::StartWaveChallenge()
 {
+	//if (!bIsChallengeActive) return;              Kanske kan behövas, skulle antagligen fixa ifall timern startar med mindre tid en vad den ska ha
+	
 	if (CurrentChallenge.Type != EChallengeType::ClearWaveInTime)
 		return;
 	

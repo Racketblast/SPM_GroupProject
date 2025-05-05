@@ -47,8 +47,13 @@ class SPM_GROUPPROJECT_API UChallengeSubsystem : public UGameInstanceSubsystem
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	void PreviewNextChallenge();
 
-	void AssignNewChallenge();
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	void ActivateCurrentChallenge();
+	
 	void CompleteCurrentChallenge();
 
 	UFUNCTION(BlueprintCallable, Category = "Challenge")
