@@ -20,6 +20,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UUserWidget> BuyBoxWidgetClass;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UUserWidget> HudWidgetClass;
+	
 	UPROPERTY(EditDefaultsOnly)
 	class USoundBase* OpenBuyMenuSound;
 

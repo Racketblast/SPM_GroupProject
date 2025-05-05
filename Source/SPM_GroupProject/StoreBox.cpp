@@ -5,7 +5,9 @@
 
 #include "PlayerCharacter.h"
 #include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/HUD.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -22,6 +24,17 @@ void AStoreBox::OpenStoreMenu()
 		if (UUserWidget* BuyBoxWidget = CreateWidget<UUserWidget>(GetWorld(), BuyBoxWidgetClass))
 		{
 			BuyBoxWidget->AddToViewport();
+			TArray<UUserWidget*> FoundWidgets;
+			UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UUserWidget::StaticClass(), false);
+
+			for (UUserWidget* Widget : FoundWidgets)
+			{
+				if (Widget && Widget->IsInViewport() && Widget->GetClass() == HudWidgetClass)
+				{
+					Widget->RemoveFromParent();
+					break;
+				}
+			}
 			
 			if (OpenBuyMenuSound)
 			{
