@@ -3,17 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PlayerUseInterface.h"
 #include "GameFramework/Actor.h"
 #include "DebugCube.generated.h"
 
 UCLASS()
-class SPM_GROUPPROJECT_API ADebugCube : public AActor
+class SPM_GROUPPROJECT_API ADebugCube : public AActor, public IPlayerUseInterface
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
 	ADebugCube();
+	virtual void Use_Implementation(APlayerCharacter* Player) override;
 
 	UPROPERTY(EditAnywhere, Category="Debug")
 	bool bLevel = false;
