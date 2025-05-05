@@ -3,17 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PlayerUseInterface.h"
 #include "GameFramework/Actor.h"
 #include "Teleporter.generated.h"
 
 UCLASS()
-class SPM_GROUPPROJECT_API ATeleporter : public AActor
+class SPM_GROUPPROJECT_API ATeleporter : public AActor, public IPlayerUseInterface
 {
 	GENERATED_BODY()
 	
 public:
 	ATeleporter();
-
+	virtual void Use_Implementation(APlayerCharacter* Player) override;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Teleport")
 	FName TargetLevelName = "Hub";
 	
