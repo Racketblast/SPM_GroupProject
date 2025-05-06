@@ -22,5 +22,5 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 
 	UPROPERTY(EditAnywhere, Category = "AI")
-	float PlayerRangeThreshold = 600.f; // Distance threshold to consider "in range"
+	float PlayerRangeThreshold = 600.f; // Distansen innan spelaren är "in range"
 };

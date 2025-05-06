@@ -13,8 +13,7 @@ UBTTask_FindPlayerLocation_Flying::UBTTask_FindPlayerLocation_Flying(FObjectInit
 	ZOffset = 300.0f;
 	bAddRandomOffset = true;
 	RandomRadius = 200.0f;
-
-	// Configure inherited BlackboardKey to accept vectors
+	
 	BlackboardKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UBTTask_FindPlayerLocation_Flying, BlackboardKey));
 }
 
@@ -36,7 +35,7 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 		FVector RandomOffset(
 			FMath::FRandRange(-RandomRadius, RandomRadius),
 			FMath::FRandRange(-RandomRadius, RandomRadius),
-			FMath::FRandRange(-RandomRadius * 0.5f, RandomRadius * 0.5f) // Tighter Z randomness
+			FMath::FRandRange(-RandomRadius * 0.5f, RandomRadius * 0.5f) 
 		);
 		TargetLocation += RandomOffset;
 	}

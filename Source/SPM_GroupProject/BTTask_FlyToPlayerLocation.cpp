@@ -9,13 +9,13 @@ UBTTask_FlyToPlayerLocation::UBTTask_FlyToPlayerLocation()
 	NodeName = TEXT("Fly To Player Location");
 	bNotifyTick = true;
 
-	// Setup default Blackboard key name
+	// Sätter default Blackboard key name till MoveToLocation
 	MoveToLocationKey.SelectedKeyName = "MoveToLocation";
 }
 
 EBTNodeResult::Type UBTTask_FlyToPlayerLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	// Start task (movement begins in TickTask)
+	// Startar Task, det som finns i tick
 	return EBTNodeResult::InProgress;
 }
 

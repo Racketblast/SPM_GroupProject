@@ -27,8 +27,8 @@ EBTNodeResult::Type UBTTask_RepositionFlyingEnemy::ExecuteTask(UBehaviorTreeComp
 	}
 
 	FVector PlayerLoc = Player->GetActorLocation();
-
-	// Pick a random direction and distance within the reposition radius
+	
+	// Väljer en random riktning och distans innom RepositionRadius.
 	FVector RandomOffset = FMath::VRand() * FMath::FRandRange(200.f, RepositionRadius);
 	RandomOffset.Z = FMath::FRandRange(ZOffsetMin, ZOffsetMax);
 
@@ -37,7 +37,7 @@ EBTNodeResult::Type UBTTask_RepositionFlyingEnemy::ExecuteTask(UBehaviorTreeComp
 	FAIMoveRequest MoveReq;
 	MoveReq.SetGoalLocation(TargetLocation);
 	MoveReq.SetAcceptanceRadius(50.f);
-	MoveReq.SetUsePathfinding(false); // No navmesh for flying
+	MoveReq.SetUsePathfinding(false); 
 	MoveReq.SetCanStrafe(true);
 
 	FNavPathSharedPtr PathPtr;
