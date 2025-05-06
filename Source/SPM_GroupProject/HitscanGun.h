@@ -21,10 +21,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UDamageType> DamageType;
 	
-	
-	float LastFireTime = 0.f;
-private: // Recoil settings (editable per weapon)
-
 	UPROPERTY(EditAnywhere, Category = "Recoil")
 	float RecoilPitchMin = -3.0f;  // Upward
 
@@ -44,6 +40,10 @@ private: // Recoil settings (editable per weapon)
 
 	UPROPERTY(VisibleAnywhere, Category = "Sound")
 	UAudioComponent* FireAudioComponent;
+	float LastFireTime = 0.f;
+
+
+
 
 };
 
