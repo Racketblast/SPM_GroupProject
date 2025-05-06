@@ -1,16 +1,11 @@
 #include "PlayerCharacter.h"
 #include "PlayerGameInstance.h"
-#include "BuyBox.h"
 #include "Teleporter.h"
 #include "Gun.h"
 #include "Kismet/GameplayStatics.h"
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
-#include "MissionSubsystem.h"
 #include "ChallengeSubsystem.h"
-#include "DebugCube.h"
-#include "StoreBox.h"
-#include "VendingMachine.h"
 #include "Rifle.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
@@ -309,10 +304,8 @@ void APlayerCharacter::SelectWeapon2()
 	}
 }
 
-// TODO: Make this a switch case and put it in it's own class
 void APlayerCharacter::Use()
 {
-	AActor* TargetActor;
 	const FVector Start = PlayerCamera->GetComponentLocation();
 	const FVector End = Start + (PlayerCamera->GetForwardVector() * UseDistance);
 	FHitResult HitResult;
@@ -321,64 +314,14 @@ void APlayerCharacter::Use()
 
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-		TargetActor = HitResult.GetActor();
-	}
-	else
-	{
-		TargetActor = nullptr;
-	}
-	if (TargetActor)
-	{
-		UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-		// Teleporting function
-		if (ATeleporter *Teleporter = Cast<ATeleporter>(TargetActor))
+		if (AActor* TargetActor = HitResult.GetActor())
 		{
-			if (GI)
+			if (TargetActor && TargetActor->GetClass()->ImplementsInterface(UPlayerUseInterface::StaticClass()))
 			{
-				// If you can teleport
-				// Checks if in wave and if you have level unlocked
-				if (!GI->bIsWave && GI->UnlockedLevels.Contains(Teleporter->TargetLevelName))
-				{
-					GI->Money += PickedUpMoney;
-					
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Teleporter->TeleportSound, Teleporter->GetActorLocation());
-
-					// För level unlock 
-					if (UMissionSubsystem* MissionSub = GI->GetSubsystem<UMissionSubsystem>())
-					{
-						MissionSub->TryUnlockLevel();
-					}
-
-					Teleporter->Teleport();
-				}
-				else
-				{
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Teleporter->CantTeleportSound, Teleporter->GetActorLocation());
-				}
+				IPlayerUseInterface::Execute_Use(TargetActor, this);
 			}
 		}
-		// Buying function
-		else if (const ABuyBox *BuyBox = Cast<ABuyBox>(TargetActor))
-		{
-			if (GI)
-			{
-				GI->BuyUpgrade(BuyBox->TargetUpgradeName, BuyBox->BuySound, BuyBox->CantBuySound);
-			}
-		}
-		//Open store Function
-		else if (AStoreBox* StoreBox = Cast<AStoreBox>(TargetActor))
-		{
-			StoreBox->OpenStoreMenu();
-		}
-		//Use VendingMachine Function
-		else if (AVendingMachine* VendingMachine = Cast<AVendingMachine>(TargetActor))
-		{
-			VendingMachine->UseVendingMachine();
-		}
-		else if (ADebugCube* DebugCube = Cast<ADebugCube>(TargetActor))
-		{
-			DebugCube->DoAllFunctions();
-		}
+		
 	}
 }
 

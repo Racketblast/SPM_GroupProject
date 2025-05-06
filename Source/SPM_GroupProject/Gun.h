@@ -61,6 +61,14 @@ protected:
 
 	UFUNCTION()
 	void FinishReload();
+	// Sound asset for reload
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase* ReloadSound;
+
+	// Audio component for reload sound
+	UPROPERTY(VisibleAnywhere, Category = "Sound")
+	UAudioComponent* ReloadAudioComponent;
+
 
 
 };

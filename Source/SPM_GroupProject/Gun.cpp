@@ -1,25 +1,40 @@
-// Gun.cpp
 #include "Gun.h"
 #include "PlayerCharacter.h"
 #include "PlayerGameInstance.h"
-
+#include "Components/AudioComponent.h"
+#include "Sound/SoundBase.h"
+#include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
 
 AGun::AGun()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	// Create components using *this*, since we're inside the constructor
 	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
-	SetRootComponent(WeaponMesh);  // Make WeaponMesh the root
+	SetRootComponent(WeaponMesh);
 
 	MuzzlePoint = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzlePoint"));
-	MuzzlePoint->SetupAttachment(WeaponMesh);  // Attach muzzle to weapon
-
-	// Optional: Forward offset of 50 units
+	MuzzlePoint->SetupAttachment(WeaponMesh);
 	MuzzlePoint->SetRelativeLocation(FVector(50.f, 0.f, 0.f));
 }
 
+void AGun::BeginPlay()
+{
+	Super::BeginPlay();
+	BaseWeaponDamage = WeaponDamage;
+	BaseRoundsPerSecond = RoundsPerSecond;
 
+	// 🔊 Initialize reload audio component
+	if (!ReloadAudioComponent)
+	{
+		ReloadAudioComponent = NewObject<UAudioComponent>(this, TEXT("ReloadAudioComponent"));
+		if (ReloadAudioComponent)
+		{
+			ReloadAudioComponent->RegisterComponent();
+			ReloadAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		}
+	}
+}
 
 void AGun::Reload()
 {
@@ -45,9 +60,21 @@ void AGun::Reload()
 
 	UE_LOG(LogTemp, Warning, TEXT("Reload started..."));
 
+	// 🔊 Play reload sound
+	if (ReloadSound && ReloadAudioComponent)
+	{
+		if (ReloadAudioComponent->IsPlaying())
+		{
+			ReloadAudioComponent->Stop();
+		}
+		ReloadAudioComponent->SetSound(ReloadSound);
+		ReloadAudioComponent->Play();
+	}
+
 	// Start a 2-second timer to finish the reload
 	GetWorld()->GetTimerManager().SetTimer(ReloadTimerHandle, this, &AGun::FinishReload, 2.0f, false);
 }
+
 void AGun::FinishReload()
 {
 	if (bHasInfiniteReloads)
@@ -74,9 +101,6 @@ void AGun::FinishReload()
 	UE_LOG(LogTemp, Warning, TEXT("Reload complete. CurrentAmmo: %d, TotalAmmo: %d"), CurrentAmmo, TotalAmmo);
 }
 
-
-
-
 void AGun::SetOwnerCharacter(APlayerCharacter* NewOwner)
 {
 	OwnerCharacter = NewOwner;
@@ -85,12 +109,12 @@ void AGun::SetOwnerCharacter(APlayerCharacter* NewOwner)
 void AGun::CheckForUpgrades()
 {
 	if (bHasAppliedUpgrades) return;
-	
+
 	if (!bIsUpgraded)
 	{
 		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 		{
-			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(),0)))
+			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
 			{
 				for (const TPair<EUpgradeType, FUpgradeInfo>& Upgrade : GI->UpgradeMap)
 				{
@@ -101,11 +125,3 @@ void AGun::CheckForUpgrades()
 		bHasAppliedUpgrades = true;
 	}
 }
-
-void AGun::BeginPlay()
-{
-	Super::BeginPlay();
-	BaseWeaponDamage = WeaponDamage;
-	BaseRoundsPerSecond = RoundsPerSecond;
-}
-

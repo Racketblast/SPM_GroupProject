@@ -7,6 +7,8 @@
 #include "LevelSequencePlayer.h"
 #include "MovieSceneSequencePlaybackSettings.h"
 #include "PlayerGameInstance.h"
+#include "PlayerCharacter.h"
+#include "MissionSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraComponent.h"
 
@@ -21,6 +23,35 @@ ATeleporter::ATeleporter()
 	TeleportSkyBeam = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TeleportSkyBeam"));
 	TeleportSkyBeam->SetupAttachment(CubeMeshComponent);
 	TeleportSkyBeam->bAutoActivate = false;
+}
+
+void ATeleporter::Use_Implementation(APlayerCharacter* Player)
+{
+		if (!CachedGameInstance)
+		return;
+		// If you can teleport
+		// Checks if in wave and if you have level unlocked
+		if (!CachedGameInstance->bIsWave && CachedGameInstance->UnlockedLevels.Contains(TargetLevelName))
+		{
+			CachedGameInstance->Money += Player->PickedUpMoney;
+			if (TeleportSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportSound, GetActorLocation());
+			}
+			// För level unlock 
+			if (UMissionSubsystem* MissionSub = CachedGameInstance->GetSubsystem<UMissionSubsystem>())
+			{
+				MissionSub->TryUnlockLevel();
+			}
+			Teleport();
+		}
+		else
+		{
+			if (CantTeleportSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantTeleportSound, GetActorLocation());
+			}
+		}
 }
 
 void ATeleporter::BeginPlay()

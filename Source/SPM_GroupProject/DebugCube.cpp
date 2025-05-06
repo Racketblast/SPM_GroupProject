@@ -17,6 +17,11 @@ ADebugCube::ADebugCube()
 
 }
 
+void ADebugCube::Use_Implementation(APlayerCharacter* Player)
+{
+	DoAllFunctions();
+}
+
 void ADebugCube::DoAllFunctions()
 {
 	if (UseSound)

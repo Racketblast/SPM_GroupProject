@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PlayerUseInterface.h"
 #include "GameFramework/Actor.h"
 #include "VendingMachine.generated.h"
 
@@ -15,13 +16,14 @@ enum class EVendingMachineSpewOut : uint8
 	// Add more as needed
 };
 UCLASS()
-class SPM_GROUPPROJECT_API AVendingMachine : public AActor
+class SPM_GROUPPROJECT_API AVendingMachine : public AActor, public IPlayerUseInterface
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
 	AVendingMachine();
+	virtual void Use_Implementation(APlayerCharacter* Player) override;
 	
 	void UseVendingMachine();
 protected:

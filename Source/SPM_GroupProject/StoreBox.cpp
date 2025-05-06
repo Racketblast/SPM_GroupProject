@@ -17,6 +17,11 @@ AStoreBox::AStoreBox()
 	StaticMeshComponent->SetupAttachment(GetRootComponent());
 }
 
+void AStoreBox::Use_Implementation(APlayerCharacter* Player)
+{
+	OpenStoreMenu();
+}
+
 void AStoreBox::OpenStoreMenu()
 {
 	if (BuyBoxWidgetClass)
