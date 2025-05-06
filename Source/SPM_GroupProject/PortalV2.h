@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Portal.generated.h"
+#include "PortalV2.generated.h"
 
 UCLASS()
-class SPM_GROUPPROJECT_API APortal : public AActor
+class SPM_GROUPPROJECT_API APortalV2 : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	APortal();
+	APortalV2();
 
 protected:
 	// Called when the game starts or when spawned
@@ -25,10 +25,7 @@ protected:
 	class UStaticMeshComponent* PortalMeshComponent;
 		
 	UPROPERTY(EditAnywhere)
-	class USceneCaptureComponent2D* PortalCaptureComponent;
-
-	UPROPERTY(EditAnywhere)
-	class USceneCaptureComponent2D* PortalNormalCaptureComponent;
+	class USceneComponent* PortalPositionComponent;
 	
 	UPROPERTY(EditDefaultsOnly)
 	class UBoxComponent* PortalTriggerVolume;
@@ -43,37 +40,29 @@ protected:
 	class UMaterialInterface* PortalMaterial;
 
 	UPROPERTY(EditAnywhere)
-	FLinearColor BoarderColor = {0,0,3,0};
+	FLinearColor PortalColor = {0,0,3,0};
 	
 	UPROPERTY()
 	class UMaterialInstanceDynamic* PortalMaterialInstance;
 
 	UPROPERTY(EditDefaultsOnly)
 	class UArrowComponent* ForwardDirection;
-
-	UPROPERTY()
-	class UTextureRenderTarget2D* PortalRenderTarget;
-	UPROPERTY()
-	UTextureRenderTarget2D* PortalFarawayRenderTarget;
-	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class APortal* LinkedPortal = this;
+	class APortalV2* LinkedPortal = this;
 private:
-	UFUNCTION()
-	void DelayedInitialCapture();
 	UPROPERTY()
 	class APlayerCameraManager* PlayerCamera;
+	float RandomTextureOffsetX;
+	float RandomTextureOffsetY;
 	
 	UFUNCTION()
 	void OnTriggerCloseBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnTriggerCloseEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	void SetClipPlanes();
 	FVector MirrorAndTransformDirection(const FTransform& SourceTransform, const FTransform& TargetTransform, const FVector& Direction);
-	void UpdatePortalCapture();
-	void CheckViewportSize() const;
+	void UpdatePortalPosition();
 
 	UFUNCTION()
 	void SetPortalMaterial();
@@ -89,10 +78,6 @@ private:
 	//For warpDistance basically. Plus means that you can go through it and not teleport, if Minus means that you go through the portal further away
 	//What it actually does is pushing the material backwards (negative value) or forwards (plus value)
 	float TextureOffsetAmount = -17;
-
-	//Divides the viewport resolution
-	UPROPERTY(EditDefaultsOnly)
-	float ViewpointResolutionDivider = 1;
 	
 	//Teleport variables
 	FVector LastPosition;

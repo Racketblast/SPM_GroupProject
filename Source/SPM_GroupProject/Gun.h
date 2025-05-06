@@ -22,8 +22,12 @@ public:
 	AGun();  // 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float WeaponDamage = 20;
+	UPROPERTY(BlueprintReadOnly)
+	float BaseWeaponDamage;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float RoundsPerSecond = 1;
+	UPROPERTY(BlueprintReadOnly)
+	float BaseRoundsPerSecond ;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float RealoadSpeed = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -38,9 +42,10 @@ public:
 	bool bHasAppliedUpgrades = false;
 	bool bIsUpgraded = false;
 	void CheckForUpgrades();
-	
 
 protected:
+	virtual void BeginPlay() override;
+	
 	UPROPERTY()
 	APlayerCharacter* OwnerCharacter;
 
@@ -56,6 +61,14 @@ protected:
 
 	UFUNCTION()
 	void FinishReload();
+	// Sound asset for reload
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase* ReloadSound;
+
+	// Audio component for reload sound
+	UPROPERTY(VisibleAnywhere, Category = "Sound")
+	UAudioComponent* ReloadAudioComponent;
+
 
 
 };

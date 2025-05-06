@@ -1,19 +1,15 @@
 #include "PlayerCharacter.h"
 #include "PlayerGameInstance.h"
-#include "BuyBox.h"
 #include "Teleporter.h"
 #include "Gun.h"
 #include "Kismet/GameplayStatics.h"
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
-#include "MissionSubsystem.h"
 #include "ChallengeSubsystem.h"
-#include "DebugCube.h"
-#include "StoreBox.h"
-#include "VendingMachine.h"
 #include "Rifle.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -34,6 +30,12 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 	if (UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
+		//Adds a pistol if player does not have one each time player is loaded
+		if (!GI->UpgradeMap.Contains(EUpgradeType::Pistol))
+		{
+			GI->UpgradeMap.Add(EUpgradeType::Pistol,GI->SetDefaultUpgradeInfo(EUpgradeType::Pistol));
+			GI->SetCurrentWeapon(EUpgradeType::Pistol);
+		}
 		GI->ApplyAllUpgradeFunctions(this);
 		SelectWeapon(GI->GetCurrentWeaponName());
 	}
@@ -50,6 +52,8 @@ void APlayerCharacter::BeginPlay()
 		ULevelSequencePlayer *SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), FadeInTransition, Settings, OutActor);
 		SequencePlayer->Play();
 	}
+
+	BasePlayerMaxHealth = PlayerMaxHealth;
 }
 
 // Called every frame
@@ -61,8 +65,6 @@ void APlayerCharacter::Tick(float DeltaTime)
 		Shoot();
 	}
 
-	const FVector Start = PlayerCamera->GetComponentLocation();
-	const FVector End = Start + (PlayerCamera->GetForwardVector() * UseDistance);
 	// DrawDebugLine for use
 	// DrawDebugLine(GetWorld(), Start, End, FColor::Red, false);
 
@@ -83,18 +85,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 		false     // Thickness
 	);*/
 
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
-
-	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
-	{
-		TargetActor = HitResult.GetActor();
-	}
-	else
-	{
-		TargetActor = nullptr;
-	}
+	
 }
 
 // Called to bind functionality to input
@@ -110,7 +101,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCom
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Yaw", this, &APlayerCharacter::Yaw);
-	PlayerInputComponent->BindAxis("Pitch", this, &APlayerCharacter::Pitch);PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &APlayerCharacter::StartShooting);
+	PlayerInputComponent->BindAxis("Pitch", this, &APlayerCharacter::Pitch);
+	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &APlayerCharacter::StartShooting);
 	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &APlayerCharacter::StopShooting);
 	
 }
@@ -219,11 +211,11 @@ void APlayerCharacter::SelectWeapon(FName Weapon)
 {
 	if (UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
-		if (GI->GetCurrentWeaponName() == WeaponName1)
+		if (Weapon == WeaponName1)
 		{
 			APlayerCharacter::SelectWeapon1();
 		}
-		else if (GI->GetCurrentWeaponName() == WeaponName2)
+		else if (Weapon == WeaponName2)
 		{
 			APlayerCharacter::SelectWeapon2();
 		}
@@ -312,80 +304,36 @@ void APlayerCharacter::SelectWeapon2()
 	}
 }
 
-// TODO: Make this a switch case and put it in it's own class
 void APlayerCharacter::Use()
 {
-	if (TargetActor)
+	const FVector Start = PlayerCamera->GetComponentLocation();
+	const FVector End = Start + (PlayerCamera->GetForwardVector() * UseDistance);
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-		UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-		// Teleporting function
-		if (ATeleporter *Teleporter = Cast<ATeleporter>(TargetActor))
+		if (AActor* TargetActor = HitResult.GetActor())
 		{
-			if (GI)
+			if (TargetActor && TargetActor->GetClass()->ImplementsInterface(UPlayerUseInterface::StaticClass()))
 			{
-				// If you can teleport
-				// Checks if in wave and if you have the key
-				// if (!GI->bIsWave && GI->TeleportKeyArray[Teleporter->TeleportKeyNumber])
-				if (!GI->bIsWave && GI->UnlockedLevels.Contains(Teleporter->TargetLevelName))
-				{
-					/*if (Teleporter->TargetLevelName != "Hub")
-					{
-						GI->Level += 1;
-						if (GI->TeleportKeyArray.IsValidIndex(GI->Level))
-						{
-							GI->TeleportKeyArray[GI->Level] = true;
-						}
-					}
-					*/
-					GI->Money += PickedUpMoney;
-					
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Teleporter->TeleportSound, Teleporter->GetActorLocation());
-
-					// För level unlock 
-					if (UMissionSubsystem* MissionSub = GI->GetSubsystem<UMissionSubsystem>())
-					{
-						MissionSub->TryUnlockLevel();
-					}
-
-					Teleporter->Teleport();
-				}
-				else
-				{
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Teleporter->CantTeleportSound, Teleporter->GetActorLocation());
-				}
+				IPlayerUseInterface::Execute_Use(TargetActor, this);
 			}
 		}
-		// Buying function
-		if (const ABuyBox *BuyBox = Cast<ABuyBox>(TargetActor))
-		{
-			if (GI)
-			{
-				GI->BuyUpgrade(BuyBox->TargetUpgradeName, BuyBox->BuySound, BuyBox->CantBuySound);
-			}
-		}
-		//Open store Function
-		if (AStoreBox* StoreBox = Cast<AStoreBox>(TargetActor))
-		{
-			StoreBox->OpenStoreMenu();
-		}
-		//Use VendingMachine Function
-		if (AVendingMachine* VendingMachine = Cast<AVendingMachine>(TargetActor))
-		{
-			VendingMachine->UseVendingMachine();
-		}
-		if (ADebugCube* DebugCube = Cast<ADebugCube>(TargetActor))
-		{
-			DebugCube->EnableAllLevels();
-		}
+		
 	}
 }
 
 void APlayerCharacter::HealPlayer(int32 HealAmount)
 {
-	PlayerHealth += HealAmount;
-	if (PlayerHealth > PlayerMaxHealth)
+	if (!bIsDead)
 	{
-		PlayerHealth = PlayerMaxHealth;
+		PlayerHealth += HealAmount;
+		if (PlayerHealth > PlayerMaxHealth)
+		{
+			PlayerHealth = PlayerMaxHealth;
+		}
 	}
 }
 
@@ -404,4 +352,49 @@ AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
 		return Weapon3Instance;
 	}
 		return nullptr;
+}
+
+float APlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	if (!bIsDead)
+	{
+		PlayerHealth -= DamageAmount;
+		if (PlayerHealth <= 0)
+		{
+			PlayerHealth = 0;
+			bIsDead = true;
+			DisableInput(nullptr);
+			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		
+			if (TeleportInSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportOutSound, GetActorLocation());
+			}
+			if (FadeOutTransition)
+			{
+				FMovieSceneSequencePlaybackSettings Settings;
+				ALevelSequenceActor* OutActor;
+				ULevelSequencePlayer* SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), FadeOutTransition, Settings, OutActor);
+				SequencePlayer->Play();
+
+				if (SequencePlayer)
+				{
+					SequencePlayer->OnFinished.AddDynamic(this, &APlayerCharacter::Respawn);
+				}
+			}
+			else
+			{
+				Respawn();
+			}
+		}
+	}
+	
+	return DamageAmount;
+}
+
+void APlayerCharacter::Respawn()
+{
+	UGameplayStatics::OpenLevel(this, "Hub");
 }

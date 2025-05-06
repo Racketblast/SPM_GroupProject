@@ -9,7 +9,7 @@ UCLASS()
 class SPM_GROUPPROJECT_API AHitscanGun : public AGun
 {
 	GENERATED_BODY()
-	
+	virtual void BeginPlay() override;
 public:
 	virtual void Fire(FVector FireLocation, FRotator FireRotation) override;
 	UPROPERTY(BlueprintReadOnly, Category = "Hit Result")
@@ -39,7 +39,11 @@ private: // Recoil settings (editable per weapon)
 	float RecoilYawMax = -0.5f;
 	// Header file
 
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase* FireSound;
 
+	UPROPERTY(VisibleAnywhere, Category = "Sound")
+	UAudioComponent* FireAudioComponent;
 
 };
 

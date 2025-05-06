@@ -5,47 +5,18 @@
 #include "PlayerCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ALaunchPad::ALaunchPad()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
 	LaunchPadMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LaunchPadMesh"));
 	
 	LaunchPadTriggerVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerVolume"));
 	LaunchPadTriggerVolume->SetupAttachment(LaunchPadMesh);
 	
 	LaunchPadTriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ALaunchPad::LaunchPadTriggered);
-	//LaunchPadTriggerVolume->OnComponentEndOverlap.AddDynamic(this, &ALaunchPad::LaunchPadEndTrigger);
-}
-
-// Called when the game starts or when spawned
-void ALaunchPad::BeginPlay()
-{
-	Super::BeginPlay();
-
-	//Debug line
-	/*FVector Start = GetActorLocation();
-	FVector End = Start + LaunchPadMesh->GetComponentRotation().RotateVector(LaunchVector);
-	DrawDebugLine(
-		GetWorld(),
-		Start,
-		End,
-		FColor::Red,
-		true,
-		0,
-		0,
-		3.0f
-	);*/
-}
-
-// Called every frame
-void ALaunchPad::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void ALaunchPad::LaunchPadTriggered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -53,27 +24,14 @@ void ALaunchPad::LaunchPadTriggered(UPrimitiveComponent* OverlappedComponent, AA
 {
 	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor))
 	{
+		//Checks if capsule touches and not anything else from the actor
 		if (Cast<UCapsuleComponent>(OtherComp) == Player->GetCapsuleComponent())
 		{
 			FVector Velocity = LaunchPadMesh->GetComponentRotation().RotateVector(LaunchVector);
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), LaunchSound, GetActorLocation());
+			Player->JumpCurrentCount = 1;
 			Player->LaunchCharacter(Velocity, bOverrideXY, bOverrideZ);
 			UE_LOG(LogTemp,Display,TEXT("LaunchPadTriggered"));
 		}
 	}
 }
-
-//Not used but could be useful
-/*
-void ALaunchPad::LaunchPadEndTrigger(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor))
-	{
-		if (Cast<UCapsuleComponent>(OtherComp) == Player->GetCapsuleComponent())
-		{
-			
-		}
-	}
-}
-*/
-

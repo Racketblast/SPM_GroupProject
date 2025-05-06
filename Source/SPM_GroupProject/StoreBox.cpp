@@ -3,7 +3,11 @@
 
 #include "StoreBox.h"
 
+#include "PlayerCharacter.h"
 #include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/HUD.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -13,6 +17,11 @@ AStoreBox::AStoreBox()
 	StaticMeshComponent->SetupAttachment(GetRootComponent());
 }
 
+void AStoreBox::Use_Implementation(APlayerCharacter* Player)
+{
+	OpenStoreMenu();
+}
+
 void AStoreBox::OpenStoreMenu()
 {
 	if (BuyBoxWidgetClass)
@@ -20,6 +29,17 @@ void AStoreBox::OpenStoreMenu()
 		if (UUserWidget* BuyBoxWidget = CreateWidget<UUserWidget>(GetWorld(), BuyBoxWidgetClass))
 		{
 			BuyBoxWidget->AddToViewport();
+			TArray<UUserWidget*> FoundWidgets;
+			UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UUserWidget::StaticClass(), false);
+
+			for (UUserWidget* Widget : FoundWidgets)
+			{
+				if (Widget && Widget->IsInViewport() && Widget->GetClass() == HudWidgetClass)
+				{
+					Widget->RemoveFromParent();
+					break;
+				}
+			}
 			
 			if (OpenBuyMenuSound)
 			{
@@ -28,8 +48,13 @@ void AStoreBox::OpenStoreMenu()
 			
 			if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
 			{
-				// Show mouse cursor if needed
+				PlayerController->SetIgnoreMoveInput(true);
+				PlayerController->SetIgnoreLookInput(true);
+				
 				PlayerController->bShowMouseCursor = true;
+				int32 ViewportX, ViewportY;
+				PlayerController->GetViewportSize(ViewportX, ViewportY);
+				PlayerController->SetMouseLocation(ViewportX/2, ViewportY/2);
 				PlayerController->SetInputMode(FInputModeUIOnly());
 			}
 		}

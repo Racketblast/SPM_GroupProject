@@ -16,13 +16,6 @@ public:
 	ALaunchPad();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
 	UPROPERTY(EditAnywhere, Category="LaunchPad")
 	bool bOverrideXY = false;
 
@@ -31,7 +24,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category="LaunchPad")
 	FVector LaunchVector = {0,0,1000};
-protected:
+	
 	UPROPERTY(EditDefaultsOnly, Category="LaunchPad")
 	class USoundBase* LaunchSound;
 private:
@@ -44,12 +37,4 @@ private:
 	UFUNCTION()
 	void LaunchPadTriggered(UPrimitiveComponent* OverlappedComponent,AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	
-	//Not used but could be useful
-	/*
-	UFUNCTION()
-	void LaunchPadEndTrigger(UPrimitiveComponent* OverlappedComponent,AActor* OtherActor, UPrimitiveComponent* OtherComp,int32 OtherBodyIndex);
-	*/
-
 };

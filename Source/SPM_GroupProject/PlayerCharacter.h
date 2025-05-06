@@ -35,10 +35,12 @@ public:
 	UPROPERTY(EditAnywhere)
 	int32 UseDistance = 300;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	int32 PlayerHealth;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 PlayerMaxHealth = 100;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int32 BasePlayerMaxHealth;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 PickedUpMoney;
@@ -54,6 +56,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	AGun* GetWeaponInstance(const FName WeaponName) const;
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 protected:
 	UPROPERTY(EditAnywhere)
 	UCameraComponent* PlayerCamera;
@@ -76,11 +80,12 @@ protected:
 	bool Weapon3Equipped = false;
 	
 private:
+	UPROPERTY(Blueprintable)
+	bool bIsDead = false;
 	
 	FName WeaponName1 = "Pistol";
 	FName WeaponName2 = "Rifle";
 	FName WeaponName3 = "Laser"; 
-	AActor* TargetActor;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class AGun> GWeapon1;
 	UPROPERTY(EditAnywhere)
@@ -94,15 +99,22 @@ private:
 	UPROPERTY()
 	AGun* Weapon3Instance;
 	bool bIsShooting = false; // True when the player is holding the shoot button
+	
+	//All of this goes when gamemode is a c++ class
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
 	class ULevelSequence* FadeInTransition;
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
+	class ULevelSequence* FadeOutTransition;
+	UPROPERTY(EditDefaultsOnly, Category="Transition")
 	class USoundBase* TeleportInSound;
+	UPROPERTY(EditDefaultsOnly, Category="Transition")
+	class USoundBase* TeleportOutSound;
 	
-
 
 	class UAIPerceptionStimuliSourceComponent* StimulusSource;
 	void SetupStimulusSource();
 
-
+	// this one has got to go when gamemode is a c++ class
+	UFUNCTION()
+	void Respawn();
 };
