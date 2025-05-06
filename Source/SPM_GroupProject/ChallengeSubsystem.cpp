@@ -83,15 +83,15 @@ void UChallengeSubsystem::HandleChallengeSuccess()
 	GiveChallengeReward();
 
 	UE_LOG(LogTemp, Log, TEXT("Challenge Completed Successfully!"));
-	ResetChallengeStatus(); // För att bara aktivera en animation för en sekund och sedan sätta tillbaka variablerna till false.
+	//ResetChallengeStatus(); // För att bara aktivera en animation för en sekund och sedan sätta tillbaka variablerna till false.
 
-	/*GetWorld()->GetTimerManager().SetTimer( // Endast för testing, ta bort sen
+	GetWorld()->GetTimerManager().SetTimer( // För att aktivera en animation och sedan stänga av den vid rätt tillfälle 
 	ResetChallengeStatusTimerHandle,
 	this,
 	&UChallengeSubsystem::ResetChallengeStatus,
-	2.0f,  
+	SuccessAnimationTimer,  
 	false  
-	);*/
+	);
 }
 
 void UChallengeSubsystem::HandleChallengeFailure()
@@ -100,7 +100,15 @@ void UChallengeSubsystem::HandleChallengeFailure()
 	bChallengeJustFailed = true;
 
 	UE_LOG(LogTemp, Warning, TEXT("Challenge Failed!"));
-	ResetChallengeStatus(); // För att bara aktivera en animation för en sekund och sedan sätta tillbaka variablerna till false. 
+	//ResetChallengeStatus(); // För att bara aktivera en animation för en sekund och sedan sätta tillbaka variablerna till false.
+
+	GetWorld()->GetTimerManager().SetTimer( // För att aktivera en animation och sedan stänga av den vid rätt tillfälle 
+	ResetChallengeStatusTimerHandle,
+	this,
+	&UChallengeSubsystem::ResetChallengeStatus,
+	FailedAnimationTimer,  
+	false  
+	);
 }
 
 void UChallengeSubsystem::ResetChallengeStatus()
@@ -112,6 +120,13 @@ void UChallengeSubsystem::ResetChallengeStatus()
 void UChallengeSubsystem::SetRewardMoneyAmount(int32 MoneyAmount)
 {
 	RewardMoneyAmount = MoneyAmount;
+}
+
+// för animationer
+void UChallengeSubsystem::SetAnimationTimers(float Success, float Failed)
+{
+	SuccessAnimationTimer = Success;
+	FailedAnimationTimer = Failed;
 }
 
 void UChallengeSubsystem::GiveChallengeReward()
