@@ -20,13 +20,7 @@ public:
 	FName TargetLevelName = "Hub";
 	
 	UPROPERTY(EditDefaultsOnly, Category="Teleport")
-	class USoundBase* TeleportSound;
-	
-	UPROPERTY(EditDefaultsOnly, Category="Teleport")
 	USoundBase* CantTeleportSound;
-
-	UPROPERTY(EditDefaultsOnly, Category="Teleport")
-	class ULevelSequence* FadeOutTransition;
 
 	UPROPERTY(EditDefaultsOnly, Category="Teleport")
 	class UNiagaraComponent* TeleportSkyBeam;
@@ -54,6 +48,7 @@ protected:
 	UMaterialInterface* GracePeriodMaterial;
 	
 private:
+	UPROPERTY()
 	class UPlayerGameInstance* CachedGameInstance;
 	bool bOldWaveValue;
 
