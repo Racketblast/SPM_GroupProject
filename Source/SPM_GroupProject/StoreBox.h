@@ -30,5 +30,4 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	class UStaticMeshComponent* StaticMeshComponent;
-
 };

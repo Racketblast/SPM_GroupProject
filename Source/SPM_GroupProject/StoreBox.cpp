@@ -9,6 +9,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/HUD.h"
 #include "Kismet/GameplayStatics.h"
+#include "Slate/SGameLayerManager.h"
 
 // Sets default values
 AStoreBox::AStoreBox()
@@ -51,11 +52,11 @@ void AStoreBox::OpenStoreMenu()
 				PlayerController->SetIgnoreMoveInput(true);
 				PlayerController->SetIgnoreLookInput(true);
 				
-				PlayerController->bShowMouseCursor = true;
 				int32 ViewportX, ViewportY;
 				PlayerController->GetViewportSize(ViewportX, ViewportY);
 				PlayerController->SetMouseLocation(ViewportX/2, ViewportY/2);
-				PlayerController->SetInputMode(FInputModeUIOnly());
+				PlayerController->SetInputMode(FInputModeGameAndUI());
+				PlayerController->GetPawn()->DisableInput(PlayerController);
 			}
 		}
 	}
