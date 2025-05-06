@@ -1,11 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-#include "HitscanGun.h"
-#include "Kismet/GameplayStatics.h"
-#include "DrawDebugHelpers.h"
 #include "CoreMinimal.h"
-#include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
 
@@ -60,7 +56,7 @@ public:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 protected:
 	UPROPERTY(EditAnywhere)
-	UCameraComponent* PlayerCamera;
+	class UCameraComponent* PlayerCamera;
 	void MoveForward(float InputVector);
 	void MoveRight(float InputVector);
 	void Yaw(float InputVector);
@@ -100,21 +96,7 @@ private:
 	AGun* Weapon3Instance;
 	bool bIsShooting = false; // True when the player is holding the shoot button
 	
-	//All of this goes when gamemode is a c++ class
-	UPROPERTY(EditDefaultsOnly, Category="Transition")
-	class ULevelSequence* FadeInTransition;
-	UPROPERTY(EditDefaultsOnly, Category="Transition")
-	class ULevelSequence* FadeOutTransition;
-	UPROPERTY(EditDefaultsOnly, Category="Transition")
-	class USoundBase* TeleportInSound;
-	UPROPERTY(EditDefaultsOnly, Category="Transition")
-	class USoundBase* TeleportOutSound;
-	
 
 	class UAIPerceptionStimuliSourceComponent* StimulusSource;
 	void SetupStimulusSource();
-
-	// this one has got to go when gamemode is a c++ class
-	UFUNCTION()
-	void Respawn();
 };
