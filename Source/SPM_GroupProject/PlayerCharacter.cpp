@@ -116,6 +116,11 @@ void APlayerCharacter::StopShooting()
 {
 	bIsShooting = false; // Player stops shooting
 }
+AGun* APlayerCharacter::GetCurrentGun() const
+{
+	return CurrentGun;
+}
+
 
 void APlayerCharacter::MoveForward(float Value)
 {

@@ -1,22 +1,41 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HitscanGun.h"
+#include "Gun.h"
 #include "Shotgun.generated.h"
 
 UCLASS()
-class SPM_GROUPPROJECT_API AShotgun : public AHitscanGun
+class SPM_GROUPPROJECT_API AShotgun : public AGun
 {
 	GENERATED_BODY()
 
 public:
 	virtual void Fire(FVector FireLocation, FRotator FireRotation) override;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Hit Result")
+	AActor* LastHitActor;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bEnemyHit = false;
+
+	UFUNCTION()
+	void EnemyHitFalse();
+	virtual void BeginPlay() override;
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Shotgun")
-	int32 NumPellets = 9;
+	UPROPERTY(EditDefaultsOnly)
+	int32 NumPellets = 10;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Shotgun")
-	float SpreadAngle = 6.0f; // Degrees of spread per pellet
+	UPROPERTY(EditDefaultsOnly)
+	float SpreadAngle = 5.0f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float Range = 1000.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase* FireSound;
+
+	UPROPERTY(VisibleAnywhere, Category = "Sound")
+	UAudioComponent* FireAudioComponent;
+
+	float LastFireTime = 0.f;
 };
-
