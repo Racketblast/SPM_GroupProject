@@ -3,9 +3,8 @@
 
 #include "Teleporter.h"
 
-#include "LevelSequenceActor.h"
+#include "ArenaGameMode.h"
 #include "LevelSequencePlayer.h"
-#include "MovieSceneSequencePlaybackSettings.h"
 #include "PlayerGameInstance.h"
 #include "PlayerCharacter.h"
 #include "MissionSubsystem.h"
@@ -34,10 +33,6 @@ void ATeleporter::Use_Implementation(APlayerCharacter* Player)
 		if (!CachedGameInstance->bIsWave && CachedGameInstance->UnlockedLevels.Contains(TargetLevelName))
 		{
 			CachedGameInstance->Money += Player->PickedUpMoney;
-			if (TeleportSound)
-			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportSound, GetActorLocation());
-			}
 			// För level unlock 
 			if (UMissionSubsystem* MissionSub = CachedGameInstance->GetSubsystem<UMissionSubsystem>())
 			{
@@ -116,16 +111,12 @@ void ATeleporter::ChangeTexture()
 
 void ATeleporter::Teleport()
 {
-	if (FadeOutTransition)
+	if (AArenaGameMode* GameMode = Cast<AArenaGameMode>(UGameplayStatics::GetGameMode(this)))
 	{
-		FMovieSceneSequencePlaybackSettings Settings;
-		ALevelSequenceActor* OutActor;
-		ULevelSequencePlayer* SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), FadeOutTransition, Settings, OutActor);
-		SequencePlayer->Play();
-
-		if (SequencePlayer)
+		GameMode->FadeOut(this);
+		if (GameMode->SequencePlayer)
 		{
-			SequencePlayer->OnFinished.AddDynamic(this, &ATeleporter::ChangeLevel);
+			GameMode->SequencePlayer->OnFinished.AddDynamic(this, &ATeleporter::ChangeLevel);
 		}
 	}
 }
