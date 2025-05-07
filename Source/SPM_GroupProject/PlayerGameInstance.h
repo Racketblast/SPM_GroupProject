@@ -41,10 +41,13 @@ struct FUpgradeInfo
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	EUpgradeCategory UpgradeCategory = EUpgradeCategory::None;
+	UPROPERTY(BlueprintReadOnly)
 	int32 UpgradeCost = 0;
+	UPROPERTY(BlueprintReadOnly)
 	int32 UpgradeOwned = 1;
+	UPROPERTY(BlueprintReadOnly)
 	int32 TotalUpgradeOwned = 1;
 };
 
@@ -94,6 +97,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetCurrentWeapon(const EUpgradeType Weapon);
 	void SetCurrentWeapon(const FName Weapon);
+
+	UFUNCTION(BlueprintCallable)
+	FUpgradeInfo GetUpgradeInfo(const EUpgradeType Weapon);
 	
 	UFUNCTION(BlueprintCallable)
 	void ApplyAllUpgradeFunctions(class APlayerCharacter* Player);
@@ -106,3 +112,5 @@ private:
 	
 	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);
 };
+
+
