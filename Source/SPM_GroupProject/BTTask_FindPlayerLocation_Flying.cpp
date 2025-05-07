@@ -38,6 +38,10 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 	{
 		TargetLocation.Z = FMath::Min(TargetLocation.Z, FlyingEnemy->GetMaxAltitude());
 	}
+	if (FlyingEnemy)
+	{
+		TargetLocation.Z = FMath::Max(TargetLocation.Z, FlyingEnemy->GetMinAltitude());
+	}
 
 	if (bAddRandomOffset)
 	{
@@ -68,17 +72,12 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 		TargetLocation.Z = FMath::Min(TargetLocation.Z, HitResult.Location.Z - 200.f);
 	}
 
-	// Debug, ska antagligen bortkommentera detta innan speltest
-	//DrawDebugSphere(GetWorld(), TargetLocation, 30.f, 12, FColor::Green, false, 2.0f);
-
-	/*OwnerComp.GetBlackboardComponent()->SetValueAsVector(BlackboardKey.SelectedKeyName, TargetLocation);*/
-
-	// Do obstacle avoidance probe before confirming target
+	// Kållar efter hinder
 	bool bValidLocation = IsLocationClear(GetWorld(), TargetLocation, AIPawn, ObstacleCheckDistance, ObstacleClearance);
 
 	if (!bValidLocation && bAddRandomOffset)
 	{
-		// Retry once with another random offset
+		// Försöker igen med en annan random offset
 		FVector RetryOffset(
 			FMath::FRandRange(-RandomRadius, RandomRadius),
 			FMath::FRandRange(-RandomRadius, RandomRadius),
@@ -91,6 +90,10 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 		{
 			RetryLocation.Z = FMath::Min(RetryLocation.Z, FlyingEnemy->GetMaxAltitude());
 		}
+		if (FlyingEnemy)
+		{
+			TargetLocation.Z = FMath::Max(TargetLocation.Z, FlyingEnemy->GetMinAltitude());
+		}
 
 		if (IsLocationClear(GetWorld(), RetryLocation, AIPawn, ObstacleCheckDistance, ObstacleClearance))
 		{
@@ -99,17 +102,21 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 		}
 	}
 
-	// fallback logic if both checks fail
+	// fallback, ifall fienden inte hittar en valid location
 	if (!bValidLocation)
 	{
-		// Fallback: move to a point in direction of player, 500 units away, at current altitude
+		// Rör sig mot spelaren, 500 units ifrån sig själv
 		FVector Direction = (Player->GetActorLocation() - AIPawn->GetActorLocation()).GetSafeNormal();
 		TargetLocation = AIPawn->GetActorLocation() + Direction * 500.f;
-		TargetLocation.Z += ZOffset; // stay airborne
+		TargetLocation.Z += ZOffset; // så att fienden stannar i luften
 
 		if (FlyingEnemy)
 		{
 			TargetLocation.Z = FMath::Min(TargetLocation.Z, FlyingEnemy->GetMaxAltitude());
+		}
+		if (FlyingEnemy)
+		{
+			TargetLocation.Z = FMath::Max(TargetLocation.Z, FlyingEnemy->GetMinAltitude());
 		}
 
 		UE_LOG(LogTemp, Warning, TEXT("Fallback target used at location: %s"), *TargetLocation.ToString());
@@ -147,7 +154,7 @@ bool UBTTask_FindPlayerLocation_Flying::IsLocationClear(UWorld* World, const FVe
 		{
 			if (Hit.Distance < Clearance)
 			{
-				// Too close to obstacle
+				// För nära hinder
 				return false;
 			}
 		}
