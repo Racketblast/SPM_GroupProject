@@ -25,3 +25,8 @@ void AFlyingEnemyAI::SetMaxAltitude(float Altitude)
 {
 	MaxAltitude = Altitude;
 }
+
+float AFlyingEnemyAI::GetMaxAltitude() const
+{
+	return MaxAltitude;
+}

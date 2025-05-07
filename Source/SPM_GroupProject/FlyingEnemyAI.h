@@ -18,6 +18,8 @@ public:
 
 	void SetMaxAltitude(float Altitude); // Kallas från wave manager, i spawnd enemy funktionen
 
+	float GetMaxAltitude() const; // Används i FindPlayerLocation_Flying 
+
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	UBehaviorTree* BehaviorTree;
 	
