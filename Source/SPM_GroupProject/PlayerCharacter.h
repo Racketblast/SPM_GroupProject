@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
+#include "Explosive.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "PlayerCharacter.generated.h"
@@ -64,6 +65,7 @@ protected:
 	void Yaw(float InputVector);
 	void Pitch(float InputVector);
 	void Shoot();
+	void ThrowGrenade();
 	void Use();
 	void Reload();
 	void SelectWeapon1();
@@ -71,7 +73,9 @@ protected:
 	void SelectWeapon3();
 	void StartShooting();
 	void StopShooting();
-	virtual void Jump() override; // La till detta för challenge systemet 
+	virtual void Jump() override; // La till detta för challenge systemet
+	virtual void Landed(const FHitResult& Hit) override;
+	void AirDash();
 
 	bool Weapon1Equipped = false;
 	bool Weapon2Equipped = false;
@@ -97,7 +101,11 @@ private:
 	UPROPERTY()
 	AGun* Weapon3Instance;
 	bool bIsShooting = false; // True when the player is holding the shoot button
-	
+	// Air dash settings
+	bool bHasDashed = false;
+	float DashStrength = 800.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Grenade")
+	TSubclassOf<AExplosive> GrenadeClass;
 
 	class UAIPerceptionStimuliSourceComponent* StimulusSource;
 	void SetupStimulusSource();
