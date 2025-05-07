@@ -12,7 +12,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
 #include "DrawDebugHelpers.h"
-
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Explosive.h" 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
 {
@@ -31,7 +32,6 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	BasePlayerMaxHealth = PlayerMaxHealth;
-	
 	Weapon1Instance = GetWorld()->SpawnActor<AGun>(GWeapon1);
 	Weapon1Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
 	Weapon1Instance->SetOwnerCharacter(this);
@@ -100,7 +100,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputCom
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::Jump);
+	PlayerInputComponent->BindAction("AirDash", IE_Pressed, this, &APlayerCharacter::AirDash);
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &APlayerCharacter::Shoot);
+	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &APlayerCharacter::ThrowGrenade);  // Bind right-click action here
+    
 	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &APlayerCharacter::Use);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &APlayerCharacter::Reload);
 	PlayerInputComponent->BindAction("SelectWeapon1", IE_Pressed, this, &APlayerCharacter::SelectWeapon1);
@@ -131,7 +134,23 @@ AGun* APlayerCharacter::GetCurrentGun() const
 {
 	return CurrentGun;
 }
+void APlayerCharacter::ThrowGrenade()
+{
+	if (!GrenadeClass)  // Ensure that the Grenade class is set
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Grenade class not set!"));
+		return;
+	}
+    
+	// Get the player's current location and rotation
+	FVector SpawnLocation = GetActorLocation() + FVector(0, 0, 50); // Slightly above player to avoid collision
+	FRotator SpawnRotation = PlayerCamera->GetComponentRotation(); // Use camera's rotation for grenade trajectory
 
+	// Spawn the grenade
+	AExplosive* SpawnedGrenade = GetWorld()->SpawnActor<AExplosive>(GrenadeClass, SpawnLocation, SpawnRotation);
+    
+
+}
 
 void APlayerCharacter::MoveForward(float Value)
 {
@@ -364,6 +383,32 @@ AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
 		return Weapon3Instance;
 	}
 		return nullptr;
+}
+void APlayerCharacter::AirDash()
+{
+	if (bHasDashed || GetCharacterMovement()->IsMovingOnGround())
+		return;
+
+	FVector ForwardInput = GetActorForwardVector() * InputComponent->GetAxisValue("MoveForward");
+	FVector RightInput = GetActorRightVector() * InputComponent->GetAxisValue("MoveRight");
+	FVector DashDirection = (ForwardInput + RightInput).GetClampedToMaxSize(1.0f);
+	if (DashDirection.IsNearlyZero())
+	{
+		DashDirection = GetActorForwardVector();
+	}
+
+	float UpwardForce = GetCharacterMovement()->JumpZVelocity;
+	FVector DashVelocity = DashDirection * DashStrength;
+	DashVelocity.Z = UpwardForce;
+
+	GetCharacterMovement()->Velocity = DashVelocity;
+	bHasDashed = true;
+
+}
+void APlayerCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+	bHasDashed = false;
 }
 
 float APlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
