@@ -31,29 +31,34 @@ FUpgradeInfo UPlayerGameInstance::SetDefaultUpgradeInfo(const EUpgradeType Upgra
 	switch (Upgrade)
 	{
 	case EUpgradeType::Pistol:
-		return {EUpgradeCategory::Weapon,0,0,1};
+		return {EUpgradeCategory::Weapon, 0, 0, 1};
 	case EUpgradeType::Rifle:
-		return {EUpgradeCategory::Weapon,20,0,1};
+		return {EUpgradeCategory::Weapon, 20, 0, 1};
+	case EUpgradeType::Shotgun:
+		return {EUpgradeCategory::Weapon, 50, 0, 1};  // Default for Shotgun
+	case EUpgradeType::RocketLauncher:
+		return {EUpgradeCategory::Weapon, 100, 0, 1};  // Default for RocketLauncher
 	case EUpgradeType::Health20:
-		return {EUpgradeCategory::PlayerStats,100,0,10};
+		return {EUpgradeCategory::PlayerStats, 100, 0, 10};
 	case EUpgradeType::HealthMax:
-		return {EUpgradeCategory::PlayerStats,0,0,1};
+		return {EUpgradeCategory::PlayerStats, 0, 0, 1};
 	case EUpgradeType::Speed20:
-		return {EUpgradeCategory::PlayerStats,100,0,1};
+		return {EUpgradeCategory::PlayerStats, 100, 0, 1};
 	case EUpgradeType::Jump50:
-		return {EUpgradeCategory::PlayerStats,200,0,1};
+		return {EUpgradeCategory::PlayerStats, 200, 0, 1};
 	case EUpgradeType::PistolDamage10:
-		return {EUpgradeCategory::WeaponStats,20,0,5};
+		return {EUpgradeCategory::WeaponStats, 20, 0, 5};
 	case EUpgradeType::RifleDamage10:
-		return {EUpgradeCategory::WeaponStats,20,0,5};
+		return {EUpgradeCategory::WeaponStats, 20, 0, 5};
 	case EUpgradeType::PistolFiringSpeed10:
-		return {EUpgradeCategory::WeaponStats,100,0,5};
+		return {EUpgradeCategory::WeaponStats, 100, 0, 5};
 	case EUpgradeType::RifleFiringSpeed10:
-		return {EUpgradeCategory::WeaponStats,100,0,5};
+		return {EUpgradeCategory::WeaponStats, 100, 0, 5};
 	default:
-		return {EUpgradeCategory::None,0,0,1};
+		return {EUpgradeCategory::None, 0, 0, 1};
 	}
 }
+
 
 void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* CanBuySound, USoundBase* CantBuySound)
 {
@@ -192,12 +197,36 @@ void UPlayerGameInstance::ApplyAllUpgradeFunctions(APlayerCharacter* Player)
 {
 	if (!Player)
 		return;
+
+	// Check and assign weapons if not bought
+	if (!UpgradeMap.Contains(EUpgradeType::Pistol))
+	{
+		UpgradeMap.Add(EUpgradeType::Pistol, SetDefaultUpgradeInfo(EUpgradeType::Pistol));
+	}
+	if (!UpgradeMap.Contains(EUpgradeType::Rifle))
+	{
+		UpgradeMap.Add(EUpgradeType::Rifle, SetDefaultUpgradeInfo(EUpgradeType::Rifle));
+	}
+	if (!UpgradeMap.Contains(EUpgradeType::Shotgun))
+	{
+		UpgradeMap.Add(EUpgradeType::Shotgun, SetDefaultUpgradeInfo(EUpgradeType::Shotgun));
+	}
+	if (!UpgradeMap.Contains(EUpgradeType::RocketLauncher))
+	{
+		UpgradeMap.Add(EUpgradeType::RocketLauncher, SetDefaultUpgradeInfo(EUpgradeType::RocketLauncher));
+	}
+
+	// Set the current weapon (default to Pistol or change logic based on your need)
+	SetCurrentWeapon(EUpgradeType::Pistol);
+	Player->SelectWeapon(*ConvertUpgradeTypeToString(CurrentWeapon));
+
+	// Apply upgrades to the player
 	for (const TPair<EUpgradeType, FUpgradeInfo>& Upgrade : UpgradeMap)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Upgrade %s"), *ConvertUpgradeTypeToString(Upgrade.Key));
 		UseUpgradeFunction(Upgrade.Key, Player);
 	}
 }
+
 
 void UPlayerGameInstance::UseUpgradeFunction(const EUpgradeType Upgrade, APlayerCharacter* Player)
 {

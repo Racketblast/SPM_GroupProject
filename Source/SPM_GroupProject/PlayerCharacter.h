@@ -1,9 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
-#include "Explosive.h"
+
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Explosive.h"
+#include "Gun.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
@@ -12,44 +12,42 @@ class SPM_GROUPPROJECT_API APlayerCharacter : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	APlayerCharacter();
+
 	UFUNCTION(BlueprintCallable)
 	AGun* GetCurrentGun() const;
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:
+	virtual void Tick(float DeltaTime) override;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
 	UPROPERTY(EditAnywhere)
 	USceneComponent* Hand;
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
 
 	UPROPERTY(EditAnywhere)
 	int32 UseDistance = 300;
-	
+
 	UPROPERTY(BlueprintReadWrite)
 	int32 PlayerHealth;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 PlayerMaxHealth = 100;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 BasePlayerMaxHealth;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 PickedUpMoney;
-	
+
 	UPROPERTY(BlueprintReadOnly)
-	class AGun* CurrentGun;
+	AGun* CurrentGun;
 
 	UFUNCTION(BlueprintCallable)
 	void SelectWeapon(FName Weapon);
-	
+
 	UFUNCTION(BlueprintCallable)
 	void HealPlayer(int32 HealAmount);
 
@@ -57,9 +55,11 @@ public:
 	AGun* GetWeaponInstance(const FName WeaponName) const;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
 protected:
 	UPROPERTY(EditAnywhere)
 	class UCameraComponent* PlayerCamera;
+
 	void MoveForward(float InputVector);
 	void MoveRight(float InputVector);
 	void Yaw(float InputVector);
@@ -71,39 +71,49 @@ protected:
 	void SelectWeapon1();
 	void SelectWeapon2();
 	void SelectWeapon3();
+	void SelectWeapon4();
 	void StartShooting();
 	void StopShooting();
-	virtual void Jump() override; // La till detta för challenge systemet
+	virtual void Jump() override;
 	virtual void Landed(const FHitResult& Hit) override;
 	void AirDash();
 
 	bool Weapon1Equipped = false;
 	bool Weapon2Equipped = false;
 	bool Weapon3Equipped = false;
-	
+	bool Weapon4Equipped = false;
+
 private:
 	UPROPERTY(Blueprintable)
 	bool bIsDead = false;
-	
+
 	FName WeaponName1 = "Pistol";
 	FName WeaponName2 = "Rifle";
-	FName WeaponName3 = "Laser"; 
+	FName WeaponName3 = "Shotgun";
+	FName WeaponName4 = "Rocketlauncher";
+
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AGun> GWeapon1;
+	TSubclassOf<AGun> GWeapon1;
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AGun> GWeapon2;
+	TSubclassOf<AGun> GWeapon2;
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class AGun> GWeapon3; // Set this to HitscanGun subclass in the editor
+	TSubclassOf<AGun> GWeapon3;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AGun> GWeapon4;
+
 	UPROPERTY()
 	AGun* Weapon1Instance;
 	UPROPERTY()
 	AGun* Weapon2Instance;
 	UPROPERTY()
 	AGun* Weapon3Instance;
-	bool bIsShooting = false; // True when the player is holding the shoot button
-	// Air dash settings
+	UPROPERTY()
+	AGun* Weapon4Instance;
+
+	bool bIsShooting = false;
 	bool bHasDashed = false;
 	float DashStrength = 800.0f;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Grenade")
 	TSubclassOf<AExplosive> GrenadeClass;
 
