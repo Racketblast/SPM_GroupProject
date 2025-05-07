@@ -3,13 +3,15 @@
 #include "Teleporter.h"
 #include "Gun.h"
 #include "Kismet/GameplayStatics.h"
-#include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
 #include "ChallengeSubsystem.h"
+#include "ArenaGameMode.h"
 #include "Rifle.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "Components/CapsuleComponent.h"
+#include "Camera/CameraComponent.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -28,6 +30,8 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	BasePlayerMaxHealth = PlayerMaxHealth;
+	
 	if (UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
 		//Adds a pistol if player does not have one each time player is loaded
@@ -39,21 +43,13 @@ void APlayerCharacter::BeginPlay()
 		GI->ApplyAllUpgradeFunctions(this);
 		SelectWeapon(GI->GetCurrentWeaponName());
 	}
+	
 	PlayerHealth = PlayerMaxHealth;
-
-	if (FadeInTransition)
+	
+	if (AArenaGameMode* GameMode = Cast<AArenaGameMode>(UGameplayStatics::GetGameMode(this)))
 	{
-		if (TeleportInSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportInSound, GetActorLocation());
-		}
-		FMovieSceneSequencePlaybackSettings Settings;
-		ALevelSequenceActor *OutActor;
-		ULevelSequencePlayer *SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), FadeInTransition, Settings, OutActor);
-		SequencePlayer->Play();
+		GameMode->FadeIn(this);
 	}
-
-	BasePlayerMaxHealth = PlayerMaxHealth;
 }
 
 // Called every frame
@@ -120,6 +116,11 @@ void APlayerCharacter::StopShooting()
 {
 	bIsShooting = false; // Player stops shooting
 }
+AGun* APlayerCharacter::GetCurrentGun() const
+{
+	return CurrentGun;
+}
+
 
 void APlayerCharacter::MoveForward(float Value)
 {
@@ -367,34 +368,16 @@ float APlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const
 			DisableInput(nullptr);
 			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-		
-			if (TeleportInSound)
+			if (AArenaGameMode* GameMode = Cast<AArenaGameMode>(UGameplayStatics::GetGameMode(this)))
 			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportOutSound, GetActorLocation());
-			}
-			if (FadeOutTransition)
-			{
-				FMovieSceneSequencePlaybackSettings Settings;
-				ALevelSequenceActor* OutActor;
-				ULevelSequencePlayer* SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), FadeOutTransition, Settings, OutActor);
-				SequencePlayer->Play();
-
-				if (SequencePlayer)
+				GameMode->FadeOut(this);
+				if (GameMode->SequencePlayer)
 				{
-					SequencePlayer->OnFinished.AddDynamic(this, &APlayerCharacter::Respawn);
+					GameMode->SequencePlayer->OnFinished.AddDynamic(GameMode, &AArenaGameMode::PlayerDeath);
 				}
-			}
-			else
-			{
-				Respawn();
 			}
 		}
 	}
 	
 	return DamageAmount;
-}
-
-void APlayerCharacter::Respawn()
-{
-	UGameplayStatics::OpenLevel(this, "Hub");
 }

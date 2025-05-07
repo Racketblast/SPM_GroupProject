@@ -2,15 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "Gun.h"
-#include "HitscanGun.generated.h"
+#include "Shotgun.generated.h"
 
 UCLASS()
-class SPM_GROUPPROJECT_API AHitscanGun : public AGun
+class SPM_GROUPPROJECT_API AShotgun : public AGun
 {
 	GENERATED_BODY()
-
-protected:
-	virtual void BeginPlay() override;
 
 public:
 	virtual void Fire(FVector FireLocation, FRotator FireRotation) override;
@@ -23,13 +20,16 @@ public:
 
 	UFUNCTION()
 	void EnemyHitFalse();
-
+	virtual void BeginPlay() override;
 protected:
 	UPROPERTY(EditDefaultsOnly)
-	float Range = 2000.0f;
+	int32 NumPellets = 10;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UDamageType> DamageType;
+	float SpreadAngle = 5.0f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float Range = 1000.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	USoundBase* FireSound;
@@ -39,4 +39,3 @@ protected:
 
 	float LastFireTime = 0.f;
 };
-
