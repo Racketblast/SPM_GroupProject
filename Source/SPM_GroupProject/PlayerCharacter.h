@@ -13,6 +13,8 @@ class SPM_GROUPPROJECT_API APlayerCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	APlayerCharacter();
+	UFUNCTION(BlueprintCallable)
+	AGun* GetCurrentGun() const;
 
 protected:
 	// Called when the game starts or when spawned

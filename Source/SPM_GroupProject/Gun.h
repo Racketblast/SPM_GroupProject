@@ -68,7 +68,19 @@ protected:
 	// Audio component for reload sound
 	UPROPERTY(VisibleAnywhere, Category = "Sound")
 	UAudioComponent* ReloadAudioComponent;
+	UPROPERTY(EditAnywhere, Category = "Recoil")
+	float RecoilPitchMin = -3.0f;  // Upward
 
+	UPROPERTY(EditAnywhere, Category = "Recoil")
+	float RecoilPitchMax = -1.0f;  // Upward
+
+
+	UPROPERTY(EditAnywhere, Category = "Recoil")
+	float RecoilYawMin = 0.5f;
+
+	UPROPERTY(EditAnywhere, Category = "Recoil")
+	float RecoilYawMax = -0.5f;
+	// Header file
 
 
 };

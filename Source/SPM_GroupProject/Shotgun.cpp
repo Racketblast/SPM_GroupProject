@@ -4,13 +4,28 @@
 #include "EngineUtils.h"
 #include "HitscanGun.h"
 #include "WaveManager.h"
-#include "DrawDebugHelpers.h"
 #include "MoneyBox.h"
 #include "PlayerCharacter.h"
 #include "GameFramework/PlayerController.h"
 #include "UObject/UnrealType.h"
 #include "Components/AudioComponent.h"
 #include "Sound/SoundBase.h"
+#include "TimerManager.h"
+void AShotgun::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (!FireAudioComponent)
+	{
+		FireAudioComponent = NewObject<UAudioComponent>(this, TEXT("FireAudioComponent"));
+		if (FireAudioComponent)
+		{
+			FireAudioComponent->RegisterComponent();
+			FireAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		}
+	}
+}
+
 void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 {
 	if (bIsReloading || CurrentAmmo <= 0)
@@ -38,6 +53,8 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 		FireAudioComponent->Play();
 	}
 
+	bool bHitEnemyThisShot = false;
+
 	for (int32 i = 0; i < NumPellets; i++)
 	{
 		FRotator PelletRotation = FireRotation;
@@ -63,6 +80,8 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 
 			if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
 			{
+				bHitEnemyThisShot = true;
+
 				static const FName AIHealthName = TEXT("AIHealth");
 				if (FIntProperty* HealthProp = FindFProperty<FIntProperty>(HitCharacter->GetClass(), AIHealthName))
 				{
@@ -112,6 +131,13 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 		}
 	}
 
+	if (bHitEnemyThisShot)
+	{
+		bEnemyHit = true;
+		UE_LOG(LogTemp, Error, TEXT("hit activated"));
+		EnemyHitFalse();
+	}
+
 	CurrentAmmo--;
 
 	// Apply recoil
@@ -130,3 +156,8 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 	}
 }
 
+void AShotgun::EnemyHitFalse()
+{
+	bEnemyHit = false;
+	UE_LOG(LogTemp, Error, TEXT("hit false"));
+}

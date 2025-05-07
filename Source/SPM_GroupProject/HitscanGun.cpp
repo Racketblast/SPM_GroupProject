@@ -74,6 +74,9 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 
         if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
         {
+            bEnemyHit = true;
+            UE_LOG(LogTemp, Error, TEXT("hit activated"));
+            EnemyHitFalse();
             static const FName AIHealthName = TEXT("AIHealth");
 
             if (FIntProperty* HealthProp = FindFProperty<FIntProperty>(HitCharacter->GetClass(), AIHealthName))
@@ -140,4 +143,11 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
             PC->SetControlRotation(ControlRotation);
         }
     }
+    
 }
+void AHitscanGun::EnemyHitFalse()
+{
+    bEnemyHit = false;
+    UE_LOG(LogTemp, Error, TEXT("hit false"));
+}
+
