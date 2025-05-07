@@ -54,4 +54,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge")
 	int32 FailedAnimationTimer = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge")
+	int32 StartedChallengeAnimationTimer = 1;
 };

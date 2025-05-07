@@ -6,6 +6,7 @@
 #include "PlayerCharacter.h"
 #include "ProjectileGun.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Slate/SGameLayerManager.h"
 
 bool UPlayerGameInstance::HasBought(const EUpgradeType Upgrade) const
@@ -173,6 +174,18 @@ void UPlayerGameInstance::SetCurrentWeapon(const FName Weapon)
 			CurrentWeapon = UpgradeType.Key;
 		}
 	}
+}
+
+FUpgradeInfo UPlayerGameInstance::GetUpgradeInfo(const EUpgradeType Upgrade)
+{
+	for (const TPair<EUpgradeType, FUpgradeInfo>& UpgradeType: UpgradeMap)
+	{
+		if (UpgradeType.Key == Upgrade)
+		{
+			return UpgradeType.Value;
+		}
+	}
+	return {EUpgradeCategory::None,0,0,0};
 }
 
 void UPlayerGameInstance::ApplyAllUpgradeFunctions(APlayerCharacter* Player)

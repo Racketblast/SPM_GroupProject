@@ -32,6 +32,17 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 	BasePlayerMaxHealth = PlayerMaxHealth;
 	
+	Weapon1Instance = GetWorld()->SpawnActor<AGun>(GWeapon1);
+	Weapon1Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
+	Weapon1Instance->SetOwnerCharacter(this);
+	Weapon1Instance->SetActorHiddenInGame(true);
+	Weapon1Instance->SetActorEnableCollision(false);
+	Weapon2Instance = GetWorld()->SpawnActor<AGun>(GWeapon2);
+	Weapon2Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
+	Weapon2Instance->SetOwnerCharacter(this);
+	Weapon2Instance->SetActorHiddenInGame(true);
+	Weapon2Instance->SetActorEnableCollision(false);
+	
 	if (UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
 		//Adds a pistol if player does not have one each time player is loaded

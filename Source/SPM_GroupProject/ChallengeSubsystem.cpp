@@ -7,6 +7,7 @@
 #include "EngineUtils.h" 
 #include "MissionAndChallengeManager.h"
 #include "PlayerCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 void UChallengeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -42,7 +43,18 @@ void UChallengeSubsystem::PreviewNextChallenge()
 
 void UChallengeSubsystem::ActivateCurrentChallenge()
 {
-	bIsChallengeActive = true;
+	bIsChallengeActive = true; // väldigt viktig, startar faktiskt logiken för challenges.
+	
+	JustStartedChallenge = true; // för animation
+	UE_LOG(LogTemp, Warning, TEXT("JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
+	
+	GetWorld()->GetTimerManager().SetTimer( // För att aktivera en animation och sedan stänga av den vid rätt tillfälle 
+	ResetChallengeStatusTimerHandle,
+	this,
+	&UChallengeSubsystem::ResetJustStartedChallenge,
+	StartedChallengeAnimationTimer,  
+	false  
+	);
 }
 
 void UChallengeSubsystem::CompleteCurrentChallenge()
@@ -65,6 +77,17 @@ void UChallengeSubsystem::CompleteCurrentChallenge()
 FText UChallengeSubsystem::GetChallengeDescription() const // Används för widget
 {
 	return CurrentChallenge.Description;
+}
+
+bool UChallengeSubsystem::GetJustStartedChallenge() const // Används för widget
+{
+	return JustStartedChallenge;
+}
+
+void UChallengeSubsystem::ResetJustStartedChallenge() // Används för widget
+{
+	JustStartedChallenge = false;
+	UE_LOG(LogTemp, Warning, TEXT("JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
 }
 
 bool UChallengeSubsystem::GetChallengeJustFailed() const  // Används för widget
@@ -123,10 +146,11 @@ void UChallengeSubsystem::SetRewardMoneyAmount(int32 MoneyAmount)
 }
 
 // för animationer
-void UChallengeSubsystem::SetAnimationTimers(float Success, float Failed)
+void UChallengeSubsystem::SetAnimationTimers(float Success, float Failed, float StartedChallenge)
 {
 	SuccessAnimationTimer = Success;
 	FailedAnimationTimer = Failed;
+	StartedChallengeAnimationTimer = StartedChallenge;
 }
 
 void UChallengeSubsystem::GiveChallengeReward()
