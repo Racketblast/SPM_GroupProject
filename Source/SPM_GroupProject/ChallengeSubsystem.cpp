@@ -46,15 +46,20 @@ void UChallengeSubsystem::ActivateCurrentChallenge()
 	bIsChallengeActive = true; // väldigt viktig, startar faktiskt logiken för challenges.
 	
 	JustStartedChallenge = true; // för animation
-	UE_LOG(LogTemp, Warning, TEXT("JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
-	
+	UE_LOG(LogTemp, Warning, TEXT("First JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
+	UE_LOG(LogTemp, Warning, TEXT("StartedChallengeAnimationTimer: %f"), StartedChallengeAnimationTimer);
+	/*if (StartedChallengeAnimationTimer <= 0)
+	{
+		StartedChallengeAnimationTimer = 4.f;
+	}*/
 	GetWorld()->GetTimerManager().SetTimer( // För att aktivera en animation och sedan stänga av den vid rätt tillfälle 
-	ResetChallengeStatusTimerHandle,
+	ResetJustStartedChallengeTimerHandle,
 	this,
 	&UChallengeSubsystem::ResetJustStartedChallenge,
 	StartedChallengeAnimationTimer,  
 	false  
 	);
+	UE_LOG(LogTemp, Warning, TEXT("StartedChallengeAnimationTimer: %f"), StartedChallengeAnimationTimer);
 }
 
 void UChallengeSubsystem::CompleteCurrentChallenge()
@@ -86,8 +91,9 @@ bool UChallengeSubsystem::GetJustStartedChallenge() const // Används för widge
 
 void UChallengeSubsystem::ResetJustStartedChallenge() // Används för widget
 {
+	UE_LOG(LogTemp, Warning, TEXT("ResetJustStartedChallenge"));
 	JustStartedChallenge = false;
-	UE_LOG(LogTemp, Warning, TEXT("JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
+	UE_LOG(LogTemp, Warning, TEXT("Second JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
 }
 
 bool UChallengeSubsystem::GetChallengeJustFailed() const  // Används för widget
@@ -151,6 +157,7 @@ void UChallengeSubsystem::SetAnimationTimers(float Success, float Failed, float 
 	SuccessAnimationTimer = Success;
 	FailedAnimationTimer = Failed;
 	StartedChallengeAnimationTimer = StartedChallenge;
+	UE_LOG(LogTemp, Warning, TEXT("Timers set: Success: %f, Failed: %f, Started: %f"), SuccessAnimationTimer, FailedAnimationTimer, StartedChallengeAnimationTimer);
 }
 
 void UChallengeSubsystem::GiveChallengeReward()

@@ -105,12 +105,14 @@ public:
 
 	bool JustStartedChallenge = false;
 	float StartedChallengeAnimationTimer = 1;
-
+	
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
 	bool GetJustStartedChallenge() const; 
 	void ResetJustStartedChallenge();
 	
 	// För tids baserad challenge
 	FTimerHandle TimerHandle_WaveTimeLimit;
+	FTimerHandle ResetJustStartedChallengeTimerHandle;
 	float CurrentWaveTimeLimit = 0.0f;
 
 	void StartWaveChallenge();
