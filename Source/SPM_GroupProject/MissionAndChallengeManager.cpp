@@ -35,7 +35,7 @@ void AMissionAndChallengeManager::BeginPlay()
 																dock så skulle alla challenges då ha samma rewards på alla levels, då man nu utan boolen skulle kunna ändra hur mycket pengar man får från en challenge mellan levels*/
 			ChallengeSubsystem->SetRewardMoneyAmount(DefaultChallengeRewardAmount);
 
-			ChallengeSubsystem->SetAnimationTimers(SuccessAnimationTimer, FailedAnimationTimer); // för animationer
+			ChallengeSubsystem->SetAnimationTimers(SuccessAnimationTimer, FailedAnimationTimer, StartedChallengeAnimationTimer); // för animationer
 		}
 	}
 }
