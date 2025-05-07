@@ -134,7 +134,8 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 	if (bHitEnemyThisShot)
 	{
 		bEnemyHit = true;
-		GetWorld()->GetTimerManager().SetTimerForNextTick(this, &AShotgun::EnemyHitFalse);
+		UE_LOG(LogTemp, Error, TEXT("hit activated"));
+		EnemyHitFalse();
 	}
 
 	CurrentAmmo--;
@@ -158,4 +159,5 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 void AShotgun::EnemyHitFalse()
 {
 	bEnemyHit = false;
+	UE_LOG(LogTemp, Error, TEXT("hit false"));
 }
