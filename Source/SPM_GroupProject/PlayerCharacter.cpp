@@ -56,11 +56,6 @@ void APlayerCharacter::BeginPlay()
 	}
 	
 	PlayerHealth = PlayerMaxHealth;
-	
-	if (AArenaGameMode* GameMode = Cast<AArenaGameMode>(UGameplayStatics::GetGameMode(this)))
-	{
-		GameMode->FadeIn(this);
-	}
 }
 
 // Called every frame
