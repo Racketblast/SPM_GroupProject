@@ -111,6 +111,7 @@ public:
 	
 	// För tids baserad challenge
 	FTimerHandle TimerHandle_WaveTimeLimit;
+	FTimerHandle ResetJustStartedChallengeTimerHandle;
 	float CurrentWaveTimeLimit = 0.0f;
 
 	void StartWaveChallenge();
