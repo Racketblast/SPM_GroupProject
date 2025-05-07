@@ -105,7 +105,8 @@ public:
 
 	bool JustStartedChallenge = false;
 	float StartedChallengeAnimationTimer = 1;
-
+	
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
 	bool GetJustStartedChallenge() const; 
 	void ResetJustStartedChallenge();
 	

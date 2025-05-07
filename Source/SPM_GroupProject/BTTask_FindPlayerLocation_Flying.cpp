@@ -29,6 +29,7 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 
 	FVector TargetLocation = Player->GetActorLocation();
 	TargetLocation.Z += ZOffset;
+	//TargetLocation.Z = FMath::Min(TargetLocation.Z, AFlyingEnemyAI->MaxAltitude);
 
 	if (bAddRandomOffset)
 	{

@@ -16,6 +16,8 @@ class SPM_GROUPPROJECT_API AFlyingEnemyAI : public AAI_Main
 public:
 	AFlyingEnemyAI();
 
+	void SetMaxAltitude(float Altitude); // Kallas från wave manager, i spawnd enemy funktionen
+
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	UBehaviorTree* BehaviorTree;
 	
@@ -27,5 +29,7 @@ protected:
 	float ShootingRange = 600.f;
 	
 	bool bHasRecentlyShot = false;
-	
+
+	// ändras i wave manager
+	float MaxAltitude = 1000.0f;
 };

@@ -48,6 +48,10 @@ void UChallengeSubsystem::ActivateCurrentChallenge()
 	JustStartedChallenge = true; // för animation
 	UE_LOG(LogTemp, Warning, TEXT("First JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
 	UE_LOG(LogTemp, Warning, TEXT("StartedChallengeAnimationTimer: %f"), StartedChallengeAnimationTimer);
+	/*if (StartedChallengeAnimationTimer <= 0)
+	{
+		StartedChallengeAnimationTimer = 4.f;
+	}*/
 	GetWorld()->GetTimerManager().SetTimer( // För att aktivera en animation och sedan stänga av den vid rätt tillfälle 
 	ResetJustStartedChallengeTimerHandle,
 	this,

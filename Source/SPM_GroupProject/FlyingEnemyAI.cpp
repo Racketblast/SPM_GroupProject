@@ -20,3 +20,8 @@ void AFlyingEnemyAI::BeginPlay()
 
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
 }
+
+void AFlyingEnemyAI::SetMaxAltitude(float Altitude)
+{
+	MaxAltitude = Altitude;
+}
