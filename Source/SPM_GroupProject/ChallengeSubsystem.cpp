@@ -20,6 +20,7 @@ void UChallengeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UChallengeSubsystem::PreviewNextChallenge()
 {
+	bHasFailedCurrentChallenge = false;
 	if (PossibleChallenges.Num() == 0) return;
 	
 	int32 Index = -1;
@@ -34,8 +35,7 @@ void UChallengeSubsystem::PreviewNextChallenge()
 	CurrentChallenge = PossibleChallenges[Index];
 	CurrentChallenge.bIsCompleted = false;
 	LastChallengeType = CurrentChallenge.Type; // För att undvika att spelaren får samma challenge på rad
-
-	bHasFailedCurrentChallenge = false;
+	
 	bIsChallengeActive = false;
 	
 	UE_LOG(LogTemp, Warning, TEXT("New Challenge: %s"), *CurrentChallenge.Description.ToString());
@@ -45,9 +45,10 @@ void UChallengeSubsystem::ActivateCurrentChallenge()
 {
 	bIsChallengeActive = true; // väldigt viktig, startar faktiskt logiken för challenges.
 	
-	JustStartedChallenge = true; // för animation
-	UE_LOG(LogTemp, Warning, TEXT("First JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
-	UE_LOG(LogTemp, Warning, TEXT("StartedChallengeAnimationTimer: %f"), StartedChallengeAnimationTimer);
+	JustStartedChallenge = true; // för animatio
+	
+	//UE_LOG(LogTemp, Warning, TEXT("First JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
+	//UE_LOG(LogTemp, Warning, TEXT("StartedChallengeAnimationTimer: %f"), StartedChallengeAnimationTimer);
 	/*if (StartedChallengeAnimationTimer <= 0)
 	{
 		StartedChallengeAnimationTimer = 4.f;
@@ -59,7 +60,7 @@ void UChallengeSubsystem::ActivateCurrentChallenge()
 	StartedChallengeAnimationTimer,  
 	false  
 	);
-	UE_LOG(LogTemp, Warning, TEXT("StartedChallengeAnimationTimer: %f"), StartedChallengeAnimationTimer);
+	//UE_LOG(LogTemp, Warning, TEXT("StartedChallengeAnimationTimer: %f"), StartedChallengeAnimationTimer);
 }
 
 void UChallengeSubsystem::CompleteCurrentChallenge()
@@ -69,10 +70,6 @@ void UChallengeSubsystem::CompleteCurrentChallenge()
 	if (!bHasFailedCurrentChallenge)
 	{
 		HandleChallengeSuccess();
-	}
-	else
-	{
-		HandleChallengeFailure();
 	}
 
 	CurrentChallenge.bIsCompleted = true;
@@ -91,9 +88,9 @@ bool UChallengeSubsystem::GetJustStartedChallenge() const // Används för widge
 
 void UChallengeSubsystem::ResetJustStartedChallenge() // Används för widget
 {
-	UE_LOG(LogTemp, Warning, TEXT("ResetJustStartedChallenge"));
+	//UE_LOG(LogTemp, Warning, TEXT("ResetJustStartedChallenge"));
 	JustStartedChallenge = false;
-	UE_LOG(LogTemp, Warning, TEXT("Second JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
+	//UE_LOG(LogTemp, Warning, TEXT("Second JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
 }
 
 bool UChallengeSubsystem::GetChallengeJustFailed() const  // Används för widget
@@ -128,7 +125,7 @@ void UChallengeSubsystem::HandleChallengeFailure()
 	bHasFailedCurrentChallenge = true;
 	bChallengeJustFailed = true;
 
-	UE_LOG(LogTemp, Warning, TEXT("Challenge Failed!"));
+	UE_LOG(LogTemp, Error, TEXT("Challenge Failed!"));
 	//ResetChallengeStatus(); // För att bara aktivera en animation för en sekund och sedan sätta tillbaka variablerna till false.
 
 	GetWorld()->GetTimerManager().SetTimer( // För att aktivera en animation och sedan stänga av den vid rätt tillfälle 
@@ -157,7 +154,7 @@ void UChallengeSubsystem::SetAnimationTimers(float Success, float Failed, float 
 	SuccessAnimationTimer = Success;
 	FailedAnimationTimer = Failed;
 	StartedChallengeAnimationTimer = StartedChallenge;
-	UE_LOG(LogTemp, Warning, TEXT("Timers set: Success: %f, Failed: %f, Started: %f"), SuccessAnimationTimer, FailedAnimationTimer, StartedChallengeAnimationTimer);
+	//UE_LOG(LogTemp, Warning, TEXT("Timers set: Success: %f, Failed: %f, Started: %f"), SuccessAnimationTimer, FailedAnimationTimer, StartedChallengeAnimationTimer);
 }
 
 void UChallengeSubsystem::GiveChallengeReward()
