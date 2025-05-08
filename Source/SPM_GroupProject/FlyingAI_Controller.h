@@ -23,4 +23,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float PlayerRangeThreshold = 600.f; // Distansen innan spelaren är "in range"
+
+	bool HasLineOfSightToPlayer() const;
 };

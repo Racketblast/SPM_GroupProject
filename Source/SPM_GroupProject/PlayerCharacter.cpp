@@ -68,27 +68,6 @@ void APlayerCharacter::BeginPlay()
 				GI->SetCurrentWeapon(EUpgradeType::Pistol);
 			}
 
-			// Rifle
-			if (!GI->UpgradeMap.Contains(EUpgradeType::Rifle))
-			{
-				GI->UpgradeMap.Add(EUpgradeType::Rifle, GI->SetDefaultUpgradeInfo(EUpgradeType::Rifle));
-				GI->SetCurrentWeapon(EUpgradeType::Rifle);
-			}
-
-			// Shotgun
-			if (!GI->UpgradeMap.Contains(EUpgradeType::Shotgun))
-			{
-				GI->UpgradeMap.Add(EUpgradeType::Shotgun, GI->SetDefaultUpgradeInfo(EUpgradeType::Shotgun));
-				GI->SetCurrentWeapon(EUpgradeType::Shotgun);
-			}
-
-			// Rocket Launcher
-			if (!GI->UpgradeMap.Contains(EUpgradeType::RocketLauncher))
-			{
-				GI->UpgradeMap.Add(EUpgradeType::RocketLauncher, GI->SetDefaultUpgradeInfo(EUpgradeType::RocketLauncher));
-				GI->SetCurrentWeapon(EUpgradeType::RocketLauncher);
-			}
-
 			// Apply all upgrades
 			GI->ApplyAllUpgradeFunctions(this);
 			SelectWeapon(GI->GetCurrentWeaponName());
@@ -165,11 +144,13 @@ void APlayerCharacter::ThrowGrenade()
 		UE_LOG(LogTemp, Warning, TEXT("Grenade class not set!"));
 		return;
 	}
+	if (GrenadeNum > 0){
+		FVector SpawnLocation = GetActorLocation() + FVector(0, 0, 50);
+		FRotator SpawnRotation = PlayerCamera->GetComponentRotation();
 
-	FVector SpawnLocation = GetActorLocation() + FVector(0, 0, 50);
-	FRotator SpawnRotation = PlayerCamera->GetComponentRotation();
-
-	AExplosive* SpawnedGrenade = GetWorld()->SpawnActor<AExplosive>(GrenadeClass, SpawnLocation, SpawnRotation);
+		AExplosive* SpawnedGrenade = GetWorld()->SpawnActor<AExplosive>(GrenadeClass, SpawnLocation, SpawnRotation);
+		GrenadeNum--;
+	}
 }
 
 void APlayerCharacter::MoveForward(float Value)
