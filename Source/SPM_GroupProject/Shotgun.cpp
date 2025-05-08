@@ -85,7 +85,7 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 					Hit.Location
 				);
 			}
-			DrawDebugLine(GetWorld(), FireLocation, Hit.ImpactPoint, FColor::Red, false, 1.0f, 0, 0.5f);
+			//DrawDebugLine(GetWorld(), FireLocation, Hit.ImpactPoint, FColor::Red, false, 1.0f, 0, 0.5f);
 			AActor* HitActor = Hit.GetActor();
 			LastHitActor = HitActor;
 
@@ -138,7 +138,7 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 		}
 		else
 		{
-			DrawDebugLine(GetWorld(), FireLocation, End, FColor::Blue, false, 1.0f, 0, 0.5f);
+			//DrawDebugLine(GetWorld(), FireLocation, End, FColor::Blue, false, 1.0f, 0, 0.5f);
 		}
 	}
 
