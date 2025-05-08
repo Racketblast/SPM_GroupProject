@@ -154,7 +154,7 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 
 
 	// Debug, ska antagligen bortkommentera detta innan speltest
-	DrawDebugSphere(GetWorld(), TargetLocation, 30.f, 12, FColor::Green, false, 2.0f);
+	//DrawDebugSphere(GetWorld(), TargetLocation, 30.f, 12, FColor::Green, false, 2.0f);
 
 	OwnerComp.GetBlackboardComponent()->SetValueAsVector(BlackboardKey.SelectedKeyName, TargetLocation);
 	return EBTNodeResult::Succeeded;

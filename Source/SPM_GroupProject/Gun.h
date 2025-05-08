@@ -36,6 +36,8 @@ public:
 	USceneComponent* MuzzlePoint;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* WeaponMesh;
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	class UNiagaraSystem* MuzzleFlash;
 	USceneComponent* GetMuzzlePoint() const { return MuzzlePoint; }
 	//Upgrade variables
 	UPROPERTY()

@@ -7,7 +7,6 @@
 
 AFlyingEnemyAI::AFlyingEnemyAI()
 {
-	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	AIControllerClass = AFlyingAI_Controller::StaticClass();
@@ -28,6 +27,34 @@ void AFlyingEnemyAI::Tick(float DeltaTime)
 /*#if WITH_EDITOR
 	DrawFlyableZRange();
 #endif*/
+
+	if (!CurrentTargetLocation.IsNearlyZero())
+	{
+		FVector CurrentLocation = GetActorLocation();
+		
+		if (CurrentTargetLocation.Z < CurrentLocation.Z - 10.0f) 
+		{
+			StuckCheckTimer += DeltaTime;
+
+			if (StuckCheckTimer >= 1.0f) 
+			{
+				float ZDelta = FMath::Abs(CurrentLocation.Z - LastLocation.Z);
+
+				if (ZDelta < 5.0f)
+				{
+					bIsDescendingStuck = true;
+					TryLateralUnstick(); 
+				}
+				else
+				{
+					bIsDescendingStuck = false;
+				}
+
+				LastLocation = CurrentLocation;
+				StuckCheckTimer = 0.0f;
+			}
+		}
+	}
 }
 
 void AFlyingEnemyAI::SetMaxAltitude(float Altitude)
@@ -64,4 +91,37 @@ void AFlyingEnemyAI::DrawFlyableZRange()
 
 	// Debug linje som är mellan dem två debug sphere 
 	DrawDebugLine(GetWorld(), MinZLocation, MaxZLocation, FColor::Yellow, false, -1.f, 0, 1.f);
+}
+
+void AFlyingEnemyAI::TryLateralUnstick()
+{
+	FVector LateralDirection;
+
+	// Väljer antingen vänster eller höger
+	if (FMath::RandBool())
+	{
+		LateralDirection = GetActorRightVector();
+	}
+	else
+	{
+		LateralDirection = -GetActorRightVector();
+	}
+
+	FVector NewTarget = GetActorLocation() + LateralDirection * 300.0f; // rör sig till sidan
+
+	// liten push uppåt
+	NewTarget.Z += 100.0f;
+
+	FVector Direction = (NewTarget - GetActorLocation()).GetSafeNormal();
+	AddMovementInput(Direction, 1.0f, false);
+}
+
+void AFlyingEnemyAI::SetCurrentTargetLocation(const FVector& NewTarget)
+{
+	CurrentTargetLocation = NewTarget;
+}
+
+FVector AFlyingEnemyAI::GetCurrentTargetLocation() const
+{
+	return CurrentTargetLocation;
 }

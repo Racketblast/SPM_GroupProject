@@ -16,11 +16,13 @@ class SPM_GROUPPROJECT_API UBTTask_FlyToPlayerLocation : public UBTTask_Blackboa
 
 public:
 	UBTTask_FlyToPlayerLocation();
-
-	EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-	void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
 protected:
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
+	struct FBlackboardKeySelector MoveToLocationKey;
+
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float AcceptanceRadius = 100.f;
 
@@ -31,14 +33,14 @@ protected:
 	float StuckMovementThreshold = 10.f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float BackoffDistance = 200.f;
+	float BackoffDistance = 300.f;
 
-	UPROPERTY(EditAnywhere)
-	FBlackboardKeySelector MoveToLocationKey;
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float BackoffCooldownTime = 1.5f;
 
 private:
 	FVector LastLocation;
-	float TimeSinceLastMove = 0.f;
+	float TimeSinceLastMove = 0.0f;
 	bool bBackingOff = false;
-	
+	float BackoffElapsed = 0.0f;
 };

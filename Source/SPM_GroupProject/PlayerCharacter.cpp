@@ -200,7 +200,14 @@ void APlayerCharacter::Shoot()
 	USceneComponent* Muzzle = CurrentGun->GetMuzzlePoint();
 	if (!Muzzle) return;
 
-	CurrentGun->Fire(Muzzle->GetComponentLocation(), PlayerCamera->GetComponentRotation());
+	if (CurrentGun == Weapon4Instance)
+	{
+		CurrentGun->Fire(Muzzle->GetComponentLocation(), PlayerCamera->GetComponentRotation());
+	}
+	else
+	{
+		CurrentGun->Fire(PlayerCamera->GetComponentLocation(), PlayerCamera->GetComponentRotation());
+	}
 
 	if (UChallengeSubsystem* ChallengeSubsystem = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
 	{
