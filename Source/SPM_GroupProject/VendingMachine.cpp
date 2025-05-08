@@ -5,6 +5,7 @@
 
 #include "PlayerCharacter.h"
 #include "PlayerGameInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AVendingMachine::AVendingMachine()
