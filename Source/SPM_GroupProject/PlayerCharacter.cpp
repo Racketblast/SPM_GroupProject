@@ -7,146 +7,199 @@
 #include "ChallengeSubsystem.h"
 #include "ArenaGameMode.h"
 #include "Rifle.h"
+#include "Shotgun.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
 #include "DrawDebugHelpers.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Explosive.h"
 
-// Sets default values
 APlayerCharacter::APlayerCharacter()
 {
-	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("PlayerCamera"));
 	PlayerCamera->SetupAttachment(RootComponent);
 	PlayerCamera->bUsePawnControlRotation = true;
 	GetMesh()->SetupAttachment(PlayerCamera);
-	
+
 	SetupStimulusSource();
 }
 
-// Called when the game starts or when spawned
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
 	BasePlayerMaxHealth = PlayerMaxHealth;
-	
-	if (UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+
+	Weapon1Instance = GetWorld()->SpawnActor<AGun>(GWeapon1);
+	Weapon1Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
+	Weapon1Instance->SetOwnerCharacter(this);
+	Weapon1Instance->SetActorHiddenInGame(true);
+	Weapon1Instance->SetActorEnableCollision(false);
+
+	Weapon2Instance = GetWorld()->SpawnActor<AGun>(GWeapon2);
+	Weapon2Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
+	Weapon2Instance->SetOwnerCharacter(this);
+	Weapon2Instance->SetActorHiddenInGame(true);
+	Weapon2Instance->SetActorEnableCollision(false);
+
+	Weapon3Instance = GetWorld()->SpawnActor<AGun>(GWeapon3);
+	Weapon3Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
+	Weapon3Instance->SetOwnerCharacter(this);
+	Weapon3Instance->SetActorHiddenInGame(true);
+	Weapon3Instance->SetActorEnableCollision(false);
+
+	Weapon4Instance = GetWorld()->SpawnActor<AGun>(GWeapon4);
+	Weapon4Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
+	Weapon4Instance->SetOwnerCharacter(this);
+	Weapon4Instance->SetActorHiddenInGame(true);
+	Weapon4Instance->SetActorEnableCollision(false);
+
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
-		//Adds a pistol if player does not have one each time player is loaded
-		if (!GI->UpgradeMap.Contains(EUpgradeType::Pistol))
-		{
-			GI->UpgradeMap.Add(EUpgradeType::Pistol,GI->SetDefaultUpgradeInfo(EUpgradeType::Pistol));
-			GI->SetCurrentWeapon(EUpgradeType::Pistol);
-		}
-		GI->ApplyAllUpgradeFunctions(this);
-		SelectWeapon(GI->GetCurrentWeaponName());
+		
+			// Pistol
+			if (!GI->UpgradeMap.Contains(EUpgradeType::Pistol))
+			{
+				GI->UpgradeMap.Add(EUpgradeType::Pistol, GI->SetDefaultUpgradeInfo(EUpgradeType::Pistol));
+				GI->SetCurrentWeapon(EUpgradeType::Pistol);
+			}
+
+			// Rifle
+			if (!GI->UpgradeMap.Contains(EUpgradeType::Rifle))
+			{
+				GI->UpgradeMap.Add(EUpgradeType::Rifle, GI->SetDefaultUpgradeInfo(EUpgradeType::Rifle));
+				GI->SetCurrentWeapon(EUpgradeType::Rifle);
+			}
+
+			// Shotgun
+			if (!GI->UpgradeMap.Contains(EUpgradeType::Shotgun))
+			{
+				GI->UpgradeMap.Add(EUpgradeType::Shotgun, GI->SetDefaultUpgradeInfo(EUpgradeType::Shotgun));
+				GI->SetCurrentWeapon(EUpgradeType::Shotgun);
+			}
+
+			// Rocket Launcher
+			if (!GI->UpgradeMap.Contains(EUpgradeType::RocketLauncher))
+			{
+				GI->UpgradeMap.Add(EUpgradeType::RocketLauncher, GI->SetDefaultUpgradeInfo(EUpgradeType::RocketLauncher));
+				GI->SetCurrentWeapon(EUpgradeType::RocketLauncher);
+			}
+
+			// Apply all upgrades
+			GI->ApplyAllUpgradeFunctions(this);
+			SelectWeapon(GI->GetCurrentWeaponName());
+		
+
 	}
-	
+
+
 	PlayerHealth = PlayerMaxHealth;
-	
+
 	if (AArenaGameMode* GameMode = Cast<AArenaGameMode>(UGameplayStatics::GetGameMode(this)))
 	{
 		GameMode->FadeIn(this);
 	}
 }
 
-// Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 	if (Weapon2Equipped && CurrentGun && CurrentGun->IsA<ARifle>() && bIsShooting)
 	{
 		Shoot();
 	}
-
-	// DrawDebugLine for use
-	// DrawDebugLine(GetWorld(), Start, End, FColor::Red, false);
-
-	// Drawdebugline for socket
-	/*const FTransform SocketTransform = GetMesh()->GetSocketTransform(TEXT("hand_lSocket"));
-	FRotator SocketRot = SocketTransform.GetRotation().Rotator();
-	FRotator SpawnRotation(SocketRot.Pitch + 12, GetActorRotation().Yaw, SocketRot.Roll);
-	FVector SpawnLocation = SocketTransform.GetLocation();
-
-	FVector EndLocation = SpawnLocation + SpawnRotation.Vector() * UseDistance;
-
-	// Draw the debug line
-	DrawDebugLine(
-		GetWorld(),
-		SpawnLocation,
-		EndLocation,
-		FColor::Green,
-		false     // Thickness
-	);*/
-
-	
 }
 
-// Called to bind functionality to input
-void APlayerCharacter::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
+void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &APlayerCharacter::Jump);
+	PlayerInputComponent->BindAction("AirDash", IE_Pressed, this, &APlayerCharacter::AirDash);
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &APlayerCharacter::Shoot);
+	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &APlayerCharacter::ThrowGrenade);
 	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &APlayerCharacter::Use);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &APlayerCharacter::Reload);
+
 	PlayerInputComponent->BindAction("SelectWeapon1", IE_Pressed, this, &APlayerCharacter::SelectWeapon1);
 	PlayerInputComponent->BindAction("SelectWeapon2", IE_Pressed, this, &APlayerCharacter::SelectWeapon2);
+	PlayerInputComponent->BindAction("SelectWeapon3", IE_Pressed, this, &APlayerCharacter::SelectWeapon3);
+	PlayerInputComponent->BindAction("SelectWeapon4", IE_Pressed, this, &APlayerCharacter::SelectWeapon4);
+
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Yaw", this, &APlayerCharacter::Yaw);
 	PlayerInputComponent->BindAxis("Pitch", this, &APlayerCharacter::Pitch);
+
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &APlayerCharacter::StartShooting);
 	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &APlayerCharacter::StopShooting);
-	
 }
-// Called when the player starts holding the shoot button
+
 void APlayerCharacter::StartShooting()
 {
 	if (Weapon2Equipped && CurrentGun && CurrentGun->IsA<ARifle>())
 	{
-		bIsShooting = true; // Player starts shooting
+		bIsShooting = true;
 	}
 }
 
-// Called when the player releases the shoot button
 void APlayerCharacter::StopShooting()
 {
-	bIsShooting = false; // Player stops shooting
+	bIsShooting = false;
+}
+
+AGun* APlayerCharacter::GetCurrentGun() const
+{
+	return CurrentGun;
+}
+
+void APlayerCharacter::ThrowGrenade()
+{
+	if (!GrenadeClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Grenade class not set!"));
+		return;
+	}
+
+	FVector SpawnLocation = GetActorLocation() + FVector(0, 0, 50);
+	FRotator SpawnRotation = PlayerCamera->GetComponentRotation();
+
+	AExplosive* SpawnedGrenade = GetWorld()->SpawnActor<AExplosive>(GrenadeClass, SpawnLocation, SpawnRotation);
 }
 
 void APlayerCharacter::MoveForward(float Value)
 {
-	FVector ForwardDirection = GetActorForwardVector();
-	AddMovementInput(ForwardDirection, Value);
+	AddMovementInput(GetActorForwardVector(), Value);
 }
+
 void APlayerCharacter::MoveRight(float Value)
 {
-	FVector RightDirection = GetActorRightVector();
-	AddMovementInput(RightDirection, Value);
+	AddMovementInput(GetActorRightVector(), Value);
 }
 
 void APlayerCharacter::Yaw(float Value)
 {
 	AddControllerYawInput(Value);
 }
+
 void APlayerCharacter::Pitch(float Value)
 {
 	AddControllerPitchInput(Value);
 }
 
-//Jag gör detta endast för att kunna kalla på en funktion från UChallengeSubsystem, om ni kommer på ett bättre sätt så kan ni bara byta till det. Dock borde jump fungera på samma sätt som förut.
 void APlayerCharacter::Jump()
 {
-	// Notify Challenge Subsystem
 	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
 	{
 		ChallengeSub->NotifyPlayerJumped();
 	}
 
-	Super::Jump(); // Den faktiska jump funktionen 
+	Super::Jump();
 }
 
 void APlayerCharacter::SetupStimulusSource()
@@ -159,165 +212,161 @@ void APlayerCharacter::SetupStimulusSource()
 	}
 }
 
-
 void APlayerCharacter::Shoot()
 {
-	if (!CurrentGun)
-		return;
+	if (!CurrentGun) return;
 
 	USceneComponent* Muzzle = CurrentGun->GetMuzzlePoint();
-	if (!Muzzle)
-		return;
+	if (!Muzzle) return;
 
-	FVector FireLocation = Muzzle->GetComponentLocation();
-	FRotator FireRotation = PlayerCamera->GetComponentRotation();
+	CurrentGun->Fire(Muzzle->GetComponentLocation(), PlayerCamera->GetComponentRotation());
 
-	CurrentGun->Fire(FireLocation, FireRotation);
-
-	// Challenge system
 	if (UChallengeSubsystem* ChallengeSubsystem = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
 	{
-		if (CurrentGun == Weapon1Instance)
-		{
-			ChallengeSubsystem->NotifyWeaponFired(WeaponName1);
-		}
-		else
-		{
-			ChallengeSubsystem->NotifyWeaponFired(WeaponName2);
-		}
+		if (CurrentGun == Weapon1Instance) ChallengeSubsystem->NotifyWeaponFired(WeaponName1);
+		else if (CurrentGun == Weapon2Instance) ChallengeSubsystem->NotifyWeaponFired(WeaponName2);
+		else if (CurrentGun == Weapon3Instance) ChallengeSubsystem->NotifyWeaponFired(WeaponName3);
+		else if (CurrentGun == Weapon4Instance) ChallengeSubsystem->NotifyWeaponFired(WeaponName4);
 	}
 }
 
-
 void APlayerCharacter::Reload()
 {
-	if (CurrentGun) // Ensure the player has a current weapon
+	if (CurrentGun)
 	{
-		// Call the Reload function on the weapon
 		CurrentGun->Reload();
-		UE_LOG(LogTemp, Warning, TEXT("Player reload triggered"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No weapon equipped to reload"));
 	}
 }
 
 void APlayerCharacter::SelectWeapon(FName Weapon)
 {
-	if (UPlayerGameInstance *GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
-		if (Weapon == WeaponName1)
-		{
-			APlayerCharacter::SelectWeapon1();
-		}
-		else if (Weapon == WeaponName2)
-		{
-			APlayerCharacter::SelectWeapon2();
-		}
+		if (Weapon == WeaponName1) SelectWeapon1();
+		else if (Weapon == WeaponName2) SelectWeapon2();
+		else if (Weapon == WeaponName3) SelectWeapon3();
+		else if (Weapon == WeaponName4) SelectWeapon4();
 	}
 }
 
-
 void APlayerCharacter::SelectWeapon1()
 {
-	if (UPlayerGameInstance *PlayerGameInstance = Cast<UPlayerGameInstance>(GetGameInstance()))
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
-		if (!Weapon1Equipped && PlayerGameInstance->HasBought(WeaponName1))
+		if (!Weapon1Equipped && GI->HasBought(WeaponName1))
 		{
-			PlayerGameInstance->SetCurrentWeapon(WeaponName1);
-
+			GI->SetCurrentWeapon(WeaponName1);
 			Weapon1Equipped = true;
-			Weapon2Equipped = false;
+			Weapon2Equipped = Weapon3Equipped = Weapon4Equipped = false;
 
-			// Spawn the weapon if it's not already in the world
-			if (!Weapon1Instance)
-			{
-				Weapon1Instance = GetWorld()->SpawnActor<AGun>(GWeapon1);
-				if (Weapon1Instance)
-				{
-					Weapon1Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
-					Weapon1Instance->SetOwnerCharacter(this);
-
-					// Example: Give Weapon1 infinite reloads
-					Weapon1Instance->bHasInfiniteReloads = true;
-				}
-			}
-
-			// Hide the other gun
-			if (Weapon2Instance)
-			{
-				Weapon2Instance->SetActorHiddenInGame(true);
-				Weapon2Instance->SetActorEnableCollision(false);
-			}
-
-			// Enable current gun
 			if (Weapon1Instance)
 			{
 				Weapon1Instance->SetActorHiddenInGame(false);
 				Weapon1Instance->SetActorEnableCollision(true);
 				CurrentGun = Weapon1Instance;
+				CurrentGun->CheckForUpgrades();
 			}
-			CurrentGun->CheckForUpgrades();
+
+			if (Weapon2Instance) Weapon2Instance->SetActorHiddenInGame(true);
+			if (Weapon3Instance) Weapon3Instance->SetActorHiddenInGame(true);
+			if (Weapon4Instance) Weapon4Instance->SetActorHiddenInGame(true);
 		}
-		
 	}
 }
 
 void APlayerCharacter::SelectWeapon2()
 {
-	if (UPlayerGameInstance *PlayerGameInstance = Cast<UPlayerGameInstance>(GetGameInstance()))
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
-		if (!Weapon2Equipped && PlayerGameInstance->HasBought(WeaponName2))
+		if (!Weapon2Equipped && GI->HasBought(WeaponName2))
 		{
-			PlayerGameInstance->SetCurrentWeapon(WeaponName2);
+			GI->SetCurrentWeapon(WeaponName2);
 			Weapon2Equipped = true;
-			Weapon1Equipped = false;
-			if (!Weapon2Instance)
-			{
-				Weapon2Instance = GetWorld()->SpawnActor<AGun>(GWeapon2);
-				if (Weapon2Instance)
-				{
-					Weapon2Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
-					Weapon2Instance->SetOwnerCharacter(this);
-				}
-			}
-
-			if (Weapon1Instance)
-			{
-				Weapon1Instance->SetActorHiddenInGame(true);
-				Weapon1Instance->SetActorEnableCollision(false);
-			}
+			Weapon1Equipped = Weapon3Equipped = Weapon4Equipped = false;
 
 			if (Weapon2Instance)
 			{
 				Weapon2Instance->SetActorHiddenInGame(false);
 				Weapon2Instance->SetActorEnableCollision(true);
 				CurrentGun = Weapon2Instance;
+				CurrentGun->CheckForUpgrades();
 			}
-			CurrentGun->CheckForUpgrades();
+
+			if (Weapon1Instance) Weapon1Instance->SetActorHiddenInGame(true);
+			if (Weapon3Instance) Weapon3Instance->SetActorHiddenInGame(true);
+			if (Weapon4Instance) Weapon4Instance->SetActorHiddenInGame(true);
+		}
+	}
+}
+
+void APlayerCharacter::SelectWeapon3()
+{
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (!Weapon3Equipped && GI->HasBought(WeaponName3))
+		{
+			GI->SetCurrentWeapon(WeaponName3);
+			Weapon3Equipped = true;
+			Weapon1Equipped = Weapon2Equipped = Weapon4Equipped = false;
+
+			if (Weapon3Instance)
+			{
+				Weapon3Instance->SetActorHiddenInGame(false);
+				Weapon3Instance->SetActorEnableCollision(true);
+				CurrentGun = Weapon3Instance;
+				CurrentGun->CheckForUpgrades();
+			}
+
+			if (Weapon1Instance) Weapon1Instance->SetActorHiddenInGame(true);
+			if (Weapon2Instance) Weapon2Instance->SetActorHiddenInGame(true);
+			if (Weapon4Instance) Weapon4Instance->SetActorHiddenInGame(true);
+		}
+	}
+}
+
+void APlayerCharacter::SelectWeapon4()
+{
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (!Weapon4Equipped && GI->HasBought(WeaponName4))
+		{
+			GI->SetCurrentWeapon(WeaponName4);
+			Weapon4Equipped = true;
+			Weapon1Equipped = Weapon2Equipped = Weapon3Equipped = false;
+
+			if (Weapon4Instance)
+			{
+				Weapon4Instance->SetActorHiddenInGame(false);
+				Weapon4Instance->SetActorEnableCollision(true);
+				CurrentGun = Weapon4Instance;
+				CurrentGun->CheckForUpgrades();
+			}
+
+			if (Weapon1Instance) Weapon1Instance->SetActorHiddenInGame(true);
+			if (Weapon2Instance) Weapon2Instance->SetActorHiddenInGame(true);
+			if (Weapon3Instance) Weapon3Instance->SetActorHiddenInGame(true);
 		}
 	}
 }
 
 void APlayerCharacter::Use()
 {
-	const FVector Start = PlayerCamera->GetComponentLocation();
-	const FVector End = Start + (PlayerCamera->GetForwardVector() * UseDistance);
+	FVector Start = PlayerCamera->GetComponentLocation();
+	FVector End = Start + PlayerCamera->GetForwardVector() * UseDistance;
+
 	FHitResult HitResult;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
 	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
 	{
-		if (AActor* TargetActor = HitResult.GetActor())
+		if (AActor* Actor = HitResult.GetActor())
 		{
-			if (TargetActor && TargetActor->GetClass()->ImplementsInterface(UPlayerUseInterface::StaticClass()))
+			if (Actor->GetClass()->ImplementsInterface(UPlayerUseInterface::StaticClass()))
 			{
-				IPlayerUseInterface::Execute_Use(TargetActor, this);
+				IPlayerUseInterface::Execute_Use(Actor, this);
 			}
 		}
-		
 	}
 }
 
@@ -325,54 +374,62 @@ void APlayerCharacter::HealPlayer(int32 HealAmount)
 {
 	if (!bIsDead)
 	{
-		PlayerHealth += HealAmount;
-		if (PlayerHealth > PlayerMaxHealth)
-		{
-			PlayerHealth = PlayerMaxHealth;
-		}
+		PlayerHealth = FMath::Clamp(PlayerHealth + HealAmount, 0, PlayerMaxHealth);
 	}
 }
 
 AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
 {
-	if (WeaponName == "Pistol")
-	{
-		return Weapon1Instance;
-	}
-	if (WeaponName == "Rifle")
-	{
-		return Weapon2Instance;
-	}
-	if (WeaponName == "Shotgun")
-	{
-		return Weapon3Instance;
-	}
-		return nullptr;
+	if (WeaponName == WeaponName1) return Weapon1Instance;
+	if (WeaponName == WeaponName2) return Weapon2Instance;
+	if (WeaponName == WeaponName3) return Weapon3Instance;
+	if (WeaponName == WeaponName4) return Weapon4Instance;
+
+	return nullptr;
 }
 
-float APlayerCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
-	class AController* EventInstigator, AActor* DamageCauser)
+void APlayerCharacter::AirDash()
 {
-	if (!bIsDead)
-	{
-		PlayerHealth -= DamageAmount;
-		if (PlayerHealth <= 0)
-		{
-			PlayerHealth = 0;
-			bIsDead = true;
-			DisableInput(nullptr);
-			GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if (bHasDashed || GetCharacterMovement()->IsMovingOnGround()) return;
 
-			if (AArenaGameMode* GameMode = Cast<AArenaGameMode>(UGameplayStatics::GetGameMode(this)))
+	FVector InputVector = GetActorForwardVector() * InputComponent->GetAxisValue("MoveForward") +
+		GetActorRightVector() * InputComponent->GetAxisValue("MoveRight");
+
+	FVector DashDirection = InputVector.IsNearlyZero() ? GetActorForwardVector() : InputVector.GetClampedToMaxSize(1.0f);
+	FVector DashVelocity = DashDirection * DashStrength;
+	DashVelocity.Z = GetCharacterMovement()->JumpZVelocity;
+
+	GetCharacterMovement()->Velocity = DashVelocity;
+	bHasDashed = true;
+}
+
+void APlayerCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+	bHasDashed = false;
+}
+
+float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	if (bIsDead) return 0;
+
+	PlayerHealth -= DamageAmount;
+	if (PlayerHealth <= 0)
+	{
+		PlayerHealth = 0;
+		bIsDead = true;
+		DisableInput(nullptr);
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		if (AArenaGameMode* GameMode = Cast<AArenaGameMode>(UGameplayStatics::GetGameMode(this)))
+		{
+			GameMode->FadeOut(this);
+			if (GameMode->SequencePlayer)
 			{
-				GameMode->FadeOut(this);
-				if (GameMode->SequencePlayer)
-				{
-					GameMode->SequencePlayer->OnFinished.AddDynamic(GameMode, &AArenaGameMode::PlayerDeath);
-				}
+				GameMode->SequencePlayer->OnFinished.AddDynamic(GameMode, &AArenaGameMode::PlayerDeath);
 			}
 		}
 	}
-	
+
 	return DamageAmount;
 }

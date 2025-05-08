@@ -110,4 +110,11 @@ protected:
 	int32 GraceSecondsRemaining;
 
 	bool bIsGracePeriod = false;
+
+	// for the Flying enemy
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FlyingEnemy")
+	float MaxAltitude = 1000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FlyingEnemy")
+	float MinAltitude = 100.0f;
 };

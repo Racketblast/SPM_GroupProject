@@ -94,17 +94,25 @@ public:
 
 	void LoadChallengeDataFromManager();
 
-	FTimerHandle ResetChallengeStatusTimerHandle; // Endast för testing, ta bort den.
-	
 	// för animationer
+	FTimerHandle ResetChallengeStatusTimerHandle; // för animationer
+	
 	float SuccessAnimationTimer = 1;
 	float FailedAnimationTimer = 1;
 
 	UFUNCTION(BlueprintCallable, Category = "Challenge")
-	void SetAnimationTimers(float Success, float Failed);
+	void SetAnimationTimers(float Success, float Failed, float StartedChallenge);
 
+	bool JustStartedChallenge = false;
+	float StartedChallengeAnimationTimer = 1;
+	
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	bool GetJustStartedChallenge() const; 
+	void ResetJustStartedChallenge();
+	
 	// För tids baserad challenge
 	FTimerHandle TimerHandle_WaveTimeLimit;
+	FTimerHandle ResetJustStartedChallengeTimerHandle;
 	float CurrentWaveTimeLimit = 0.0f;
 
 	void StartWaveChallenge();
