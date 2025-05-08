@@ -41,3 +41,9 @@ void AArenaGameMode::PlayerDeath()
 {
 	UGameplayStatics::OpenLevel(this, "Hub");
 }
+
+void AArenaGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+	FadeIn(this);
+}

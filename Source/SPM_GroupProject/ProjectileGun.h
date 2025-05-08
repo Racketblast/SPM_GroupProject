@@ -1,8 +1,8 @@
 // ProjectileGun.h
 #pragma once
 
+#include "Explosive.h"
 #include "Gun.h"
-#include "projectile.h"
 #include "ProjectileGun.generated.h"
 
 UCLASS()
@@ -12,12 +12,12 @@ class SPM_GROUPPROJECT_API AProjectileGun : public AGun
 
 public:
 	virtual void Fire(FVector FireLocation, FRotator FireRotation) override;
-	void SetProjectileClass(TSubclassOf<AProjectile> NewClass)
+	void SetProjectileClass(TSubclassOf<AExplosive> NewClass)
 	{
 		ProjectileClass = NewClass;
 	}
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<class AProjectile> ProjectileClass;
+	TSubclassOf<class AExplosive> ProjectileClass;
 };

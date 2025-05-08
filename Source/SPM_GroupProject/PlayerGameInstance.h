@@ -12,19 +12,22 @@
 UENUM(BlueprintType)
 enum class EUpgradeType : uint8
 {
-	None        UMETA(DisplayName = "None"),
-	Pistol        UMETA(DisplayName = "Pistol"),
-	Rifle    UMETA(DisplayName = "Rifle"),
-	Health20    UMETA(DisplayName = "20 Health"),
-	HealthMax    UMETA(DisplayName = "Max Health"),
-	Speed20  UMETA(DisplayName = "Speed 20%"),
-	Jump50    UMETA(DisplayName = "50% Jump"),
-	PistolDamage10 UMETA(DisplayName = "10% PistolDamage"),
-	RifleDamage10 UMETA(DisplayName = "10% RifleDamage"),
-	PistolFiringSpeed10 UMETA(DisplayName = "10% PistolFiringSpeed"),
-	RifleFiringSpeed10 UMETA(DisplayName = "10% RifleFiringSpeed"),
+	None                UMETA(DisplayName = "None"),
+	Pistol              UMETA(DisplayName = "Pistol"),
+	Rifle               UMETA(DisplayName = "Rifle"),
+	Shotgun             UMETA(DisplayName = "Shotgun"),
+	RocketLauncher      UMETA(DisplayName = "RocketLauncher"),
+	Health20            UMETA(DisplayName = "20 Health"),
+	HealthMax           UMETA(DisplayName = "Max Health"),
+	Speed20             UMETA(DisplayName = "Speed 20%"),
+	Jump50              UMETA(DisplayName = "50% Jump"),
+	PistolDamage10      UMETA(DisplayName = "10% Pistol Damage"),
+	RifleDamage10       UMETA(DisplayName = "10% Rifle Damage"),
+	PistolFiringSpeed10 UMETA(DisplayName = "10% Pistol Firing Speed"),
+	RifleFiringSpeed10  UMETA(DisplayName = "10% Rifle Firing Speed"),
 	// Add more as needed
 };
+
 
 UENUM(BlueprintType)
 enum class EUpgradeCategory : uint8
