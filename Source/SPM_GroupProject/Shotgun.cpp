@@ -11,6 +11,9 @@
 #include "Components/AudioComponent.h"
 #include "Sound/SoundBase.h"
 #include "TimerManager.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+
 void AShotgun::BeginPlay()
 {
 	Super::BeginPlay();
@@ -74,6 +77,14 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 
 		if (GetWorld()->LineTraceSingleByChannel(Hit, FireLocation, End, ECC_Visibility, Params))
 		{
+			if (BulletHitEffect)
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+					GetWorld(),
+					BulletHitEffect,
+					Hit.Location
+				);
+			}
 			DrawDebugLine(GetWorld(), FireLocation, Hit.ImpactPoint, FColor::Red, false, 1.0f, 0, 0.5f);
 			AActor* HitActor = Hit.GetActor();
 			LastHitActor = HitActor;

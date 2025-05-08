@@ -71,7 +71,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
     {
         DrawDebugLine(GetWorld(), FireLocation, Hit.ImpactPoint, FColor::Red, false, 1.0f, 0, 1.0f);
 
-        if (BulletHitEffect) // GunMesh is your USkeletalMeshComponent
+        if (BulletHitEffect)
         {
             UNiagaraFunctionLibrary::SpawnSystemAtLocation(
                 GetWorld(),
