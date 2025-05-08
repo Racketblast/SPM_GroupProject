@@ -15,7 +15,16 @@ UBTTask_FlyToPlayerLocation::UBTTask_FlyToPlayerLocation()
 
 EBTNodeResult::Type UBTTask_FlyToPlayerLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	// Startar Task, det som finns i tick
+	AController* Controller = OwnerComp.GetAIOwner();
+	if (!Controller || !Controller->GetPawn())
+	{
+		return EBTNodeResult::Failed;
+	}
+
+	LastLocation = Controller->GetPawn()->GetActorLocation();
+	TimeSinceLastMove = 0.f;
+	bBackingOff = false;
+
 	return EBTNodeResult::InProgress;
 }
 
@@ -30,11 +39,9 @@ void UBTTask_FlyToPlayerLocation::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 		return;
 	}
 
-	UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
-	FVector TargetLocation = Blackboard->GetValueAsVector(MoveToLocationKey.SelectedKeyName);
-
-	FVector Direction = (TargetLocation - Pawn->GetActorLocation());
-	float Distance = Direction.Size();
+	FVector TargetLocation = OwnerComp.GetBlackboardComponent()->GetValueAsVector(MoveToLocationKey.SelectedKeyName);
+	FVector CurrentLocation = Pawn->GetActorLocation();
+	float Distance = FVector::Dist(CurrentLocation, TargetLocation);
 
 	if (Distance <= AcceptanceRadius)
 	{
@@ -42,7 +49,34 @@ void UBTTask_FlyToPlayerLocation::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 		return;
 	}
 
-	Direction.Normalize();
+	// kollar om fienden har fastnat
+	TimeSinceLastMove += DeltaSeconds;
+	if (TimeSinceLastMove >= StuckCheckInterval)
+	{
+		float MovedDistance = FVector::Dist(CurrentLocation, LastLocation);
+		if (MovedDistance < StuckMovementThreshold)
+		{
+			// ifall den fastnar, så använder den sig av en backoff, alltså typ en failsafe. 
+			if (!bBackingOff)
+			{
+				bBackingOff = true;
+				FVector Backward = -(TargetLocation - CurrentLocation).GetSafeNormal() * BackoffDistance;
+				TargetLocation = CurrentLocation + Backward;
+				OwnerComp.GetBlackboardComponent()->SetValueAsVector(MoveToLocationKey.SelectedKeyName, TargetLocation);
+
+				UE_LOG(LogTemp, Warning, TEXT("Flying AI is stuck, backing off"));
+				DrawDebugSphere(GetWorld(), CurrentLocation, 50.f, 12, FColor::Red, false, 1.f);
+			}
+		}
+		else
+		{
+			bBackingOff = false;
+		}
+		LastLocation = CurrentLocation;
+		TimeSinceLastMove = 0.f;
+	}
+	
+	FVector Direction = (TargetLocation - CurrentLocation).GetSafeNormal();
 	Pawn->AddMovementInput(Direction, 1.0f, false);
 }
 

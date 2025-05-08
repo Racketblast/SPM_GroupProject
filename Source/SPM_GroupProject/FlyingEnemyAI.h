@@ -16,12 +16,17 @@ class SPM_GROUPPROJECT_API AFlyingEnemyAI : public AAI_Main
 public:
 	AFlyingEnemyAI();
 
+	void Tick(float DeltaTime);
+
+	void DrawFlyableZRange();
+
 	void SetMaxAltitude(float Altitude); // Kallas från wave manager, i spawnd enemy funktionen
 
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	UBehaviorTree* BehaviorTree;
-	
-	UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }*/
+	float GetMaxAltitude() const; // Används i FindPlayerLocation_Flying
+
+	void SetMinAltitude(float Altitude); // Kallas från wave manager, i spawnd enemy funktionen
+
+	float GetMinAltitude() const; // Används i FindPlayerLocation_Flying
 
 protected:
 	virtual void BeginPlay() override;
@@ -32,4 +37,7 @@ protected:
 
 	// ändras i wave manager
 	float MaxAltitude = 1000.0f;
+
+	// ändras i wave manager
+	float MinAltitude = 100.f;  
 };

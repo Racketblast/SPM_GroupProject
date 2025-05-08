@@ -31,6 +31,7 @@ void ADebugCube::DoAllFunctions()
 	EnableAllLevels();
 	GivePlayerMaxHealth();
 	GivePlayerMaxMoney();
+	GiveAllWeapons();
 }
 
 void ADebugCube::EnableAllLevels()
@@ -74,3 +75,35 @@ void ADebugCube::GivePlayerMaxMoney()
 	}
 }
 
+void ADebugCube::GiveAllWeapons()
+{
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (bUnlockAllWeapons)
+		{
+			if (!GI->UpgradeMap.Contains(EUpgradeType::Pistol))
+			{
+				GI->UpgradeMap.Add(EUpgradeType::Pistol, GI->SetDefaultUpgradeInfo(EUpgradeType::Pistol));
+				GI->SetCurrentWeapon(EUpgradeType::Pistol);
+			}
+			// Rifle
+			if (!GI->UpgradeMap.Contains(EUpgradeType::Rifle))
+			{
+				GI->UpgradeMap.Add(EUpgradeType::Rifle, GI->SetDefaultUpgradeInfo(EUpgradeType::Rifle));
+			}
+
+			// Shotgun
+			if (!GI->UpgradeMap.Contains(EUpgradeType::Shotgun))
+			{
+				GI->UpgradeMap.Add(EUpgradeType::Shotgun, GI->SetDefaultUpgradeInfo(EUpgradeType::Shotgun));
+			}
+
+			// Rocket Launcher
+			if (!GI->UpgradeMap.Contains(EUpgradeType::RocketLauncher))
+			{
+				GI->UpgradeMap.Add(EUpgradeType::RocketLauncher, GI->SetDefaultUpgradeInfo(EUpgradeType::RocketLauncher));
+			}
+		}
+	}
+	
+}

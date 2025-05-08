@@ -23,8 +23,12 @@ enum class EUpgradeType : uint8
 	Jump50              UMETA(DisplayName = "50% Jump"),
 	PistolDamage10      UMETA(DisplayName = "10% Pistol Damage"),
 	RifleDamage10       UMETA(DisplayName = "10% Rifle Damage"),
+	ShotgunDamage10       UMETA(DisplayName = "10% Shotgun Damage"),
+	RocketLauncherDamage10       UMETA(DisplayName = "10% RocketLauncher Damage"),
 	PistolFiringSpeed10 UMETA(DisplayName = "10% Pistol Firing Speed"),
 	RifleFiringSpeed10  UMETA(DisplayName = "10% Rifle Firing Speed"),
+	ShotgunFiringSpeed10 UMETA(DisplayName = "10% Shotgun Firing Speed"),
+	RocketLauncherFiringSpeed10 UMETA(DisplayName = "10% RocketLauncher Firing Speed"),
 	// Add more as needed
 };
 
