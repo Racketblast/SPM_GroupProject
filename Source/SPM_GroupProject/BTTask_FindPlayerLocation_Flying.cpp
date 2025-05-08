@@ -28,11 +28,41 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if (!Player) return EBTNodeResult::Failed;
 
-	FVector TargetLocation = Player->GetActorLocation();
-	TargetLocation.Z += ZOffset;
+	FVector PlayerLocation = Player->GetActorLocation();
+	FVector TargetLocation = PlayerLocation;
 
 	APawn* AIPawn = OwnerComp.GetAIOwner()->GetPawn();
 	AFlyingEnemyAI* FlyingEnemy = Cast<AFlyingEnemyAI>(AIPawn);
+
+	// Line trace uppåt för att titta efter tak åvanför spelaren
+	FHitResult CeilingHit;
+	FCollisionQueryParams CeilingParams;
+	CeilingParams.AddIgnoredActor(Player);
+	CeilingParams.AddIgnoredActor(AIPawn);
+
+	FVector CeilingTraceStart = PlayerLocation;
+	FVector CeilingTraceEnd = CeilingTraceStart + FVector(0.f, 0.f, ZOffset + 100.f); // kållar lite över z-offset
+
+	bool bCeilingClose = false;
+
+	if (GetWorld()->LineTraceSingleByChannel(CeilingHit, CeilingTraceStart, CeilingTraceEnd, ECC_Visibility, CeilingParams))
+	{
+		float CeilingDistance = CeilingHit.Distance;
+		if (CeilingDistance < ZOffset + 50.f) // inte tillräckligt med plats över spelaren
+		{
+			bCeilingClose = true;
+		}
+	}
+
+	if (!bCeilingClose)
+	{
+		TargetLocation.Z += ZOffset;
+	}
+	else
+	{
+		// Förminskar offset om det inte finns tillräckligt med plats
+		TargetLocation.Z += FMath::Clamp(CeilingHit.Distance - 100.f, 0.f, ZOffset);
+	}
 
 	if (FlyingEnemy)
 	{
