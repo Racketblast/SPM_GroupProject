@@ -199,6 +199,7 @@ void UChallengeSubsystem::LoadChallengeDataFromManager()
 				RewardMoneyAmount = Manager->DefaultChallengeRewardAmount;
 				UE_LOG(LogTemp, Warning, TEXT("Challenge data loaded from manager."));
 				UE_LOG(LogTemp, Warning, TEXT("Loaded %d challenges into the system."), PossibleChallenges.Num());
+				PreviewNextChallenge(); 
 				return;
 			}
 		}
