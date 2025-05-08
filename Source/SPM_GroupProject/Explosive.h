@@ -40,5 +40,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Grenade")
 	float WeaponDamage = 40.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Explosion|Sound")
+	USoundBase* ExplosionSound;
+
+
 	FTimerHandle ExplosionTimer;
 };
