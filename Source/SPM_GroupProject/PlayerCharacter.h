@@ -82,6 +82,9 @@ protected:
 	bool Weapon2Equipped = false;
 	bool Weapon3Equipped = false;
 	bool Weapon4Equipped = false;
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 GrenadeNum = 5;
 
 private:
 	UPROPERTY(Blueprintable)
@@ -113,7 +116,6 @@ private:
 	bool bIsShooting = false;
 	bool bHasDashed = false;
 	float DashStrength = 800.0f;
-	int32 GrenadeNum = 5;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Grenade")
 	TSubclassOf<AExplosive> GrenadeClass;

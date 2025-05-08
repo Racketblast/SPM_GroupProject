@@ -10,6 +10,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/AudioComponent.h"
 #include "Sound/SoundBase.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 void AHitscanGun::BeginPlay()
 {
@@ -67,8 +69,16 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 
     if (GetWorld()->LineTraceSingleByChannel(Hit, FireLocation, End, ECC_Visibility, Params))
     {
-        DrawDebugLine(GetWorld(), FireLocation, Hit.ImpactPoint, FColor::Red, false, 1.0f, 0, 1.0f);
+        //DrawDebugLine(GetWorld(), FireLocation, Hit.ImpactPoint, FColor::Red, false, 1.0f, 0, 1.0f);
 
+        if (BulletHitEffect)
+        {
+            UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+                GetWorld(),
+                BulletHitEffect,
+                Hit.Location
+            );
+        }
         AActor* HitActor = Hit.GetActor();
         LastHitActor = HitActor;
 
@@ -123,7 +133,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
     }
     else
     {
-        DrawDebugLine(GetWorld(), FireLocation, End, FColor::Blue, false, 1.0f, 0, 1.0f);
+        //DrawDebugLine(GetWorld(), FireLocation, End, FColor::Blue, false, 1.0f, 0, 1.0f);
     }
 
     CurrentAmmo--;

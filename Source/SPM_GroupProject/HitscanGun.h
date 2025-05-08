@@ -23,6 +23,9 @@ public:
 
 	UFUNCTION()
 	void EnemyHitFalse();
+	
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	class UNiagaraSystem* BulletHitEffect;
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
