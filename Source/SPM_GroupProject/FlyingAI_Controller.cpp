@@ -26,6 +26,9 @@ void AFlyingAI_Controller::Tick(float DeltaSeconds)
 		float Distance = FVector::Dist(Player->GetActorLocation(), ControlledPawn->GetActorLocation());
 		bool bIsInRange = Distance <= PlayerRangeThreshold;
 		Blackboard->SetValueAsBool("PlayerInRange", bIsInRange);
+		
+		bool bPlayerVisible = HasLineOfSightToPlayer();
+		Blackboard->SetValueAsBool("PlayerVisible", bPlayerVisible);
 	}
 }
 
@@ -43,4 +46,31 @@ void AFlyingAI_Controller::OnPossess(APawn* InPawn)
 			RunBehaviorTree(BehaviorTree);
 		}
 	}
+}
+
+bool AFlyingAI_Controller::HasLineOfSightToPlayer() const
+{
+	APawn* AIPawn = GetPawn();
+	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	if (!AIPawn || !Player) return false;
+
+	FVector Start = AIPawn->GetActorLocation();
+	FVector End = Player->GetActorLocation();
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(AIPawn);
+	Params.AddIgnoredActor(Player);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1.0f, 0, 1.0f);
+
+	if (!bHit)
+	{
+		// Nothing in the way
+		return true;
+	}
+
+	// Hit something — is it the player?
+	return HitResult.GetActor() == Player;
 }
