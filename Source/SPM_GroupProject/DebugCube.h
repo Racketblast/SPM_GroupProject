@@ -23,6 +23,8 @@ public:
 	bool bHealth = false;
 	UPROPERTY(EditAnywhere, Category="Debug")
 	bool bMoney = false;
+	UPROPERTY(EditAnywhere, Category="Debug")
+	bool bUnlockAllWeapons = false;
 	void DoAllFunctions();
 protected:
 	UPROPERTY(EditDefaultsOnly)
@@ -33,4 +35,5 @@ protected:
 	void EnableAllLevels();
 	void GivePlayerMaxHealth();
 	void GivePlayerMaxMoney();
+	void GiveAllWeapons();
 };
