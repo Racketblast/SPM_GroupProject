@@ -67,10 +67,10 @@ bool AFlyingAI_Controller::HasLineOfSightToPlayer() const
 
 	if (!bHit)
 	{
-		// Nothing in the way
+		// Ingenting i vägen
 		return true;
 	}
 
-	// Hit something — is it the player?
+	// Kållar om den träffar spelaren, alltså om den ser spelaren
 	return HitResult.GetActor() == Player;
 }
