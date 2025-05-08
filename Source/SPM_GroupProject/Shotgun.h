@@ -22,6 +22,9 @@ public:
 	void EnemyHitFalse();
 	virtual void BeginPlay() override;
 protected:
+	UPROPERTY(EditAnywhere, Category = "Effects")
+	class UNiagaraSystem* BulletHitEffect;
+	
 	UPROPERTY(EditDefaultsOnly)
 	int32 NumPellets = 10;
 
