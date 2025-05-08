@@ -354,7 +354,7 @@ UPlayerGameInstance::UPlayerGameInstance()
 		FName("Arena_1"),
 		FName("V1"),
 		FName("V2"),
-		FName("MetroV2")
+		FName("MetroV3")
 	};
 
 	// Låser upp level 1 och Huben direkt.
