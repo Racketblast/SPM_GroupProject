@@ -1,4 +1,3 @@
-// ProjectileGun.h
 #pragma once
 
 #include "Explosive.h"
@@ -16,8 +15,22 @@ public:
 	{
 		ProjectileClass = NewClass;
 	}
-
+void BeginPlay();
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class AExplosive> ProjectileClass;
+
+private:
+	bool bCanFire = true;
+	FTimerHandle FireRateTimerHandle;
+
+	void ResetFire();
+	// ProjectileGun.h
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase* FireSound;
+
+	UPROPERTY(VisibleAnywhere, Category = "Sound")
+	UAudioComponent* FireAudioComponent;
+
 };
