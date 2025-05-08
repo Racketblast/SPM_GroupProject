@@ -56,6 +56,19 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
         FireAudioComponent->Play();
     }
 
+    if (MuzzleFlash && WeaponSkeletalMesh)
+    {
+        UNiagaraFunctionLibrary::SpawnSystemAttached(
+            MuzzleFlash,
+            WeaponSkeletalMesh,
+            FName("MuzzleSocket"),
+            FVector::ZeroVector,
+            FRotator::ZeroRotator,
+            EAttachLocation::SnapToTarget,
+            true
+        );
+    }
+    
     FVector ShotDirection = FireRotation.Vector();
     FVector End = FireLocation + (ShotDirection * Range);
 

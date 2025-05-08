@@ -10,11 +10,13 @@ AGun::AGun()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
-	SetRootComponent(WeaponMesh);
+	WeaponMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
+	SetRootComponent(WeaponMeshComponent);
 
 	MuzzlePoint = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzlePoint"));
-	MuzzlePoint->SetupAttachment(WeaponMesh);
+	MuzzlePoint->SetupAttachment(WeaponMeshComponent);
+	WeaponSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponSkeletalMesh"));
+	WeaponSkeletalMesh->SetupAttachment(WeaponMeshComponent);
 	MuzzlePoint->SetRelativeLocation(FVector(50.f, 0.f, 0.f));
 }
 
