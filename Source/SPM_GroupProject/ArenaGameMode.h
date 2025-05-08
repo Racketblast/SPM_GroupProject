@@ -22,6 +22,7 @@ public:
 	UPROPERTY()
 	class ULevelSequencePlayer* SequencePlayer;
 protected:
+	virtual void BeginPlay() override;
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
 	class ULevelSequence* FadeInTransition;
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
