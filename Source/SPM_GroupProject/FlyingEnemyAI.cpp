@@ -25,9 +25,9 @@ void AFlyingEnemyAI::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-#if WITH_EDITOR
+/*#if WITH_EDITOR
 	DrawFlyableZRange();
-#endif
+#endif*/
 }
 
 void AFlyingEnemyAI::SetMaxAltitude(float Altitude)
