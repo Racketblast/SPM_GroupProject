@@ -28,12 +28,22 @@ public:
 
 	float GetMinAltitude() const; // Används i FindPlayerLocation_Flying
 
+	void TryLateralUnstick();
+
+	void SetCurrentTargetLocation(const FVector& NewTarget);
+	FVector GetCurrentTargetLocation() const;
+
 protected:
 	virtual void BeginPlay() override;
 	
 	float ShootingRange = 600.f;
 	
 	bool bHasRecentlyShot = false;
+
+	FVector CurrentTargetLocation;
+	FVector LastLocation;
+	float StuckCheckTimer = 0.0f;
+	bool bIsDescendingStuck = false;
 
 	// ändras i wave manager
 	float MaxAltitude = 1000.0f;
