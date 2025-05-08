@@ -144,11 +144,13 @@ void APlayerCharacter::ThrowGrenade()
 		UE_LOG(LogTemp, Warning, TEXT("Grenade class not set!"));
 		return;
 	}
+	if (GrenadeNum > 0){
+		FVector SpawnLocation = GetActorLocation() + FVector(0, 0, 50);
+		FRotator SpawnRotation = PlayerCamera->GetComponentRotation();
 
-	FVector SpawnLocation = GetActorLocation() + FVector(0, 0, 50);
-	FRotator SpawnRotation = PlayerCamera->GetComponentRotation();
-
-	AExplosive* SpawnedGrenade = GetWorld()->SpawnActor<AExplosive>(GrenadeClass, SpawnLocation, SpawnRotation);
+		AExplosive* SpawnedGrenade = GetWorld()->SpawnActor<AExplosive>(GrenadeClass, SpawnLocation, SpawnRotation);
+		GrenadeNum--;
+	}
 }
 
 void APlayerCharacter::MoveForward(float Value)
