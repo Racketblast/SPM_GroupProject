@@ -198,7 +198,7 @@ void APlayerCharacter::Shoot()
 	USceneComponent* Muzzle = CurrentGun->GetMuzzlePoint();
 	if (!Muzzle) return;
 
-	CurrentGun->Fire(Muzzle->GetComponentLocation(), PlayerCamera->GetComponentRotation());
+	CurrentGun->Fire(PlayerCamera->GetComponentLocation(), PlayerCamera->GetComponentRotation());
 
 	if (UChallengeSubsystem* ChallengeSubsystem = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
 	{
