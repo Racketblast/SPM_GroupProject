@@ -18,6 +18,8 @@ public:
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
+	static bool IsLocationClear(UWorld* World, const FVector& Location, AActor* IgnoredActor, float Distance, float Clearance);
+
 protected:
 
 	UPROPERTY(EditAnywhere, Category = "Flight")
@@ -28,4 +30,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Randomization", meta = (EditCondition = "bAddRandomOffset"))
 	float RandomRadius;
+
+	UPROPERTY(EditAnywhere, Category = "Obstacle Avoidance")
+	float ObstacleCheckDistance = 200.f; // how far to check for nearby obstacles
+
+	UPROPERTY(EditAnywhere, Category = "Obstacle Avoidance")
+	float ObstacleClearance = 100.f;     // how close is too close to accept
 };
