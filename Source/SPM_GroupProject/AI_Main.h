@@ -18,6 +18,12 @@ public:
 
 	UBehaviorTree* GetBehaviorTree() const;
 
+	UPROPERTY(BlueprintReadWrite)
+	int32 AIHealth;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int32 MaxAIHealth = 100;
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -33,4 +39,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+private:
+	bool bIsDead = false;
 };

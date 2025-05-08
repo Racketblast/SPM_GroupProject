@@ -7,6 +7,7 @@
 #include "TimerManager.h"
 #include "MissionSubsystem.h"
 #include "ChallengeSubsystem.h"
+#include "FlyingEnemyAI.h"
 
 AWaveManager::AWaveManager()
 {
@@ -166,6 +167,16 @@ void AWaveManager::SpawnEnemy()
 			bSpawned = true;
 			SpawnedCountPerType.FindOrAdd(SelectedClass)++;
 			EnemiesSpawnedInCurrentWave++;
+
+			// för flying enemy 
+			if (AFlyingEnemyAI* FlyingEnemy = Cast<AFlyingEnemyAI>(SpawnedEnemy))
+			{
+				FlyingEnemy->SetMaxAltitude(MaxAltitude);
+				FlyingEnemy->SetMinAltitude(MinAltitude);
+				UE_LOG(LogTemp, Warning, TEXT("FlyingEnemy MaxAltitude: %f"), MaxAltitude);
+				UE_LOG(LogTemp, Warning, TEXT("FlyingEnemy MinAltitude: %f"), MinAltitude);
+			}
+			
 			UE_LOG(LogTemp, Warning, TEXT("Spawned enemy: %i"), EnemiesSpawnedInCurrentWave);
 			break;
 		}

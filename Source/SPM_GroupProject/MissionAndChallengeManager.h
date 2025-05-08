@@ -49,9 +49,12 @@ public:
 	float ClearWaveTimeLimit = 30.0f;
 
 	// för animationer
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge")
-	int32 SuccessAnimationTimer = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge") // ändrade från int32 till float, om detta skappar problem, så ändra tillbaka
+	float SuccessAnimationTimer = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge")
-	int32 FailedAnimationTimer = 1;
+	float FailedAnimationTimer = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge")
+	float StartedChallengeAnimationTimer = 1;
 };

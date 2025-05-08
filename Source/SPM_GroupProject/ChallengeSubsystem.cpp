@@ -7,6 +7,7 @@
 #include "EngineUtils.h" 
 #include "MissionAndChallengeManager.h"
 #include "PlayerCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 void UChallengeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -42,7 +43,23 @@ void UChallengeSubsystem::PreviewNextChallenge()
 
 void UChallengeSubsystem::ActivateCurrentChallenge()
 {
-	bIsChallengeActive = true;
+	bIsChallengeActive = true; // väldigt viktig, startar faktiskt logiken för challenges.
+	
+	JustStartedChallenge = true; // för animation
+	UE_LOG(LogTemp, Warning, TEXT("First JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
+	UE_LOG(LogTemp, Warning, TEXT("StartedChallengeAnimationTimer: %f"), StartedChallengeAnimationTimer);
+	/*if (StartedChallengeAnimationTimer <= 0)
+	{
+		StartedChallengeAnimationTimer = 4.f;
+	}*/
+	GetWorld()->GetTimerManager().SetTimer( // För att aktivera en animation och sedan stänga av den vid rätt tillfälle 
+	ResetJustStartedChallengeTimerHandle,
+	this,
+	&UChallengeSubsystem::ResetJustStartedChallenge,
+	StartedChallengeAnimationTimer,  
+	false  
+	);
+	UE_LOG(LogTemp, Warning, TEXT("StartedChallengeAnimationTimer: %f"), StartedChallengeAnimationTimer);
 }
 
 void UChallengeSubsystem::CompleteCurrentChallenge()
@@ -65,6 +82,18 @@ void UChallengeSubsystem::CompleteCurrentChallenge()
 FText UChallengeSubsystem::GetChallengeDescription() const // Används för widget
 {
 	return CurrentChallenge.Description;
+}
+
+bool UChallengeSubsystem::GetJustStartedChallenge() const // Används för widget
+{
+	return JustStartedChallenge;
+}
+
+void UChallengeSubsystem::ResetJustStartedChallenge() // Används för widget
+{
+	UE_LOG(LogTemp, Warning, TEXT("ResetJustStartedChallenge"));
+	JustStartedChallenge = false;
+	UE_LOG(LogTemp, Warning, TEXT("Second JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
 }
 
 bool UChallengeSubsystem::GetChallengeJustFailed() const  // Används för widget
@@ -123,10 +152,12 @@ void UChallengeSubsystem::SetRewardMoneyAmount(int32 MoneyAmount)
 }
 
 // för animationer
-void UChallengeSubsystem::SetAnimationTimers(float Success, float Failed)
+void UChallengeSubsystem::SetAnimationTimers(float Success, float Failed, float StartedChallenge)
 {
 	SuccessAnimationTimer = Success;
 	FailedAnimationTimer = Failed;
+	StartedChallengeAnimationTimer = StartedChallenge;
+	UE_LOG(LogTemp, Warning, TEXT("Timers set: Success: %f, Failed: %f, Started: %f"), SuccessAnimationTimer, FailedAnimationTimer, StartedChallengeAnimationTimer);
 }
 
 void UChallengeSubsystem::GiveChallengeReward()

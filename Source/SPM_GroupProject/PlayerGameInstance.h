@@ -12,19 +12,22 @@
 UENUM(BlueprintType)
 enum class EUpgradeType : uint8
 {
-	None        UMETA(DisplayName = "None"),
-	Pistol        UMETA(DisplayName = "Pistol"),
-	Rifle    UMETA(DisplayName = "Rifle"),
-	Health20    UMETA(DisplayName = "20 Health"),
-	HealthMax    UMETA(DisplayName = "Max Health"),
-	Speed20  UMETA(DisplayName = "Speed 20%"),
-	Jump50    UMETA(DisplayName = "50% Jump"),
-	PistolDamage10 UMETA(DisplayName = "10% PistolDamage"),
-	RifleDamage10 UMETA(DisplayName = "10% RifleDamage"),
-	PistolFiringSpeed10 UMETA(DisplayName = "10% PistolFiringSpeed"),
-	RifleFiringSpeed10 UMETA(DisplayName = "10% RifleFiringSpeed"),
+	None                UMETA(DisplayName = "None"),
+	Pistol              UMETA(DisplayName = "Pistol"),
+	Rifle               UMETA(DisplayName = "Rifle"),
+	Shotgun             UMETA(DisplayName = "Shotgun"),
+	RocketLauncher      UMETA(DisplayName = "RocketLauncher"),
+	Health20            UMETA(DisplayName = "20 Health"),
+	HealthMax           UMETA(DisplayName = "Max Health"),
+	Speed20             UMETA(DisplayName = "Speed 20%"),
+	Jump50              UMETA(DisplayName = "50% Jump"),
+	PistolDamage10      UMETA(DisplayName = "10% Pistol Damage"),
+	RifleDamage10       UMETA(DisplayName = "10% Rifle Damage"),
+	PistolFiringSpeed10 UMETA(DisplayName = "10% Pistol Firing Speed"),
+	RifleFiringSpeed10  UMETA(DisplayName = "10% Rifle Firing Speed"),
 	// Add more as needed
 };
+
 
 UENUM(BlueprintType)
 enum class EUpgradeCategory : uint8
@@ -41,10 +44,13 @@ struct FUpgradeInfo
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	EUpgradeCategory UpgradeCategory = EUpgradeCategory::None;
+	UPROPERTY(BlueprintReadOnly)
 	int32 UpgradeCost = 0;
+	UPROPERTY(BlueprintReadOnly)
 	int32 UpgradeOwned = 1;
+	UPROPERTY(BlueprintReadOnly)
 	int32 TotalUpgradeOwned = 1;
 };
 
@@ -94,6 +100,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetCurrentWeapon(const EUpgradeType Weapon);
 	void SetCurrentWeapon(const FName Weapon);
+
+	UFUNCTION(BlueprintCallable)
+	FUpgradeInfo GetUpgradeInfo(const EUpgradeType Weapon);
 	
 	UFUNCTION(BlueprintCallable)
 	void ApplyAllUpgradeFunctions(class APlayerCharacter* Player);
@@ -106,3 +115,5 @@ private:
 	
 	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);
 };
+
+
