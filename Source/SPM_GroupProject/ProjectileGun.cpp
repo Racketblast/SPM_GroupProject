@@ -2,6 +2,8 @@
 #include "Projectile.h"
 #include "TimerManager.h"
 #include "Components/AudioComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 void AProjectileGun::BeginPlay()
 {
@@ -42,6 +44,19 @@ void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
 			}
 			FireAudioComponent->SetSound(FireSound);
 			FireAudioComponent->Play();
+		}
+
+		if (MuzzleFlash && WeaponSkeletalMesh)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAttached(
+				MuzzleFlash,
+				WeaponSkeletalMesh,
+				FName("MuzzleSocket"),
+				FVector::ZeroVector,
+				FRotator::ZeroRotator,
+				EAttachLocation::SnapToTarget,
+				true
+			);
 		}
 
 		// Fire cooldown

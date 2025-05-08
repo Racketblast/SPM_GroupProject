@@ -56,6 +56,19 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 		FireAudioComponent->Play();
 	}
 
+	if (MuzzleFlash && WeaponSkeletalMesh)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAttached(
+			MuzzleFlash,
+			WeaponSkeletalMesh,
+			FName("MuzzleSocket"),
+			FVector::ZeroVector,
+			FRotator::ZeroRotator,
+			EAttachLocation::SnapToTarget,
+			true
+		);
+	}
+
 	bool bHitEnemyThisShot = false;
 
 	for (int32 i = 0; i < NumPellets; i++)
