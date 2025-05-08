@@ -10,6 +10,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Components/AudioComponent.h"
 #include "Sound/SoundBase.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 void AHitscanGun::BeginPlay()
 {
@@ -69,6 +71,14 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
     {
         DrawDebugLine(GetWorld(), FireLocation, Hit.ImpactPoint, FColor::Red, false, 1.0f, 0, 1.0f);
 
+        if (BulletHitEffect) // GunMesh is your USkeletalMeshComponent
+        {
+            UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+                GetWorld(),
+                BulletHitEffect,
+                Hit.Location
+            );
+        }
         AActor* HitActor = Hit.GetActor();
         LastHitActor = HitActor;
 
