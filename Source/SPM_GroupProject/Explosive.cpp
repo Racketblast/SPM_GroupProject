@@ -1,15 +1,16 @@
 #include "Explosive.h"
 #include "CollisionQueryParams.h"
-#include "Components/PrimitiveComponent.h"  // Add this include
+#include "Components/PrimitiveComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "EngineUtils.h"
 #include "GameFramework/Character.h"
 #include "UObject/UnrealType.h"
 #include "MoneyBox.h"
 #include "WaveManager.h"
-#include "Components/PrimitiveComponent.h"
 #include "Engine/OverlapResult.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "Sound/SoundBase.h"  // Include for USoundBase
 
 AExplosive::AExplosive()
 {
@@ -28,7 +29,6 @@ void AExplosive::BeginPlay()
 	Super::BeginPlay();
 
 	GetWorldTimerManager().SetTimer(ExplosionTimer, this, &AExplosive::Explode, ExplosionDelay, false);
-	
 }
 
 void AExplosive::Explode()
@@ -36,7 +36,7 @@ void AExplosive::Explode()
 	TArray<AActor*> IgnoredActors;
 	IgnoredActors.Add(this);
 
-	TArray<FOverlapResult> OverlapResults;  // This should work now
+	TArray<FOverlapResult> OverlapResults;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
@@ -50,17 +50,21 @@ void AExplosive::Explode()
 		FCollisionShape::MakeSphere(ExplosionRadius),
 		Params
 	);
+
 	if (ExplosionEffectAsset)
 	{
-		UParticleSystemComponent* ParticleComponent = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffectAsset, GetActorLocation(), FRotator::ZeroRotator, true);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffectAsset, GetActorLocation(), FRotator::ZeroRotator, true);
+	}
+
+	if (ExplosionSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, GetActorLocation());
 	}
 
 	for (const FOverlapResult& Result : OverlapResults)
 	{
-
-		
 		AActor* HitActor = Result.GetActor();
-		
+
 		if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
 		{
 			static const FName AIHealthName = TEXT("AIHealth");
