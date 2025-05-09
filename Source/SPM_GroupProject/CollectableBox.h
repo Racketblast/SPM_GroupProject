@@ -25,7 +25,10 @@ public:
 	
 protected:
 	UPROPERTY(EditDefaultsOnly)
-	class UStaticMeshComponent* CollectableMesh;
+	class UStaticMeshComponent* PhysicsRoot;
+	
+	UPROPERTY(EditDefaultsOnly)
+	UStaticMeshComponent* CollectableMesh;
 	
 	UPROPERTY(EditDefaultsOnly)
 	class UBoxComponent* CollectableTriggerVolume;

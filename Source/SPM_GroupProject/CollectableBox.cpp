@@ -5,6 +5,7 @@
 #include "PlayerCharacter.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -12,8 +13,11 @@ ACollectableBox::ACollectableBox()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	PhysicsRoot = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PhysicsRoot"));
+	RootComponent = PhysicsRoot;
 
-	CollectableMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MoneyMesh"));
+	CollectableMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CollectableMesh"));
+	CollectableMesh->SetupAttachment(PhysicsRoot);
 	
 	CollectableTriggerVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerVolume"));
 	CollectableTriggerVolume->SetupAttachment(CollectableMesh);
@@ -24,7 +28,6 @@ ACollectableBox::ACollectableBox()
 	{
 		CollectableTriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ACollectableBox::CollectableBoxTriggered);
 	}
-
 }
 
 // Called when the game starts or when spawned
@@ -32,8 +35,12 @@ void ACollectableBox::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	StartVector = GetActorLocation();
-	
+	StartVector = CollectableMesh->GetRelativeLocation();
+
+	//Should be deleted when all guns uses the TakeDamage-function
+	FVector HelpVector = GetActorLocation();
+	HelpVector.Z += 10;
+	SetActorLocation(HelpVector);
 }
 
 // Called every frame
@@ -51,20 +58,20 @@ void ACollectableBox::MoveBox(float DeltaTime)
 	{
 		const FVector MoveDirection = PlatformVelocity.GetSafeNormal();
 		StartVector = StartVector + MoveDirection * GetDistanceMoved();
-		SetActorLocation(StartVector);
+		CollectableMesh->SetRelativeLocation(StartVector);
 		PlatformVelocity = -PlatformVelocity;
 	}
 	else
 	{
-		FVector LocalVector = GetActorLocation();
+		FVector LocalVector = CollectableMesh->GetRelativeLocation();
 		LocalVector = LocalVector + PlatformVelocity * DeltaTime;
-		SetActorLocation(LocalVector);
+		CollectableMesh->SetRelativeLocation(LocalVector);
 	}
 }
 
 void ACollectableBox::RotateBox(float const DeltaTime)
 {
-	AddActorLocalRotation(RotationVelocity*DeltaTime);
+	CollectableMesh->AddLocalRotation(RotationVelocity*DeltaTime);
 }
 
 bool ACollectableBox::ShouldBoxReturn() const
@@ -74,7 +81,7 @@ bool ACollectableBox::ShouldBoxReturn() const
 
 float ACollectableBox::GetDistanceMoved() const
 {
-	return FVector::Dist(StartVector, GetActorLocation());
+	return FVector::Dist(StartVector, CollectableMesh->GetRelativeLocation());
 }
 
 void ACollectableBox::CollectableBoxTriggered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

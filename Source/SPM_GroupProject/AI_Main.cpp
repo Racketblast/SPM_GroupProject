@@ -35,11 +35,7 @@ float AAI_Main::TakeDamage(float DamageAmount, struct FDamageEvent const& Damage
 			TSubclassOf<AMoneyBox> MoneyBoxClass = LoadClass<AMoneyBox>(nullptr, TEXT("/Game/Blueprints/BP_MoneyBox.BP_MoneyBox_C"));
 			if (MoneyBoxClass)
 			{
-				FTransform SpawnTransform = GetTransform();
-				FVector NewLocation = SpawnTransform.GetLocation();
-				NewLocation.Z -= 100.0f;
-				SpawnTransform.SetLocation(NewLocation);
-				GetWorld()->SpawnActor<AMoneyBox>(MoneyBoxClass, SpawnTransform);
+				GetWorld()->SpawnActor<AMoneyBox>(MoneyBoxClass, GetTransform());
 			}
 			
 			for (TActorIterator<AWaveManager> It(GetWorld()); It; ++It)
