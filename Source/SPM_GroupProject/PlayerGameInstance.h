@@ -4,59 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+
+#include "UpgradeEnums.h"
+#include "UpgradeInfo.h"
+
 #include "PlayerGameInstance.generated.h"
-
-/**
- * 
- */
-UENUM(BlueprintType)
-enum class EUpgradeType : uint8
-{
-	None                UMETA(DisplayName = "None"),
-	Pistol              UMETA(DisplayName = "Pistol"),
-	Rifle               UMETA(DisplayName = "Rifle"),
-	Shotgun             UMETA(DisplayName = "Shotgun"),
-	RocketLauncher      UMETA(DisplayName = "RocketLauncher"),
-	Health20            UMETA(DisplayName = "20 Health"),
-	HealthMax           UMETA(DisplayName = "Max Health"),
-	Speed20             UMETA(DisplayName = "Speed 20%"),
-	Jump50              UMETA(DisplayName = "50% Jump"),
-	PistolDamage10      UMETA(DisplayName = "10% Pistol Damage"),
-	RifleDamage10       UMETA(DisplayName = "10% Rifle Damage"),
-	ShotgunDamage10       UMETA(DisplayName = "10% Shotgun Damage"),
-	RocketLauncherDamage10       UMETA(DisplayName = "10% RocketLauncher Damage"),
-	PistolFiringSpeed10 UMETA(DisplayName = "10% Pistol Firing Speed"),
-	RifleFiringSpeed10  UMETA(DisplayName = "10% Rifle Firing Speed"),
-	ShotgunFiringSpeed10 UMETA(DisplayName = "10% Shotgun Firing Speed"),
-	RocketLauncherFiringSpeed10 UMETA(DisplayName = "10% RocketLauncher Firing Speed"),
-	// Add more as needed
-};
-
-
-UENUM(BlueprintType)
-enum class EUpgradeCategory : uint8
-{
-	None        UMETA(DisplayName = "None"),
-	PlayerStats    UMETA(DisplayName = "Player Stats"),
-	PlayerAbilities    UMETA(DisplayName = "Player Abilities"),
-	Weapon    UMETA(DisplayName = "Weapon"),
-	WeaponStats  UMETA(DisplayName = "Weapon Stats")
-};
-
-USTRUCT(BlueprintType)
-struct FUpgradeInfo
-{
-	GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadOnly)
-	EUpgradeCategory UpgradeCategory = EUpgradeCategory::None;
-	UPROPERTY(BlueprintReadOnly)
-	int32 UpgradeCost = 0;
-	UPROPERTY(BlueprintReadOnly)
-	int32 UpgradeOwned = 1;
-	UPROPERTY(BlueprintReadOnly)
-	int32 TotalUpgradeOwned = 1;
-};
 
 UCLASS()
 class SPM_GROUPPROJECT_API UPlayerGameInstance : public UGameInstance
@@ -75,13 +27,24 @@ public:
 	EUpgradeType CurrentWeapon;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<EUpgradeType,FUpgradeInfo> UpgradeMap;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName CurrentDialogueRowName;
+	FName StartDialogueRowName;
+	FName NextDialogueRowName;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
+	UDataTable* UpgradeDataTable;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
+	UDataTable* EventDialogueInfo;
 
+	
 	UFUNCTION(BlueprintCallable)
 	bool HasBought(const EUpgradeType Upgrade) const;
 	bool HasBought(const FName Upgrade) const;
 
 	UFUNCTION(BlueprintCallable)
-	FUpgradeInfo SetDefaultUpgradeInfo(const EUpgradeType Upgrade) const;
+	FUpgradeInfo SetDefaultUpgradeInfo(const EUpgradeType Upgrade);
 	UFUNCTION(BlueprintCallable)
 	void BuyUpgrade(const EUpgradeType Upgrade,USoundBase* CanBuySound = nullptr, USoundBase* CantBuySound = nullptr);
 
@@ -106,7 +69,7 @@ public:
 	void SetCurrentWeapon(const FName Weapon);
 
 	UFUNCTION(BlueprintCallable)
-	FUpgradeInfo GetUpgradeInfo(const EUpgradeType Weapon);
+	FUpgradeInfo GetUpgradeInfo(const EUpgradeType Weapon) const;
 	
 	UFUNCTION(BlueprintCallable)
 	void ApplyAllUpgradeFunctions(class APlayerCharacter* Player);
@@ -115,8 +78,12 @@ public:
 	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradePlayerStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradeGunStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
+
+	void StartDialogue();
+	UFUNCTION()
+	void PlayNextDialogue();
 private:
-	
+	FTimerHandle TimerHandle;
 	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);
 };
 

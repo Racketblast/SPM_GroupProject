@@ -8,6 +8,7 @@
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
 #define FPS 40
@@ -42,7 +43,7 @@ void APortalV2::BeginPlay()
 	Super::BeginPlay();
 
 	SetTickGroup(TG_PostUpdateWork);
-	
+
 	PlayerCamera = UGameplayStatics::GetPlayerCameraManager(GetWorld(),0);
 	
 	SetPortalMaterial();

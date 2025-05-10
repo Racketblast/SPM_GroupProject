@@ -3,8 +3,11 @@
 
 #include "PlayerGameInstance.h"
 
+#include "DialogueInfo.h"
 #include "PlayerCharacter.h"
 #include "ProjectileGun.h"
+#include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Slate/SGameLayerManager.h"
@@ -26,50 +29,21 @@ bool UPlayerGameInstance::HasBought(const FName Upgrade) const
 	return false;
 }
 
-FUpgradeInfo UPlayerGameInstance::SetDefaultUpgradeInfo(const EUpgradeType Upgrade) const
+FUpgradeInfo UPlayerGameInstance::SetDefaultUpgradeInfo(const EUpgradeType Upgrade)
 {
-	switch (Upgrade)
+	if (!UpgradeDataTable)
+	return {};
+	
+	FName RowName(*ConvertUpgradeTypeToString(Upgrade));
+	if (FUpgradeInfo* Row = UpgradeDataTable->FindRow<FUpgradeInfo>(RowName, TEXT("")))
 	{
-	//Weapons
-	case EUpgradeType::Pistol:
-		return {EUpgradeCategory::Weapon, 0, 0, 1};
-	case EUpgradeType::Rifle:
-		return {EUpgradeCategory::Weapon, 20, 0, 1};
-	case EUpgradeType::Shotgun:
-		return {EUpgradeCategory::Weapon, 50, 0, 1};  // Default for Shotgun
-	case EUpgradeType::RocketLauncher:
-		return {EUpgradeCategory::Weapon, 100, 0, 1};  // Default for RocketLauncher
-	//Player stats
-	case EUpgradeType::Health20:
-		return {EUpgradeCategory::PlayerStats, 100, 0, 10};
-	case EUpgradeType::HealthMax:
-		return {EUpgradeCategory::PlayerStats, 0, 0, 1};
-	case EUpgradeType::Speed20:
-		return {EUpgradeCategory::PlayerStats, 100, 0, 1};
-	case EUpgradeType::Jump50:
-		return {EUpgradeCategory::PlayerStats, 200, 0, 1};
-	//Weapon damage
-	case EUpgradeType::PistolDamage10:
-		return {EUpgradeCategory::WeaponStats, 20, 0, 5};
-	case EUpgradeType::RifleDamage10:
-		return {EUpgradeCategory::WeaponStats, 20, 0, 5};
-	case EUpgradeType::ShotgunDamage10:
-		return {EUpgradeCategory::WeaponStats, 20, 0, 5};
-	case EUpgradeType::RocketLauncherDamage10:
-		return {EUpgradeCategory::WeaponStats, 20, 0, 5};
-	//Weapon firing speed
-	case EUpgradeType::PistolFiringSpeed10:
-		return {EUpgradeCategory::WeaponStats, 100, 0, 5};
-	case EUpgradeType::RifleFiringSpeed10:
-		return {EUpgradeCategory::WeaponStats, 100, 0, 5};
-	case EUpgradeType::ShotgunFiringSpeed10:
-		return {EUpgradeCategory::WeaponStats, 100, 0, 5};
-	case EUpgradeType::RocketLauncherFiringSpeed10:
-		return {EUpgradeCategory::WeaponStats, 100, 0, 5};
-	default:
-		return {EUpgradeCategory::None, 0, 0, 1};
+		return *Row;
 	}
+	
+	return {};
 }
+
+
 
 
 void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* CanBuySound, USoundBase* CantBuySound)
@@ -193,7 +167,7 @@ void UPlayerGameInstance::SetCurrentWeapon(const FName Weapon)
 	}
 }
 
-FUpgradeInfo UPlayerGameInstance::GetUpgradeInfo(const EUpgradeType Upgrade)
+FUpgradeInfo UPlayerGameInstance::GetUpgradeInfo(const EUpgradeType Upgrade) const
 {
 	for (const TPair<EUpgradeType, FUpgradeInfo>& UpgradeType: UpgradeMap)
 	{
@@ -364,5 +338,104 @@ UPlayerGameInstance::UPlayerGameInstance()
 		UnlockedLevels.Add(LevelOrder[1]);
 		UnlockedLevels.Add(LevelOrder[2]);
 		UnlockedLevels.Add(LevelOrder[3]);
+	}
+}
+
+void UPlayerGameInstance::StartDialogue()
+{
+	if (!EventDialogueInfo)
+		return;
+	
+	CurrentDialogueRowName = StartDialogueRowName;
+	
+	if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(StartDialogueRowName, TEXT("")))
+	{
+		if (!Row->bHasBeenPlayed)
+		{
+			NextDialogueRowName = Row->NextDialogue;
+			//If the row should only play one time during a game session, then bPlayOneTime should be true
+			if (Row->bPlayOneTime)
+			{
+				Row->bHasBeenPlayed = true;
+			}
+
+			//This is the reason why the dialogue iss broken into two functions, because I don't want to get an infinite amount of widgets
+			if (Row->DialogueWidgetClass)
+			{
+				if (UUserWidget* DialogueWidget = CreateWidget<UUserWidget>(GetWorld(), Row->DialogueWidgetClass))
+				{
+					DialogueWidget->AddToViewport();
+				}
+			}
+
+			//Plays the dialogue for the amount of time the sound plays
+			float TimeUntilNextDialogue = 0.0f;
+			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+			{
+				if (Row->DialogueSound)
+				{
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Row->DialogueSound, Player->GetActorLocation());
+					TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
+				}
+			}
+		
+			//Goes to next dialogue
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UPlayerGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
+		}
+		
+	}
+}
+
+void UPlayerGameInstance::PlayNextDialogue()
+{
+	if (!EventDialogueInfo)
+	return;
+	CurrentDialogueRowName = NextDialogueRowName;
+	if ( NextDialogueRowName != "")
+	{
+		if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(NextDialogueRowName, TEXT("")))
+		{
+			if (!Row->bHasBeenPlayed)
+			{
+				NextDialogueRowName = Row->NextDialogue;
+				
+				//If the row should only play one time during a game session, then bPlayOneTime should be true
+				if (Row->bPlayOneTime)
+				{
+					Row->bHasBeenPlayed = true;
+				}
+		
+				//Plays the dialogue for the amount of time the sound plays
+				float TimeUntilNextDialogue = 0.0f;
+				if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+				{
+					if (Row->DialogueSound)
+					{
+						UGameplayStatics::PlaySoundAtLocation(GetWorld(), Row->DialogueSound, Player->GetActorLocation());
+						TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
+					}
+				}
+				
+				//Goes to next dialogue
+				GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UPlayerGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
+			}
+			
+		}
+	}
+	//If dialogue is over, take away the widgets
+	else
+	{
+		TArray<UUserWidget*> FoundWidgets;
+		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UUserWidget::StaticClass(), false);
+		if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(StartDialogueRowName, TEXT("")))
+		{
+			for (UUserWidget* Widget : FoundWidgets)
+			{
+				if (Widget && Widget->IsInViewport() && Widget->GetClass() == Row->DialogueWidgetClass)
+				{
+					Widget->RemoveFromParent();
+				}
+			}
+		}
 	}
 }

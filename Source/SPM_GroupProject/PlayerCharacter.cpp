@@ -60,7 +60,6 @@ void APlayerCharacter::BeginPlay()
 
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
-		
 			// Pistol
 			if (!GI->UpgradeMap.Contains(EUpgradeType::Pistol))
 			{
@@ -71,8 +70,8 @@ void APlayerCharacter::BeginPlay()
 			// Apply all upgrades
 			GI->ApplyAllUpgradeFunctions(this);
 			SelectWeapon(GI->GetCurrentWeaponName());
-		
-
+			GI->StartDialogueRowName = "TestDialogue1";
+			GI->StartDialogue();
 	}
 
 
