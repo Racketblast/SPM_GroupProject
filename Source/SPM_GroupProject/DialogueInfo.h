@@ -18,10 +18,7 @@ struct FDialogueInfo : public FTableRowBase
 	TSubclassOf<UUserWidget> DialogueWidgetClass = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	bool bPlayOneTime = false;
-	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	bool bHasBeenPlayed = false;
+	int32 DialogueFlag = 0;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FString DialogueText = "";
@@ -31,7 +28,7 @@ struct FDialogueInfo : public FTableRowBase
 	
 	FDialogueInfo() {}
 
-	FDialogueInfo(USoundBase* InSound, TSubclassOf<UUserWidget> InWidgetClass, bool bPlayed = false, FString InText = "", FName InNextDialogue = "")
-		: DialogueSound(InSound), DialogueWidgetClass(InWidgetClass), bHasBeenPlayed(bPlayed), DialogueText(InText), NextDialogue(InNextDialogue)
+	FDialogueInfo(USoundBase* InSound, TSubclassOf<UUserWidget> InWidgetClass, int32 InDialogueFlag = 0, FString InText = "", FName InNextDialogue = "")
+		: DialogueSound(InSound), DialogueWidgetClass(InWidgetClass), DialogueFlag(InDialogueFlag), DialogueText(InText), NextDialogue(InNextDialogue)
 	{}
 };

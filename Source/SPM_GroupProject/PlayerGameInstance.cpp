@@ -6,6 +6,7 @@
 #include "DialogueInfo.h"
 #include "PlayerCharacter.h"
 #include "ProjectileGun.h"
+#include "SwarmedSaveGame.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -322,6 +323,12 @@ FString UPlayerGameInstance::ConvertUpgradeTypeToString(const EUpgradeType Type)
 
 UPlayerGameInstance::UPlayerGameInstance()
 {
+}
+
+void UPlayerGameInstance::Init()
+{
+	Super::Init();
+	
 	// Sätter upp level order, aka vilken level är numer 1 o.s.v
 	LevelOrder = {
 		FName("Hub"),
@@ -330,7 +337,7 @@ UPlayerGameInstance::UPlayerGameInstance()
 		FName("V2"),
 		FName("MetroV3")
 	};
-
+	
 	// Låser upp level 1 och Huben direkt.
 	if (LevelOrder.Num() > 0)
 	{
@@ -338,6 +345,66 @@ UPlayerGameInstance::UPlayerGameInstance()
 		UnlockedLevels.Add(LevelOrder[1]);
 		UnlockedLevels.Add(LevelOrder[2]);
 		UnlockedLevels.Add(LevelOrder[3]);
+	}
+	
+	//Loads the saved game
+	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
+	{
+		Save = Cast<USwarmedSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
+		if (Save)
+		{
+			Money = Save->SavedMoney;
+			UpgradeMap = Save->SavedUpgradeMap;
+			CurrentWeapon = Save->SavedCurrentWeapon;
+			UnlockedLevels = Save->SavedUnlockedLevels;
+			CurrentGameFlag = Save->SavedCurrentGameFlag;
+		}
+	}
+	//Creates a new saved game if nothing exists
+	else
+	{
+		if (SaveGameObject)
+		{
+			Save = Cast<USwarmedSaveGame>(UGameplayStatics::CreateSaveGameObject(SaveGameObject));
+			if (Save)
+			{
+				Save->SavedMoney = Money;
+				Save->SavedUpgradeMap = UpgradeMap;
+				Save->SavedCurrentWeapon = CurrentWeapon;
+				Save->SavedUnlockedLevels = UnlockedLevels;
+				Save->SavedCurrentGameFlag = CurrentGameFlag;
+				UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
+			}
+		}
+	}
+}
+
+void UPlayerGameInstance::SaveGame()
+{
+	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
+	{
+		Save->SavedMoney = Money;
+		Save->SavedUpgradeMap = UpgradeMap;
+		Save->SavedCurrentWeapon = CurrentWeapon;
+		Save->SavedUnlockedLevels = UnlockedLevels;
+		Save->SavedCurrentGameFlag = CurrentGameFlag;
+		UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
+	}
+}
+
+void UPlayerGameInstance::RestartGame()
+{
+	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
+	{
+		Money = 0;
+		UpgradeMap = {};
+		UnlockedLevels = {};
+		Save->SavedCurrentWeapon = EUpgradeType::None;
+		UnlockedLevels.Add(LevelOrder[0]);
+		UnlockedLevels.Add(LevelOrder[1]);
+		UnlockedLevels.Add(LevelOrder[2]);
+		UnlockedLevels.Add(LevelOrder[3]);
+		CurrentGameFlag = 0;
 	}
 }
 
@@ -350,14 +417,13 @@ void UPlayerGameInstance::StartDialogue()
 	
 	if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(StartDialogueRowName, TEXT("")))
 	{
-		if (!Row->bHasBeenPlayed)
+		if (CurrentGameFlag < Row->DialogueFlag || Row->DialogueFlag == 0)
 		{
-			NextDialogueRowName = Row->NextDialogue;
-			//If the row should only play one time during a game session, then bPlayOneTime should be true
-			if (Row->bPlayOneTime)
+			if (CurrentGameFlag < Row->DialogueFlag)
 			{
-				Row->bHasBeenPlayed = true;
+				CurrentGameFlag++;
 			}
+			NextDialogueRowName = Row->NextDialogue;
 
 			//This is the reason why the dialogue iss broken into two functions, because I don't want to get an infinite amount of widgets
 			if (Row->DialogueWidgetClass)
@@ -382,7 +448,6 @@ void UPlayerGameInstance::StartDialogue()
 			//Goes to next dialogue
 			GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UPlayerGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
 		}
-		
 	}
 }
 
@@ -391,35 +456,24 @@ void UPlayerGameInstance::PlayNextDialogue()
 	if (!EventDialogueInfo)
 	return;
 	CurrentDialogueRowName = NextDialogueRowName;
-	if ( NextDialogueRowName != "")
+	if (NextDialogueRowName != "")
 	{
 		if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(NextDialogueRowName, TEXT("")))
 		{
-			if (!Row->bHasBeenPlayed)
+			NextDialogueRowName = Row->NextDialogue;
+			//Plays the dialogue for the amount of time the sound plays
+			float TimeUntilNextDialogue = 0.0f;
+			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
 			{
-				NextDialogueRowName = Row->NextDialogue;
-				
-				//If the row should only play one time during a game session, then bPlayOneTime should be true
-				if (Row->bPlayOneTime)
+				if (Row->DialogueSound)
 				{
-					Row->bHasBeenPlayed = true;
+					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Row->DialogueSound, Player->GetActorLocation());
+					TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
 				}
-		
-				//Plays the dialogue for the amount of time the sound plays
-				float TimeUntilNextDialogue = 0.0f;
-				if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
-				{
-					if (Row->DialogueSound)
-					{
-						UGameplayStatics::PlaySoundAtLocation(GetWorld(), Row->DialogueSound, Player->GetActorLocation());
-						TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
-					}
-				}
-				
-				//Goes to next dialogue
-				GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UPlayerGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
 			}
 			
+			//Goes to next dialogue
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UPlayerGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
 		}
 	}
 	//If dialogue is over, take away the widgets

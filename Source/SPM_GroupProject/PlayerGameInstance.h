@@ -16,6 +16,11 @@ class SPM_GROUPPROJECT_API UPlayerGameInstance : public UGameInstance
 	GENERATED_BODY()
 public:
 	UPlayerGameInstance();
+	virtual void Init() override;
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class USwarmedSaveGame> SaveGameObject;
+	UPROPERTY(VisibleAnywhere,BlueprintReadWrite)
+	USwarmedSaveGame* Save;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Money;
@@ -32,12 +37,20 @@ public:
 	FName CurrentDialogueRowName;
 	FName StartDialogueRowName;
 	FName NextDialogueRowName;
+
+	//CurrentGameFlag means, at what point am I in the game. If CurrentGameFlag is less than a number it means that it should play, but if it's bigger, then it should not play
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 CurrentGameFlag = 0;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
 	UDataTable* UpgradeDataTable;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
 	UDataTable* EventDialogueInfo;
 
+	UFUNCTION(BlueprintCallable)
+	void SaveGame();
+	UFUNCTION(BlueprintCallable)
+	void RestartGame();
 	
 	UFUNCTION(BlueprintCallable)
 	bool HasBought(const EUpgradeType Upgrade) const;
@@ -55,7 +68,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Progression")
 	TArray<FName> LevelOrder;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Progression")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Level Progression")
 	TSet<FName> UnlockedLevels;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Level Progression")
