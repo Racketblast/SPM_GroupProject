@@ -16,6 +16,8 @@ class SPM_GROUPPROJECT_API UPlayerGameInstance : public UGameInstance
 	GENERATED_BODY()
 public:
 	UPlayerGameInstance();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bGameStarted = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Money;
