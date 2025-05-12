@@ -143,7 +143,7 @@ bool UBTTask_FlyToPlayerLocation::FindValidTeleportLocation(APawn* Pawn, FVector
 		float Dot = FVector::DotProduct(PlayerForward, ToTestLocation);
 
 		// Only accept positions *not* in front of the player (Dot < 0.5)
-		if (Dot < 0.5f && Pawn->GetWorld()->LineTraceTestByChannel(TestLocation, PlayerLocation, ECC_Visibility) == false)
+		if (Dot < 0.5f && Pawn->GetWorld()->LineTraceTestByChannel(TestLocation, PlayerLocation, ECC_Visibility) == false && IsFlyableLocation(Pawn->GetWorld(), TestLocation, 100.f))
 		{
 			OutLocation = TestLocation;
 			DrawDebugSphere(Pawn->GetWorld(), TestLocation, 50.f, 12, FColor::Cyan, false, 2.0f);
@@ -155,3 +155,17 @@ bool UBTTask_FlyToPlayerLocation::FindValidTeleportLocation(APawn* Pawn, FVector
 }
 
 
+bool UBTTask_FlyToPlayerLocation::IsFlyableLocation(UWorld* World, FVector Location, float ClearanceRadius)
+{
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(UGameplayStatics::GetPlayerPawn(World, 0));
+
+	// Sphere trace to make sure space is clear
+	return !World->OverlapBlockingTestByChannel(
+		Location,
+		FQuat::Identity,
+		ECC_Pawn,
+		FCollisionShape::MakeSphere(ClearanceRadius),
+		Params
+	);
+}
