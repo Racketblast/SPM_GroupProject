@@ -17,12 +17,13 @@ UBTTask_FlyToPlayerLocation::UBTTask_FlyToPlayerLocation()
 EBTNodeResult::Type UBTTask_FlyToPlayerLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	AController* Controller = OwnerComp.GetAIOwner();
-	if (!Controller || !Controller->GetPawn())
+	APawn* Pawn = Controller ? Controller->GetPawn() : nullptr;
+	if (!Controller || !Pawn)
 	{
 		return EBTNodeResult::Failed;
 	}
 
-	LastLocation = Controller->GetPawn()->GetActorLocation();
+	LastLocation = Pawn->GetActorLocation();
 	TimeSinceLastMove = 0.f;
 	bBackingOff = false;
 	BackoffElapsed = 0.f;
@@ -63,30 +64,29 @@ void UBTTask_FlyToPlayerLocation::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 			{
 				bBackingOff = true;
 
-				AFlyingEnemyAI* Enemy = Cast<AFlyingEnemyAI>(Pawn);
-				if (Enemy && Enemy->bTeleportIfStuck)
+				if (AFlyingEnemyAI* Enemy = Cast<AFlyingEnemyAI>(Pawn))
 				{
-					// Teleport mode
-					FVector NewLocation;
-					if (FindValidTeleportLocation(Pawn, TargetLocation, NewLocation))
+					if (Enemy->bTeleportIfStuck)
 					{
-						Pawn->SetActorLocation(NewLocation, false);
-						Enemy->NotifyTeleported();
-						UE_LOG(LogTemp, Warning, TEXT("Enemy teleported to escape being stuck."));
+						// Teleport mode
+						FVector NewLocation;
+						if (FindValidTeleportLocation(Pawn, TargetLocation, NewLocation))
+						{
+							Pawn->SetActorLocation(NewLocation, false);
+							Enemy->NotifyTeleported();
+							UE_LOG(LogTemp, Warning, TEXT("Enemy teleported to escape being stuck."));
+						}
 					}
-				}
-				else
-				{
-					// Backoff fallback
-					FVector Backward = -(TargetLocation - CurrentLocation).GetSafeNormal() * BackoffDistance;
-					TargetLocation = CurrentLocation + Backward;
-					OwnerComp.GetBlackboardComponent()->SetValueAsVector(MoveToLocationKey.SelectedKeyName, TargetLocation);
+					else
+					{
+						// Backoff fallback
+						FVector Backward = -(TargetLocation - CurrentLocation).GetSafeNormal() * BackoffDistance;
+						TargetLocation = CurrentLocation + Backward;
+						OwnerComp.GetBlackboardComponent()->SetValueAsVector(MoveToLocationKey.SelectedKeyName, TargetLocation);
 
-					UE_LOG(LogTemp, Warning, TEXT("Flying AI is stuck, backing off"));
-					DrawDebugSphere(GetWorld(), CurrentLocation, 50.f, 12, FColor::Red, false, 1.f);
-					/*DrawDebugSphere(GetWorld(), CurrentLocation, 50.f, 12, FColor::Red, false, 1.f);
-					DrawDebugLine(GetWorld(), CurrentLocation, NewBackoffTarget, FColor::Yellow, false, 1.f, 0, 2.f);
-					DrawDebugBox(GetWorld(), LastLocation, FVector(5,5,5), FColor::Blue, false, 1.f);*/
+						UE_LOG(LogTemp, Warning, TEXT("Flying AI is stuck, backing off"));
+						DrawDebugSphere(GetWorld(), CurrentLocation, 50.f, 12, FColor::Red, false, 1.f);
+					}
 				}
 			}
 		}
@@ -98,7 +98,7 @@ void UBTTask_FlyToPlayerLocation::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 		TimeSinceLastMove = 0.f;
 	}
 
-	// Ifall den backartillbaka, väntar den på en cooldown, innan den fortsätter
+	// Ifall den backar tillbaka, väntar den på en cooldown, innan den fortsätter
 	if (bBackingOff)
 	{
 		BackoffElapsed += DeltaSeconds;
@@ -130,37 +130,52 @@ bool UBTTask_FlyToPlayerLocation::FindValidTeleportLocation(APawn* Pawn, FVector
 	FVector PlayerLocation = Player->GetActorLocation();
 	FVector PlayerForward = Player->GetActorForwardVector();
 
-	for (int32 i = 0; i < 20; ++i)
+	auto TryFindLocation = [&](bool bAvoidFront) -> bool
 	{
-		float Angle = FMath::RandRange(0.f, 360.f);
-		float Radius = FMath::RandRange(200.f, 600.f);
-		FVector Offset = FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.f) * Radius;
-
-		FVector TestLocation = PlayerLocation + Offset;
-		TestLocation.Z += 200.f; // Hover above
-
-		FVector ToTestLocation = (TestLocation - PlayerLocation).GetSafeNormal();
-		float Dot = FVector::DotProduct(PlayerForward, ToTestLocation);
-
-		// Only accept positions *not* in front of the player (Dot < 0.5)
-		if (Dot < 0.5f && Pawn->GetWorld()->LineTraceTestByChannel(TestLocation, PlayerLocation, ECC_Visibility) == false && IsFlyableLocation(Pawn->GetWorld(), TestLocation, 100.f))
+		for (int32 i = 0; i < 20; ++i)
 		{
-			OutLocation = TestLocation;
-			DrawDebugSphere(Pawn->GetWorld(), TestLocation, 50.f, 12, FColor::Cyan, false, 2.0f);
-			return true;
+			float AngleDegrees = FMath::RandRange(0.f, 360.f);
+			float Angle = FMath::DegreesToRadians(AngleDegrees);
+			float Radius = FMath::RandRange(200.f, 600.f);
+			FVector Offset = FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.f) * Radius;
+
+			FVector TestLocation = PlayerLocation + Offset;
+			TestLocation.Z += 200.f;
+
+			FVector ToTestLocation = (TestLocation - PlayerLocation).GetSafeNormal();
+			float Dot = FVector::DotProduct(PlayerForward, ToTestLocation);
+
+			bool bLineClear = !Pawn->GetWorld()->LineTraceTestByChannel(TestLocation, PlayerLocation, ECC_Visibility);
+			bool bIsFlyable = IsFlyableLocation(Pawn, Pawn->GetWorld(), TestLocation, 50.f);
+
+			if ((Dot < 0.5f || !bAvoidFront) && bLineClear && bIsFlyable)
+			{
+				OutLocation = TestLocation;
+				DrawDebugSphere(Pawn->GetWorld(), TestLocation, 50.f, 12, bAvoidFront ? FColor::Cyan : FColor::Green, false, 2.0f);
+				return true;
+			}
 		}
+		return false;
+	};
+
+	// Första försöket, undvik att teleportera framför spelaren, så att den ser teleporteringen
+	if (TryFindLocation(true))
+	{
+		return true;
 	}
 
-	return false;
+	// Om det första försöket misslyckas, så körs ett annat där fienden får teleportera til spelarens field of view så att dem ser teleporteringen
+	return TryFindLocation(false);
 }
 
 
-bool UBTTask_FlyToPlayerLocation::IsFlyableLocation(UWorld* World, FVector Location, float ClearanceRadius)
+bool UBTTask_FlyToPlayerLocation::IsFlyableLocation(APawn* Pawn, UWorld* World, FVector Location, float ClearanceRadius)
 {
 	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(UGameplayStatics::GetPlayerPawn(World, 0));
+	Params.AddIgnoredActor(Pawn); 
+	Params.AddIgnoredActor(UGameplayStatics::GetPlayerPawn(World, 0)); 
 
-	// Sphere trace to make sure space is clear
+	// Kållar om stället är tomt, så att inga hinder är ivägen
 	return !World->OverlapBlockingTestByChannel(
 		Location,
 		FQuat::Identity,

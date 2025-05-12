@@ -40,7 +40,7 @@ protected:
 
 	bool FindValidTeleportLocation(APawn* Pawn, FVector TargetLocation, FVector& OutLocation);
 
-	bool IsFlyableLocation(UWorld* World, FVector Location, float ClearanceRadius = 100.f);
+	bool IsFlyableLocation(APawn* Pawn, UWorld* World, FVector Location, float ClearanceRadius = 100.f);
 
 private:
 	FVector LastLocation;
