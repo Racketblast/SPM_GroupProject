@@ -21,6 +21,8 @@ public:
 	TSubclassOf<class USwarmedSaveGame> SaveGameObject;
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite)
 	USwarmedSaveGame* Save;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bGameStarted = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Money;
