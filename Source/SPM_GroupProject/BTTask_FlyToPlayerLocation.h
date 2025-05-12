@@ -38,6 +38,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float BackoffCooldownTime = 1.5f;
 
+	bool FindValidTeleportLocation(APawn* Pawn, FVector TargetLocation, FVector& OutLocation);
+
 private:
 	FVector LastLocation;
 	float TimeSinceLastMove = 0.0f;

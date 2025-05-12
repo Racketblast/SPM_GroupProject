@@ -33,6 +33,19 @@ public:
 	void SetCurrentTargetLocation(const FVector& NewTarget);
 	FVector GetCurrentTargetLocation() const;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float FlySpeed = 1.0f;
+
+	// Väljer om fienden teleporterar till spelaren eller bara backar när den är fast
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool bTeleportIfStuck = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float PostTeleportFireDelay = 2.0f;
+
+	bool CanShoot() const; 
+	void NotifyTeleported();
+
 protected:
 	virtual void BeginPlay() override;
 	
@@ -49,5 +62,8 @@ protected:
 	float MaxAltitude = 1000.0f;
 
 	// ändras i wave manager
-	float MinAltitude = 100.f;  
+	float MinAltitude = 100.f;
+
+private:
+	float LastTeleportTime = -100.f;
 };

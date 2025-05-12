@@ -3,6 +3,7 @@
 #include "FlyingEnemyAI.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/GameplayStatics.h"
 
 UBTTask_FlyToPlayerLocation::UBTTask_FlyToPlayerLocation()
 {
@@ -58,21 +59,35 @@ void UBTTask_FlyToPlayerLocation::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 		float MovedDistance = FVector::Dist(CurrentLocation, LastLocation);
 		if (MovedDistance < StuckMovementThreshold)
 		{
-			// Ifall den fastnar, så använder den sig av en backoff, alltså typ en failsafe. 
 			if (!bBackingOff)
 			{
 				bBackingOff = true;
-				BackoffElapsed = 0.0f;
 
-				// rör sig bakåt och uppdaterar MoveToLocationKey
-				FVector Backward = -(TargetLocation - CurrentLocation).GetSafeNormal() * BackoffDistance;
-				FVector NewBackoffTarget = CurrentLocation + Backward;
-				OwnerComp.GetBlackboardComponent()->SetValueAsVector(MoveToLocationKey.SelectedKeyName, NewBackoffTarget);
+				AFlyingEnemyAI* Enemy = Cast<AFlyingEnemyAI>(Pawn);
+				if (Enemy && Enemy->bTeleportIfStuck)
+				{
+					// Teleport mode
+					FVector NewLocation;
+					if (FindValidTeleportLocation(Pawn, TargetLocation, NewLocation))
+					{
+						Pawn->SetActorLocation(NewLocation, false);
+						Enemy->NotifyTeleported();
+						UE_LOG(LogTemp, Warning, TEXT("Enemy teleported to escape being stuck."));
+					}
+				}
+				else
+				{
+					// Backoff fallback
+					FVector Backward = -(TargetLocation - CurrentLocation).GetSafeNormal() * BackoffDistance;
+					TargetLocation = CurrentLocation + Backward;
+					OwnerComp.GetBlackboardComponent()->SetValueAsVector(MoveToLocationKey.SelectedKeyName, TargetLocation);
 
-				UE_LOG(LogTemp, Warning, TEXT("Flying AI is stuck, backing off from %s"), *CurrentLocation.ToString());
-				/*DrawDebugSphere(GetWorld(), CurrentLocation, 50.f, 12, FColor::Red, false, 1.f);
-				DrawDebugLine(GetWorld(), CurrentLocation, NewBackoffTarget, FColor::Yellow, false, 1.f, 0, 2.f);
-				DrawDebugBox(GetWorld(), LastLocation, FVector(5,5,5), FColor::Blue, false, 1.f);*/
+					UE_LOG(LogTemp, Warning, TEXT("Flying AI is stuck, backing off"));
+					DrawDebugSphere(GetWorld(), CurrentLocation, 50.f, 12, FColor::Red, false, 1.f);
+					/*DrawDebugSphere(GetWorld(), CurrentLocation, 50.f, 12, FColor::Red, false, 1.f);
+					DrawDebugLine(GetWorld(), CurrentLocation, NewBackoffTarget, FColor::Yellow, false, 1.f, 0, 2.f);
+					DrawDebugBox(GetWorld(), LastLocation, FVector(5,5,5), FColor::Blue, false, 1.f);*/
+				}
 			}
 		}
 		else
@@ -103,7 +118,40 @@ void UBTTask_FlyToPlayerLocation::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 	if (AFlyingEnemyAI* Enemy = Cast<AFlyingEnemyAI>(Pawn))
 	{
 		Enemy->SetCurrentTargetLocation(TargetLocation);
-		Enemy->AddMovementInput(Direction, 1.0f);
+		Enemy->AddMovementInput(Direction, Enemy->FlySpeed * GetWorld()->GetDeltaSeconds());
 	}
 }
+
+bool UBTTask_FlyToPlayerLocation::FindValidTeleportLocation(APawn* Pawn, FVector TargetLocation, FVector& OutLocation)
+{
+	AActor* Player = UGameplayStatics::GetPlayerPawn(Pawn->GetWorld(), 0);
+	if (!Player) return false;
+
+	FVector PlayerLocation = Player->GetActorLocation();
+	FVector PlayerForward = Player->GetActorForwardVector();
+
+	for (int32 i = 0; i < 20; ++i)
+	{
+		float Angle = FMath::RandRange(0.f, 360.f);
+		float Radius = FMath::RandRange(200.f, 600.f);
+		FVector Offset = FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.f) * Radius;
+
+		FVector TestLocation = PlayerLocation + Offset;
+		TestLocation.Z += 200.f; // Hover above
+
+		FVector ToTestLocation = (TestLocation - PlayerLocation).GetSafeNormal();
+		float Dot = FVector::DotProduct(PlayerForward, ToTestLocation);
+
+		// Only accept positions *not* in front of the player (Dot < 0.5)
+		if (Dot < 0.5f && Pawn->GetWorld()->LineTraceTestByChannel(TestLocation, PlayerLocation, ECC_Visibility) == false)
+		{
+			OutLocation = TestLocation;
+			DrawDebugSphere(Pawn->GetWorld(), TestLocation, 50.f, 12, FColor::Cyan, false, 2.0f);
+			return true;
+		}
+	}
+
+	return false;
+}
+
 

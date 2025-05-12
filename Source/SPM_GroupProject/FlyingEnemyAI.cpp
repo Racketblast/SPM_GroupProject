@@ -125,3 +125,13 @@ FVector AFlyingEnemyAI::GetCurrentTargetLocation() const
 {
 	return CurrentTargetLocation;
 }
+
+void AFlyingEnemyAI::NotifyTeleported()
+{
+	LastTeleportTime = GetWorld()->GetTimeSeconds();
+}
+
+bool AFlyingEnemyAI::CanShoot() const
+{
+	return (GetWorld()->GetTimeSeconds() - LastTeleportTime) >= PostTeleportFireDelay;
+}
