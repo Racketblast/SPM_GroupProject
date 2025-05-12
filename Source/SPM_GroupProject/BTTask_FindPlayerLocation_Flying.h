@@ -32,8 +32,8 @@ protected:
 	float RandomRadius;
 
 	UPROPERTY(EditAnywhere, Category = "Obstacle Avoidance")
-	float ObstacleCheckDistance = 200.f; // how far to check for nearby obstacles
+	float ObstacleCheckDistance = 200.f; // Hur stort området är som fienden kållar efter hinder
 
 	UPROPERTY(EditAnywhere, Category = "Obstacle Avoidance")
-	float ObstacleClearance = 100.f;     // how close is too close to accept
+	float ObstacleClearance = 100.f;     // Gränsen för hur nära ett hinder får vara, mindre betyder att hindret får vara närmare
 };

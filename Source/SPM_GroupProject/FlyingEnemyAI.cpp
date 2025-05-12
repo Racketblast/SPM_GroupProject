@@ -3,7 +3,9 @@
 
 #include "FlyingEnemyAI.h"
 #include "FlyingAI_Controller.h"
+#include "EnemyAIUtils.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 AFlyingEnemyAI::AFlyingEnemyAI()
 {
@@ -54,6 +56,48 @@ void AFlyingEnemyAI::Tick(float DeltaTime)
 				StuckCheckTimer = 0.0f;
 			}
 		}
+	}
+
+	if (bIsMovingToTarget)
+	{
+		float TimeSinceStarted = GetWorld()->GetTimeSeconds() - DestinationStartTime;
+		if (TimeSinceStarted >= MaxTimeToReachDestination)
+		{
+			AFlyingAI_Controller* AIController = Cast<AFlyingAI_Controller>(GetController());
+			ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
+			bool bHasLineOfSight = AIController && AIController->HasLineOfSightToPlayer();
+			bool bInRange = false;
+
+			if (Player)
+			{
+				float DistanceToPlayer = FVector::Dist(GetActorLocation(), Player->GetActorLocation());
+				bInRange = DistanceToPlayer <= AIController->PlayerRangeThreshold;
+			}
+
+			// Teleporterar bara om fienden inte redan är inrange och har line of sight
+			if (!(bHasLineOfSight && bInRange))
+			{
+				TeleportToValidLocationNearPlayer();
+			}
+
+			bIsMovingToTarget = false;
+		}
+	}
+}
+
+void AFlyingEnemyAI::TeleportToValidLocationNearPlayer()
+{
+	if (!Controller) return;
+
+	FVector TargetLocation = GetCurrentTargetLocation();
+	FVector NewTeleportLocation;
+	
+	if (UEnemyAIUtils::FindValidTeleportLocation(this, TargetLocation, NewTeleportLocation) && bTeleportAfterTimer)
+	{
+		SetActorLocation(NewTeleportLocation);
+		NotifyTeleported();
+		UE_LOG(LogTemp, Warning, TEXT("Enemy teleported after timer ran out."));
 	}
 }
 
@@ -124,4 +168,41 @@ void AFlyingEnemyAI::SetCurrentTargetLocation(const FVector& NewTarget)
 FVector AFlyingEnemyAI::GetCurrentTargetLocation() const
 {
 	return CurrentTargetLocation;
+}
+
+void AFlyingEnemyAI::NotifyTeleported()
+{
+	LastTeleportTime = GetWorld()->GetTimeSeconds();
+}
+
+bool AFlyingEnemyAI::CanShoot() const
+{
+	return (GetWorld()->GetTimeSeconds() - LastTeleportTime) >= PostTeleportFireDelay;
+}
+
+// denna används aldrig
+void AFlyingEnemyAI::SetNewMoveTarget(const FVector& NewTarget)
+{
+	CurrentTargetLocation = NewTarget;
+	DestinationStartTime = GetWorld()->GetTimeSeconds();
+	bIsMovingToTarget = true;
+
+	FVector Direction = (NewTarget - GetActorLocation()).GetSafeNormal();
+	AddMovementInput(Direction, FlySpeed);
+}
+
+bool AFlyingEnemyAI::IsFireCooldownElapsed() const
+{
+	return (GetWorld()->GetTimeSeconds() - LastFireTime) >= FireCooldown;
+}
+
+void AFlyingEnemyAI::NotifyFired()
+{
+	LastFireTime = GetWorld()->GetTimeSeconds();
+}
+
+void AFlyingEnemyAI::IsMoving()
+{
+	DestinationStartTime = GetWorld()->GetTimeSeconds();
+	bIsMovingToTarget = true;
 }

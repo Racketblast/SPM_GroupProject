@@ -30,6 +30,12 @@ void AFlyingAI_Controller::Tick(float DeltaSeconds)
 		bool bPlayerVisible = HasLineOfSightToPlayer();
 		Blackboard->SetValueAsBool("PlayerVisible", bPlayerVisible);
 	}
+
+	if (AFlyingEnemyAI* fiende = Cast<AFlyingEnemyAI>(GetPawn()))
+	{
+		bool bCanShoot = fiende->CanShoot();
+		GetBlackboardComponent()->SetValueAsBool("CanShoot", bCanShoot);
+	}
 }
 
 void AFlyingAI_Controller::OnPossess(APawn* InPawn)

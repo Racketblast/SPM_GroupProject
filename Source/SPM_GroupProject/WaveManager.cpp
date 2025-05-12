@@ -177,8 +177,8 @@ void AWaveManager::SpawnEnemy()
 			{
 				FlyingEnemy->SetMaxAltitude(MaxAltitude);
 				FlyingEnemy->SetMinAltitude(MinAltitude);
-				UE_LOG(LogTemp, Warning, TEXT("FlyingEnemy MaxAltitude: %f"), MaxAltitude);
-				UE_LOG(LogTemp, Warning, TEXT("FlyingEnemy MinAltitude: %f"), MinAltitude);
+				//UE_LOG(LogTemp, Warning, TEXT("FlyingEnemy MaxAltitude: %f"), MaxAltitude);
+				//UE_LOG(LogTemp, Warning, TEXT("FlyingEnemy MinAltitude: %f"), MinAltitude);
 			}
 			
 			UE_LOG(LogTemp, Warning, TEXT("Spawned enemy: %i"), EnemiesSpawnedInCurrentWave);

@@ -39,15 +39,13 @@ void UChallengeSubsystem::PreviewNextChallenge()
 	bIsChallengeActive = false;
 	
 	UE_LOG(LogTemp, Warning, TEXT("New Challenge: %s"), *CurrentChallenge.Description.ToString());
-}
 
-void UChallengeSubsystem::ActivateCurrentChallenge()
-{
-	bIsChallengeActive = true; // väldigt viktig, startar faktiskt logiken för challenges.
+
 	
+	// för animationer, var orginellt i ActivateCurrentChallenge
 	JustStartedChallenge = true; // för animatio
 	
-	//UE_LOG(LogTemp, Warning, TEXT("First JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
+	UE_LOG(LogTemp, Warning, TEXT("JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
 	//UE_LOG(LogTemp, Warning, TEXT("StartedChallengeAnimationTimer: %f"), StartedChallengeAnimationTimer);
 	/*if (StartedChallengeAnimationTimer <= 0)
 	{
@@ -61,6 +59,11 @@ void UChallengeSubsystem::ActivateCurrentChallenge()
 	false  
 	);
 	//UE_LOG(LogTemp, Warning, TEXT("StartedChallengeAnimationTimer: %f"), StartedChallengeAnimationTimer);
+}
+
+void UChallengeSubsystem::ActivateCurrentChallenge()
+{
+	bIsChallengeActive = true; // väldigt viktig, startar faktiskt logiken för challenges.
 }
 
 void UChallengeSubsystem::CompleteCurrentChallenge()

@@ -3,6 +3,8 @@
 #include "FlyingEnemyAI.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/GameplayStatics.h"
+#include "EnemyAIUtils.h"
 
 UBTTask_FlyToPlayerLocation::UBTTask_FlyToPlayerLocation()
 {
@@ -16,12 +18,13 @@ UBTTask_FlyToPlayerLocation::UBTTask_FlyToPlayerLocation()
 EBTNodeResult::Type UBTTask_FlyToPlayerLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	AController* Controller = OwnerComp.GetAIOwner();
-	if (!Controller || !Controller->GetPawn())
+	APawn* Pawn = Controller ? Controller->GetPawn() : nullptr;
+	if (!Controller || !Pawn)
 	{
 		return EBTNodeResult::Failed;
 	}
 
-	LastLocation = Controller->GetPawn()->GetActorLocation();
+	LastLocation = Pawn->GetActorLocation();
 	TimeSinceLastMove = 0.f;
 	bBackingOff = false;
 	BackoffElapsed = 0.f;
@@ -56,23 +59,41 @@ void UBTTask_FlyToPlayerLocation::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 	if (TimeSinceLastMove >= StuckCheckInterval)
 	{
 		float MovedDistance = FVector::Dist(CurrentLocation, LastLocation);
-		if (MovedDistance < StuckMovementThreshold)
+		float DistanceToTargetLast = FVector::Dist(LastLocation, TargetLocation);
+		float DistanceToTargetNow = FVector::Dist(CurrentLocation, TargetLocation);
+		float ProgressTowardGoal = DistanceToTargetLast - DistanceToTargetNow;
+
+		// Fienden räknas som fast ifall den knappt rör sig och knappt gör framsteg mott sitt mål som är spelaren. 
+		if (MovedDistance < StuckMovementThreshold && ProgressTowardGoal < 10.f)
 		{
-			// Ifall den fastnar, så använder den sig av en backoff, alltså typ en failsafe. 
 			if (!bBackingOff)
 			{
 				bBackingOff = true;
-				BackoffElapsed = 0.0f;
 
-				// rör sig bakåt och uppdaterar MoveToLocationKey
-				FVector Backward = -(TargetLocation - CurrentLocation).GetSafeNormal() * BackoffDistance;
-				FVector NewBackoffTarget = CurrentLocation + Backward;
-				OwnerComp.GetBlackboardComponent()->SetValueAsVector(MoveToLocationKey.SelectedKeyName, NewBackoffTarget);
+				if (AFlyingEnemyAI* Enemy = Cast<AFlyingEnemyAI>(Pawn))
+				{
+					if (Enemy->bTeleportIfStuck)
+					{
+						// Teleport mode
+						FVector NewLocation;
+						if (UEnemyAIUtils::FindValidTeleportLocation(Pawn, TargetLocation, NewLocation))
+						{
+							Pawn->SetActorLocation(NewLocation);
+							Enemy->NotifyTeleported();
+							UE_LOG(LogTemp, Warning, TEXT("Enemy teleported to escape being stuck."));
+						}
+					}
+					else
+					{
+						// Backoff fallback
+						FVector Backward = -(TargetLocation - CurrentLocation).GetSafeNormal() * BackoffDistance;
+						TargetLocation = CurrentLocation + Backward;
+						OwnerComp.GetBlackboardComponent()->SetValueAsVector(MoveToLocationKey.SelectedKeyName, TargetLocation);
 
-				UE_LOG(LogTemp, Warning, TEXT("Flying AI is stuck, backing off from %s"), *CurrentLocation.ToString());
-				/*DrawDebugSphere(GetWorld(), CurrentLocation, 50.f, 12, FColor::Red, false, 1.f);
-				DrawDebugLine(GetWorld(), CurrentLocation, NewBackoffTarget, FColor::Yellow, false, 1.f, 0, 2.f);
-				DrawDebugBox(GetWorld(), LastLocation, FVector(5,5,5), FColor::Blue, false, 1.f);*/
+						UE_LOG(LogTemp, Warning, TEXT("Flying AI is stuck, backing off"));
+						DrawDebugSphere(GetWorld(), CurrentLocation, 50.f, 12, FColor::Red, false, 1.f);
+					}
+				}
 			}
 		}
 		else
@@ -83,7 +104,7 @@ void UBTTask_FlyToPlayerLocation::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 		TimeSinceLastMove = 0.f;
 	}
 
-	// Ifall den backartillbaka, väntar den på en cooldown, innan den fortsätter
+	// Ifall den backar tillbaka, väntar den på en cooldown, innan den fortsätter
 	if (bBackingOff)
 	{
 		BackoffElapsed += DeltaSeconds;
@@ -103,7 +124,6 @@ void UBTTask_FlyToPlayerLocation::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 	if (AFlyingEnemyAI* Enemy = Cast<AFlyingEnemyAI>(Pawn))
 	{
 		Enemy->SetCurrentTargetLocation(TargetLocation);
-		Enemy->AddMovementInput(Direction, 1.0f);
+		Enemy->AddMovementInput(Direction, Enemy->FlySpeed * GetWorld()->GetDeltaSeconds());
 	}
 }
-
