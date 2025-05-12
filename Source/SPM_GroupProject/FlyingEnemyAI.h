@@ -37,8 +37,15 @@ public:
 	float FlySpeed = 1.0f;
 
 	// Väljer om fienden teleporterar till spelaren eller bara backar när den är fast
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
 	bool bTeleportIfStuck = true;
+
+	// Väljer om fienden teleporterar till spelaren efter att MaxTimeToReachDestination timern har gott ut
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
+	bool bTeleportAfterTimer = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
+	float MaxTimeToReachDestination = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float PostTeleportFireDelay = 2.0f;
@@ -57,6 +64,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float FireCooldown = 2.0f; // Sekunder mellan skot som fienden skjuter
 
+	void IsMoving();
+
 protected:
 	virtual void BeginPlay() override;
 	
@@ -74,7 +83,6 @@ protected:
 	float MinAltitude = 100.f; 	// ändras i wave manager
 
 	float DestinationStartTime = 0.f;
-	float MaxTimeToReachDestination = 10.0f;
 
 	bool bIsMovingToTarget;
 

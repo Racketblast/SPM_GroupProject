@@ -15,14 +15,13 @@ class SPM_GROUPPROJECT_API AFlyingAI_Controller : public AAI_Controller
 	GENERATED_BODY()
 public:
 	//AFlyingAI_Controller();
+	UPROPERTY(EditAnywhere, Category = "AI")
+	float PlayerRangeThreshold = 600.f; // Distansen innan spelaren är "in range"
+
+	bool HasLineOfSightToPlayer() const;
 
 protected:
 	virtual void Tick(float DeltaSeconds) override;
 
 	virtual void OnPossess(APawn* InPawn) override;
-
-	UPROPERTY(EditAnywhere, Category = "AI")
-	float PlayerRangeThreshold = 600.f; // Distansen innan spelaren är "in range"
-
-	bool HasLineOfSightToPlayer() const;
 };

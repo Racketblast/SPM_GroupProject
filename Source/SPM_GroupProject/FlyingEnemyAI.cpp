@@ -5,6 +5,7 @@
 #include "FlyingAI_Controller.h"
 #include "EnemyAIUtils.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 AFlyingEnemyAI::AFlyingEnemyAI()
 {
@@ -62,7 +63,24 @@ void AFlyingEnemyAI::Tick(float DeltaTime)
 		float TimeSinceStarted = GetWorld()->GetTimeSeconds() - DestinationStartTime;
 		if (TimeSinceStarted >= MaxTimeToReachDestination)
 		{
-			TeleportToValidLocationNearPlayer();
+			AFlyingAI_Controller* AIController = Cast<AFlyingAI_Controller>(GetController());
+			ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
+			bool bHasLineOfSight = AIController && AIController->HasLineOfSightToPlayer();
+			bool bInRange = false;
+
+			if (Player)
+			{
+				float DistanceToPlayer = FVector::Dist(GetActorLocation(), Player->GetActorLocation());
+				bInRange = DistanceToPlayer <= AIController->PlayerRangeThreshold;
+			}
+
+			// Only teleport if NOT in range OR no line of sight
+			if (!(bHasLineOfSight && bInRange))
+			{
+				TeleportToValidLocationNearPlayer();
+			}
+
 			bIsMovingToTarget = false;
 		}
 	}
@@ -75,11 +93,11 @@ void AFlyingEnemyAI::TeleportToValidLocationNearPlayer()
 	FVector TargetLocation = GetCurrentTargetLocation();
 	FVector NewTeleportLocation;
 	
-	if (UEnemyAIUtils::FindValidTeleportLocation(this, TargetLocation, NewTeleportLocation))
+	if (UEnemyAIUtils::FindValidTeleportLocation(this, TargetLocation, NewTeleportLocation) && bTeleportAfterTimer)
 	{
 		SetActorLocation(NewTeleportLocation);
 		NotifyTeleported();
-		UE_LOG(LogTemp, Warning, TEXT("Enemy teleported to escape being stuck or timing out."));
+		UE_LOG(LogTemp, Warning, TEXT("Enemy teleported after timer ran out."));
 	}
 }
 
@@ -162,6 +180,7 @@ bool AFlyingEnemyAI::CanShoot() const
 	return (GetWorld()->GetTimeSeconds() - LastTeleportTime) >= PostTeleportFireDelay;
 }
 
+// denna används aldrig
 void AFlyingEnemyAI::SetNewMoveTarget(const FVector& NewTarget)
 {
 	CurrentTargetLocation = NewTarget;
@@ -180,4 +199,10 @@ bool AFlyingEnemyAI::IsFireCooldownElapsed() const
 void AFlyingEnemyAI::NotifyFired()
 {
 	LastFireTime = GetWorld()->GetTimeSeconds();
+}
+
+void AFlyingEnemyAI::IsMoving()
+{
+	DestinationStartTime = GetWorld()->GetTimeSeconds();
+	bIsMovingToTarget = true;
 }
