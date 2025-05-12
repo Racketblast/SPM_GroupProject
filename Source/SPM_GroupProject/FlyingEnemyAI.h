@@ -46,6 +46,17 @@ public:
 	bool CanShoot() const; 
 	void NotifyTeleported();
 
+	void SetNewMoveTarget(const FVector& NewTarget);
+
+	UFUNCTION()
+	void TeleportToValidLocationNearPlayer();
+
+	bool IsFireCooldownElapsed() const; 
+	void NotifyFired();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float FireCooldown = 2.0f; // Sekunder mellan skot som fienden skjuter
+
 protected:
 	virtual void BeginPlay() override;
 	
@@ -57,12 +68,17 @@ protected:
 	FVector LastLocation;
 	float StuckCheckTimer = 0.0f;
 	bool bIsDescendingStuck = false;
+	
+	float MaxAltitude = 1000.0f; 	// ändras i wave manager
+	
+	float MinAltitude = 100.f; 	// ändras i wave manager
 
-	// ändras i wave manager
-	float MaxAltitude = 1000.0f;
+	float DestinationStartTime = 0.f;
+	float MaxTimeToReachDestination = 10.0f;
 
-	// ändras i wave manager
-	float MinAltitude = 100.f;
+	bool bIsMovingToTarget;
+
+	float LastFireTime = -9999.f;
 
 private:
 	float LastTeleportTime = -100.f;
