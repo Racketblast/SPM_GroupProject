@@ -33,9 +33,19 @@ void ATeleporter::Use_Implementation(APlayerCharacter* Player)
 		if (!CachedGameInstance->bIsWave && CachedGameInstance->UnlockedLevels.Contains(TargetLevelName))
 		{
 			CachedGameInstance->Money += Player->PickedUpMoney;
+			
+			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+			{
+				GI->StartDialogueRowName = "TeleportOut";
+			}
+			
 			// För level unlock 
 			if (UMissionSubsystem* MissionSub = CachedGameInstance->GetSubsystem<UMissionSubsystem>())
 			{
+				if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+				{
+					GI->StartDialogueRowName = "TeleportOutMissionComplete";
+				}
 				MissionSub->TryUnlockLevel();
 			}
 			Teleport();
