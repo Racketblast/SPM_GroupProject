@@ -75,7 +75,7 @@ void AFlyingEnemyAI::Tick(float DeltaTime)
 				bInRange = DistanceToPlayer <= AIController->PlayerRangeThreshold;
 			}
 
-			// Only teleport if NOT in range OR no line of sight
+			// Teleporterar bara om fienden inte redan är inrange och har line of sight
 			if (!(bHasLineOfSight && bInRange))
 			{
 				TeleportToValidLocationNearPlayer();
