@@ -9,6 +9,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetRenderingLibrary.h"
 
@@ -46,7 +47,7 @@ void APortal::BeginPlay()
 	Super::BeginPlay();
 
 	SetTickGroup(TG_PostUpdateWork);
-	
+
 	PlayerCamera = UGameplayStatics::GetPlayerCameraManager(GetWorld(),0);
 	
 	SetPortalMaterial();
