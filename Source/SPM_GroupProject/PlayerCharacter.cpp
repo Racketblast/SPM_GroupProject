@@ -70,10 +70,6 @@ void APlayerCharacter::BeginPlay()
 			// Apply all upgrades
 			GI->ApplyAllUpgradeFunctions(this);
 			SelectWeapon(GI->GetCurrentWeaponName());
-
-		
-			GI->StartDialogueRowName = "TestDialogue1";
-			GI->StartDialogue();
 	}
 
 
