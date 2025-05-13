@@ -22,7 +22,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	class UNiagaraSystem* BulletHitEffect;
-
+	virtual void Tick(float DeltaTime) override;
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	float Range = 2000.0f;
@@ -30,11 +30,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UDamageType> DamageType;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Sound")
-	USoundBase* FireSound;
-
-	UPROPERTY(VisibleAnywhere, Category = "Sound")
-	UAudioComponent* FireAudioComponent;
 
 	float LastFireTime = 0.f;
 };

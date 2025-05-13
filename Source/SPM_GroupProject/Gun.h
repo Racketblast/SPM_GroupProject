@@ -75,9 +75,22 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	USoundBase* ReloadSound;
 
-	// Audio component for reload sound
+
 	UPROPERTY(VisibleAnywhere, Category = "Sound")
 	UAudioComponent* ReloadAudioComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase*FireSound;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase*MagEmptySound;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Sound")
+	UAudioComponent* FireAudioComponent;
+
+	// Audio component for reload sound
+	UPROPERTY(VisibleAnywhere, Category = "Sound")
+	UAudioComponent* MagEmptyAudioComponent;
 	UPROPERTY(EditAnywhere, Category = "Recoil")
 	float RecoilPitchMin = -3.0f;  // Upward
 
@@ -90,7 +103,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Recoil")
 	float RecoilYawMax = -0.5f;
-	// Header file
+
+
+
 
 
 };
