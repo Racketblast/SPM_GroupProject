@@ -125,6 +125,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Challenge")
 	bool ShouldShowChallengeTimer() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Challenges") //  Kalla på denna funktion när fienderna dör
+	void AddTimeToWaveChallenge(float TimeToAdd); 
+
 private:
 	UPROPERTY()
 	FChallengeData CurrentChallenge;

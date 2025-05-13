@@ -25,6 +25,10 @@ enum class EUpgradeType : uint8
 	RifleFiringSpeed10  UMETA(DisplayName = "10% Rifle Firing Speed"),
 	ShotgunFiringSpeed10 UMETA(DisplayName = "10% Shotgun Firing Speed"),
 	RocketLauncherFiringSpeed10 UMETA(DisplayName = "10% RocketLauncher Firing Speed"),
+	PistolAmmoSize UMETA(DisplayName = "Pistol Ammo Size"),
+	RifleAmmoSize  UMETA(DisplayName = "Rifle Ammo Size"),
+	ShotgunAmmoSize UMETA(DisplayName = "Shotgun Ammo Size"),
+	RocketLauncherAmmoSize UMETA(DisplayName = "RocketLauncher Ammo Size"),
 	// Add more as needed
 };
 
