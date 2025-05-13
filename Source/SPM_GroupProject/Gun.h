@@ -16,7 +16,9 @@ public:
 	void SetOwnerCharacter(class APlayerCharacter* NewOwner);
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun")
 	bool bHasInfiniteReloads = false;
-	
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 BaseTotalAmmo;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 TotalAmmo = 90;
 	AGun();  // 
@@ -41,6 +43,16 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	class UNiagaraSystem* MuzzleFlash;
 	USceneComponent* GetMuzzlePoint() const { return MuzzlePoint; }
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 BaseMaxAmmo;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 CurrentAmmo = MaxAmmo;
+	
 	//Upgrade variables
 	UPROPERTY()
 	bool bHasAppliedUpgrades = false;
@@ -52,12 +64,6 @@ protected:
 	
 	UPROPERTY()
 	APlayerCharacter* OwnerCharacter;
-
-	UPROPERTY(EditAnywhere)
-	int32 MaxAmmo;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 CurrentAmmo = MaxAmmo;
 	
 	bool bIsReloading = false;
 
