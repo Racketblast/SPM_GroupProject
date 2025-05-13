@@ -100,6 +100,7 @@ void ATeleporter::ChangeTexture()
 		if (WaveMaterial)
 		{
 			CubeMeshComponent->SetMaterial(0, WaveMaterial);
+			CubeMeshComponent->SetRenderCustomDepth(false);
 		}
 		if (TeleportSkyBeam && UGameplayStatics::GetCurrentLevelName(this,true) != TEXT("Hub"))
 		{
@@ -111,6 +112,7 @@ void ATeleporter::ChangeTexture()
 		if (GracePeriodMaterial)
 		{
 			CubeMeshComponent->SetMaterial(0, GracePeriodMaterial);
+			CubeMeshComponent->SetRenderCustomDepth(true);
 		}
 		if (TeleportSkyBeam && UGameplayStatics::GetCurrentLevelName(this,true) != TEXT("Hub"))
 		{
