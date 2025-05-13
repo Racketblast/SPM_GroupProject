@@ -413,7 +413,7 @@ void UPlayerGameInstance::StartDialogue()
 	if (!EventDialogueInfo)
 		return;
 
-	if (true)
+	if (!bCanPlayDialogue)
 		return;
 	CurrentDialogueRowName = StartDialogueRowName;
 	

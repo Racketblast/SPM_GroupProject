@@ -47,7 +47,10 @@ void AArenaGameMode::PlayerDeath()
 		float TimeUntilDone = 0.f;
 		if (FDialogueInfo* Row = GI->EventDialogueInfo->FindRow<FDialogueInfo>(DeathDialogue, TEXT("")))
 		{
-			TimeUntilDone = Row->DialogueSound->Duration;
+			if (GI->bCanPlayDialogue)
+			{
+				TimeUntilDone = Row->DialogueSound->Duration;
+			}
 		}
 		GI->StartDialogueRowName = DeathDialogue;
 		GI->StartDialogue();
