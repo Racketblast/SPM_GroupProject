@@ -12,6 +12,13 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundBase.h"
+#include "GameFramework/Actor.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/ProjectileMovementComponent.h"
+#include "GameFramework/DamageType.h"        
+#include "Kismet/GameplayStatics.h"
+#include "Engine/EngineTypes.h"               
+
 
 AExplosive::AExplosive()
 {
@@ -32,91 +39,74 @@ void AExplosive::BeginPlay()
 	GetWorldTimerManager().SetTimer(ExplosionTimer, this, &AExplosive::Explode, ExplosionDelay, false);
 }
 
+
+
+
+
 void AExplosive::Explode()
 {
-	TArray<AActor*> IgnoredActors;
-	IgnoredActors.Add(this);
+    TArray<FOverlapResult> OverlapResults;
+    FCollisionQueryParams Params;
+    Params.AddIgnoredActor(this);
 
-	TArray<FOverlapResult> OverlapResults;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
+    FVector ExplosionCenter = GetActorLocation();
 
-	FVector ExplosionCenter = GetActorLocation();
+    GetWorld()->OverlapMultiByChannel(
+        OverlapResults,
+        ExplosionCenter,
+        FQuat::Identity,
+        ECC_Pawn,
+        FCollisionShape::MakeSphere(ExplosionRadius),
+        Params
+    );
 
-	GetWorld()->OverlapMultiByChannel(
-		OverlapResults,
-		ExplosionCenter,
-		FQuat::Identity,
-		ECC_Pawn,
-		FCollisionShape::MakeSphere(ExplosionRadius),
-		Params
-	);
+    // VFX & SFX
+    if (ExplosionEffectAsset)
+    {
+        UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffectAsset, ExplosionCenter, FRotator::ZeroRotator, true);
+    }
+    if (ExplosionSound)
+    {
+        UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, ExplosionCenter);
+    }
 
-	if (ExplosionEffectAsset)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffectAsset, GetActorLocation(), FRotator::ZeroRotator, true);
-	}
-
-	if (ExplosionSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, GetActorLocation());
-	}
-
-	for (const FOverlapResult& Result : OverlapResults)
-	{
-		AActor* HitActor = Result.GetActor();
-
-		if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
-		{
-			if (APlayerCharacter* Player = Cast<APlayerCharacter>(GetInstigator()))
-			{
-				Player->bEnemyHit = true;
-				UE_LOG(LogTemp, Error, TEXT("hit activated (from explosive)"));
-				Player->EnemyHitFalse();
-			}
+    for (const FOverlapResult& Result : OverlapResults)
+    {
+        AActor* HitActor = Result.GetActor();
+        if (!HitActor) continue;
 
 
-			static const FName AIHealthName = TEXT("AIHealth");
+        if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
+        {
+            // Optional: Visual feedback for player hit
+            if (APlayerCharacter* Player = Cast<APlayerCharacter>(HitCharacter))
+            {
+                Player->bEnemyHit = true;
+                UE_LOG(LogTemp, Warning, TEXT("Player hit by explosive"));
+                Player->EnemyHitFalse();
+            }
 
-			if (FIntProperty* HealthProp = FindFProperty<FIntProperty>(HitCharacter->GetClass(), AIHealthName))
-			{
-				int32 CurrentHealth = HealthProp->GetPropertyValue_InContainer(HitCharacter);
-				CurrentHealth -= static_cast<int32>(WeaponDamage);
+            // Construct HitResult (needed for ApplyPointDamage)
+            FHitResult HitResult;
+            HitResult.Location = HitCharacter->GetActorLocation();
+            HitResult.ImpactPoint = HitResult.Location;
+            HitResult.Component = Result.Component;
 
-				if (CurrentHealth <= 0)
-				{
-					TSubclassOf<AMoneyBox> MoneyBoxClass = LoadClass<AMoneyBox>(nullptr, TEXT("/Game/Blueprints/BP_MoneyBox.BP_MoneyBox_C"));
-					if (MoneyBoxClass)
-					{
-						FTransform SpawnTransform = HitCharacter->GetTransform();
-						FVector NewLocation = SpawnTransform.GetLocation();
-						NewLocation.Z -= 100.0f;
-						SpawnTransform.SetLocation(NewLocation);
-						GetWorld()->SpawnActor<AMoneyBox>(MoneyBoxClass, SpawnTransform);
-					}
+            UGameplayStatics::ApplyPointDamage(
+                HitCharacter,
+                WeaponDamage,
+                (HitCharacter->GetActorLocation() - ExplosionCenter).GetSafeNormal(),
+                HitResult,
+                GetInstigatorController(),
+                this,
+                UDamageType::StaticClass()
+            );
+        }
+        else if (HitActor->FindFunction("OnLineTraceHit"))
+        {
+            HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
+        }
+    }
 
-					HitCharacter->Destroy();
-
-					for (TActorIterator<AWaveManager> It(GetWorld()); It; ++It)
-					{
-						if (AWaveManager* WaveManager = *It)
-						{
-							WaveManager->OnEnemyKilled();
-							break;
-						}
-					}
-				}
-				else
-				{
-					HealthProp->SetPropertyValue_InContainer(HitCharacter, CurrentHealth);
-				}
-			}
-		}
-		else if (HitActor && HitActor->FindFunction("OnLineTraceHit"))
-		{
-			HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
-		}
-	}
-
-	Destroy();
+    Destroy();
 }

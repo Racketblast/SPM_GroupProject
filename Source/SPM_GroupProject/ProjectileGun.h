@@ -27,10 +27,6 @@ private:
 	void ResetFire();
 	// ProjectileGun.h
 
-	UPROPERTY(EditDefaultsOnly, Category = "Sound")
-	USoundBase* FireSound;
 
-	UPROPERTY(VisibleAnywhere, Category = "Sound")
-	UAudioComponent* FireAudioComponent;
 
 };

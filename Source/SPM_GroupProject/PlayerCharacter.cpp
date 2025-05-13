@@ -192,9 +192,22 @@ void APlayerCharacter::SetupStimulusSource()
 }
 void APlayerCharacter::EnemyHitFalse()
 {
-	bEnemyHit = false;
-	UE_LOG(LogTemp, Error, TEXT("hit false (player)"));
+	// Schedule the actual reset after 0.2 seconds
+	GetWorldTimerManager().SetTimerForNextTick([this]()
+	{
+		GetWorldTimerManager().SetTimer(
+			EnemyHitResetTimerHandle,
+			[this]()
+			{
+				bEnemyHit = false;
+				UE_LOG(LogTemp, Error, TEXT("hit false (player)"));
+			},
+			0.2f,
+			false
+		);
+	});
 }
+
 
 
 void APlayerCharacter::Shoot()

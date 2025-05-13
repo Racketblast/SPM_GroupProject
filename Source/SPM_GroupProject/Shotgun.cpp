@@ -17,6 +17,7 @@
 void AShotgun::BeginPlay()
 {
 	Super::BeginPlay();
+	OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
 
 	if (!FireAudioComponent)
 	{
@@ -27,15 +28,37 @@ void AShotgun::BeginPlay()
 			FireAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 		}
 	}
+	if (!MagEmptyAudioComponent)
+	{
+		MagEmptyAudioComponent = NewObject<UAudioComponent>(this, TEXT("FireAudioComponent"));
+		if (MagEmptyAudioComponent)
+		{
+			MagEmptyAudioComponent->RegisterComponent();
+			MagEmptyAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		}
+	}
 }
 
 void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 {
-	if (bIsReloading || CurrentAmmo <= 0)
+	if (bIsReloading)
 	{
 		return;
 	}
 
+	if (CurrentAmmo <= 0)
+	{
+		if (MagEmptySound  && MagEmptyAudioComponent)
+		{
+			if (MagEmptyAudioComponent->IsPlaying())
+			{
+				MagEmptyAudioComponent->Stop();
+			}
+			MagEmptyAudioComponent->SetSound(MagEmptySound);
+			MagEmptyAudioComponent->Play();
+			return;
+		}
+	}
 	const float CurrentTime = GetWorld()->GetTimeSeconds();
 	const float TimeBetweenShots = 1.0f / RoundsPerSecond;
 
@@ -45,6 +68,7 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 	}
 
 	LastFireTime = CurrentTime;
+	
 
 	if (FireSound && FireAudioComponent)
 	{
@@ -164,7 +188,6 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 
 	CurrentAmmo--;
 
-	// Apply recoil
 	if (OwnerCharacter)
 	{
 		APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
@@ -172,9 +195,11 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 		{
 			float RecoilPitch = FMath::FRandRange(RecoilPitchMin, RecoilPitchMax);
 			float RecoilYaw = FMath::FRandRange(RecoilYawMin, RecoilYawMax);
+
 			FRotator ControlRotation = PC->GetControlRotation();
 			ControlRotation.Pitch -= RecoilPitch;
 			ControlRotation.Yaw += RecoilYaw;
+
 			PC->SetControlRotation(ControlRotation);
 		}
 	}

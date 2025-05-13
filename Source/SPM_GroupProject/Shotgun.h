@@ -33,12 +33,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	float Range = 1000.0f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Sound")
-	USoundBase* FireSound;
-
-	UPROPERTY(VisibleAnywhere, Category = "Sound")
-	UAudioComponent* FireAudioComponent;
+	
 
 	float LastFireTime = 0.f;
 };

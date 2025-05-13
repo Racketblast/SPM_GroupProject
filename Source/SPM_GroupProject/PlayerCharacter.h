@@ -130,4 +130,5 @@ private:
 
 	class UAIPerceptionStimuliSourceComponent* StimulusSource;
 	void SetupStimulusSource();
+	FTimerHandle EnemyHitResetTimerHandle;
 };

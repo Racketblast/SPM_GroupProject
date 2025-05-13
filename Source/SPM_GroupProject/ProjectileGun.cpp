@@ -19,24 +19,63 @@ void AProjectileGun::BeginPlay()
 			FireAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 		}
 	}
+	if (!MagEmptyAudioComponent)
+	{
+		MagEmptyAudioComponent = NewObject<UAudioComponent>(this, TEXT("FireAudioComponent"));
+		if (MagEmptyAudioComponent)
+		{
+			MagEmptyAudioComponent->RegisterComponent();
+			MagEmptyAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		}
+	}
 }
 
 void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
 {
+
+	if (CurrentAmmo <= 0 &&bCanFire)
+	{
+		if (MagEmptySound  && MagEmptyAudioComponent)
+		{
+			if (MagEmptyAudioComponent->IsPlaying())
+			{
+				MagEmptyAudioComponent->Stop();
+			}
+			MagEmptyAudioComponent->SetSound(MagEmptySound);
+			MagEmptyAudioComponent->Play();
+			return;
+		}
+	}
 	if (!bCanFire || bIsReloading)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Cannot fire: either reloading or waiting for fire rate cooldown."));
 		return;
 	}
 
+
+
 	if (ProjectileClass && GetWorld() && CurrentAmmo > 0)
 	{
 		AExplosive* Projectile = GetWorld()->SpawnActor<AExplosive>(ProjectileClass, FireLocation, FireRotation);
 		if (Projectile)
 		{
-			Projectile->SetInstigator(Cast<APawn>(OwnerCharacter));  // ✅ Set the instigator
+			Projectile->SetInstigator(Cast<APawn>(OwnerCharacter));  
 		}
+    if (OwnerCharacter)
+    {
+        APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
+        if (PC)
+        {
+            float RecoilPitch = FMath::FRandRange(RecoilPitchMin, RecoilPitchMax);
+            float RecoilYaw = FMath::FRandRange(RecoilYawMin, RecoilYawMax);
 
+            FRotator ControlRotation = PC->GetControlRotation();
+            ControlRotation.Pitch -= RecoilPitch;
+            ControlRotation.Yaw += RecoilYaw;
+
+            PC->SetControlRotation(ControlRotation);
+        }
+    }
 		CurrentAmmo--;
 		UE_LOG(LogTemp, Warning, TEXT("Fired! Current Ammo: %d"), CurrentAmmo);
 
