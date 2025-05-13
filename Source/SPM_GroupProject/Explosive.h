@@ -22,14 +22,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	class UProjectileMovementComponent* ProjectileComponent;
 
-	// Explosive.h
-
 	UPROPERTY()
-	AActor* InstigatorActor;  // Store the player who threw the explosive
-
+	AActor* InstigatorActor;  // Optional: track player that threw it
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion")
-	UParticleSystem* ExplosionEffectAsset;  // Reference to the particle system asset
+	UParticleSystem* ExplosionEffectAsset;
+
+	UPROPERTY(EditAnywhere, Category = "Explosion|Sound")
+	USoundBase* ExplosionSound;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Grenade")
 	float ExplosionDelay = 2.0f;
@@ -39,10 +39,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Grenade")
 	float WeaponDamage = 40.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Explosion|Sound")
-	USoundBase* ExplosionSound;
-
 
 	FTimerHandle ExplosionTimer;
 };

@@ -4,6 +4,7 @@
 #include "Components/AudioComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "PlayerCharacter.h"
 
 void AProjectileGun::BeginPlay()
 {
@@ -22,7 +23,6 @@ void AProjectileGun::BeginPlay()
 
 void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
 {
-	// Prevent firing while reloading or during cooldown
 	if (!bCanFire || bIsReloading)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Cannot fire: either reloading or waiting for fire rate cooldown."));
@@ -31,11 +31,15 @@ void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
 
 	if (ProjectileClass && GetWorld() && CurrentAmmo > 0)
 	{
-		GetWorld()->SpawnActor<AExplosive>(ProjectileClass, FireLocation, FireRotation);
+		AExplosive* Projectile = GetWorld()->SpawnActor<AExplosive>(ProjectileClass, FireLocation, FireRotation);
+		if (Projectile)
+		{
+			Projectile->SetInstigator(Cast<APawn>(OwnerCharacter));  // ✅ Set the instigator
+		}
+
 		CurrentAmmo--;
 		UE_LOG(LogTemp, Warning, TEXT("Fired! Current Ammo: %d"), CurrentAmmo);
 
-		// 🔊 Play fire sound
 		if (FireSound && FireAudioComponent)
 		{
 			if (FireAudioComponent->IsPlaying())
@@ -59,13 +63,12 @@ void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
 			);
 		}
 
-		// Fire cooldown
 		bCanFire = false;
 		float FireCooldown = 1.0f / RoundsPerSecond;
 		GetWorld()->GetTimerManager().SetTimer(FireRateTimerHandle, this, &AProjectileGun::ResetFire, FireCooldown, false);
 	}
-
 }
+
 
 void AProjectileGun::ResetFire()
 {

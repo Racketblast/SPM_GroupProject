@@ -6,11 +6,12 @@
 #include "GameFramework/Character.h"
 #include "UObject/UnrealType.h"
 #include "MoneyBox.h"
+#include "PlayerCharacter.h"
 #include "WaveManager.h"
 #include "Engine/OverlapResult.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
-#include "Sound/SoundBase.h"  // Include for USoundBase
+#include "Sound/SoundBase.h"
 
 AExplosive::AExplosive()
 {
@@ -67,6 +68,14 @@ void AExplosive::Explode()
 
 		if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
 		{
+			if (APlayerCharacter* Player = Cast<APlayerCharacter>(GetInstigator()))
+			{
+				Player->bEnemyHit = true;
+				UE_LOG(LogTemp, Error, TEXT("hit activated (from explosive)"));
+				Player->EnemyHitFalse();
+			}
+
+
 			static const FName AIHealthName = TEXT("AIHealth");
 
 			if (FIntProperty* HealthProp = FindFProperty<FIntProperty>(HitCharacter->GetClass(), AIHealthName))
