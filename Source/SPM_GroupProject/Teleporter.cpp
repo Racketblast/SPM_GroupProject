@@ -34,18 +34,18 @@ void ATeleporter::Use_Implementation(APlayerCharacter* Player)
 		{
 			CachedGameInstance->Money += Player->PickedUpMoney;
 			
+			//Plays the mission incomplete dialogue for return
 			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 			{
-				GI->StartDialogueRowName = "TeleportOut";
+				if ( TargetLevelName == "Hub")
+				{
+					GI->StartDialogueRowName = "ReturnMissionIncomplete";
+				}
 			}
 			
 			// För level unlock 
 			if (UMissionSubsystem* MissionSub = CachedGameInstance->GetSubsystem<UMissionSubsystem>())
 			{
-				if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
-				{
-					GI->StartDialogueRowName = "TeleportOutMissionComplete";
-				}
 				MissionSub->TryUnlockLevel();
 			}
 			Teleport();

@@ -51,7 +51,7 @@ void AArenaGameMode::PlayerDeath()
 		}
 		GI->StartDialogueRowName = DeathDialogue;
 		GI->StartDialogue();
-		GI->StartDialogueRowName = "";
+		GI->StartDialogueRowName = "ReturnDeath1";
 
 		if (TimeUntilDone != 0.f)
 		{
@@ -79,7 +79,15 @@ void AArenaGameMode::BeginPlay()
 	
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
-		GI->StartDialogue();
+		if (UGameplayStatics::GetCurrentLevelName(GetWorld(), true) == "Hub")
+		{
+			if (GI->CurrentGameFlag < 1)
+			{
+				GI->StartDialogueRowName = "Intro";
+			}
+			
+			GI->StartDialogue();
+		}
 	}
 }
 
