@@ -43,6 +43,13 @@ void UMissionSubsystem::OnWaveCompleted(int32 WaveIndex)
 	if (WavesSurvived >= RequiredWaveToComplete)
 	{
 		CompleteMission();
+
+		//Plays the mission complete dialogue
+		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+		{
+			GI->StartDialogueRowName = "MissionComplete";
+			GI->StartDialogue();
+		}
 	}
 }
 
@@ -76,6 +83,9 @@ void UMissionSubsystem::TryUnlockLevel() const
 		GI->UnlockedLevels.Add(NextLevel);
 		UE_LOG(LogTemp, Log, TEXT("Unlocked level: %s"), *NextLevel.ToString());
 	}
+	
+	//Plays the mission complete dialogue for return if mission is complete
+	GI->StartDialogueRowName = "ReturnMissionComplete";
 }
 
 void UMissionSubsystem::NewMission()

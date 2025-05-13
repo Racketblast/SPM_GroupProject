@@ -31,6 +31,11 @@ protected:
 	class USoundBase* TeleportInSound;
 	UPROPERTY(EditDefaultsOnly, Category="Transition")
 	class USoundBase* TeleportOutSound;
+private:
+	FTimerHandle TimerHandle;
+	
+	UFUNCTION()
+	void ReturnToHub();
 };
 
 

@@ -412,14 +412,11 @@ float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 		bIsDead = true;
 		DisableInput(nullptr);
 		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
+		
 		if (AArenaGameMode* GameMode = Cast<AArenaGameMode>(UGameplayStatics::GetGameMode(this)))
 		{
 			GameMode->FadeOut(this);
-			if (GameMode->SequencePlayer)
-			{
-				GameMode->SequencePlayer->OnFinished.AddDynamic(GameMode, &AArenaGameMode::PlayerDeath);
-			}
+			GameMode->PlayerDeath();
 		}
 	}
 

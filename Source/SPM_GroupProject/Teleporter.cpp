@@ -33,6 +33,16 @@ void ATeleporter::Use_Implementation(APlayerCharacter* Player)
 		if (!CachedGameInstance->bIsWave && CachedGameInstance->UnlockedLevels.Contains(TargetLevelName))
 		{
 			CachedGameInstance->Money += Player->PickedUpMoney;
+			
+			//Plays the mission incomplete dialogue for return
+			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+			{
+				if ( TargetLevelName == "Hub")
+				{
+					GI->StartDialogueRowName = "ReturnMissionIncomplete";
+				}
+			}
+			
 			// För level unlock 
 			if (UMissionSubsystem* MissionSub = CachedGameInstance->GetSubsystem<UMissionSubsystem>())
 			{
