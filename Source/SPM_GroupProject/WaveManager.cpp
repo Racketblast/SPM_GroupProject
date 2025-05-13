@@ -95,6 +95,8 @@ void AWaveManager::StartNextWave()
 	}
 	
 	TotalEnemiesToSpawn += ActiveWaveData.MaxExtraCount;
+
+	UE_LOG(LogTemp, Warning, TEXT("This wave will spawn %d enemies."), TotalEnemiesToSpawn);
 	
 	GetWorldTimerManager().SetTimer(
 		EnemySpawnTimer,
@@ -251,6 +253,8 @@ void AWaveManager::EndWave()
 
 	UE_LOG(LogTemp, Warning, TEXT("Grace period started: %d seconds"), GraceSecondsRemaining);
 
+	//PreviewNextWaveEnemyCount();
+
 	// Challenges
 	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
 	{
@@ -269,6 +273,42 @@ void AWaveManager::EndWave()
 		}
 	}
 }
+
+
+void AWaveManager::PreviewNextWaveEnemyCount()
+{
+	if (!Waves.IsValidIndex(CurrentWaveIndex + 1) && !DefaultWave.EnemyTypes.Num())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No valid wave data to preview."));
+		return;
+	}
+
+	FWaveData PreviewWave = Waves.IsValidIndex(CurrentWaveIndex + 1) ? Waves[CurrentWaveIndex + 1] : DefaultWave;
+
+	// Ifall man är på DefaultWave
+	if (!Waves.IsValidIndex(CurrentWaveIndex + 1))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("DefaultWave"));
+		for (FEnemyTypeData& Type : PreviewWave.EnemyTypes)
+		{
+			Type.MinCount += (CurrentWaveIndex + 1) * DefaultWaveDifficultyMultiplier;
+			PreviewWave.MaxExtraCount += (CurrentWaveIndex + 1);
+		}
+	}
+
+	int32 TotalEnemies = 0;
+	for (const FEnemyTypeData& Type : PreviewWave.EnemyTypes)
+	{
+		TotalEnemies += Type.MinCount;
+	}
+	TotalEnemies += PreviewWave.MaxExtraCount;
+
+	UE_LOG(LogTemp, Warning, TEXT("Next wave will spawn %d enemies."), TotalEnemies);
+
+	// Lägger det i en variable för att sedan kunna vissa det i en widget
+	UpcomingEnemyCount = TotalEnemies;
+}
+
 
 int32 AWaveManager::GetCurrentWaveNumber() const
 {
