@@ -18,15 +18,25 @@
 
 APlayerCharacter::APlayerCharacter()
 {
+	// Enable ticking for every frame
 	PrimaryActorTick.bCanEverTick = true;
 
+	// Setup the Player Camera and its attachment
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("PlayerCamera"));
-	PlayerCamera->SetupAttachment(RootComponent);
-	PlayerCamera->bUsePawnControlRotation = true;
-	GetMesh()->SetupAttachment(PlayerCamera);
+	PlayerCamera->SetupAttachment(RootComponent); // Attach camera to root
+	PlayerCamera->bUsePawnControlRotation = true; // Use player control for rotation
 
+	// Setup ArmsRoot and attach it to the camera
+	ArmsRoot = CreateDefaultSubobject<USceneComponent>(TEXT("ArmsRoot"));
+	ArmsRoot->SetupAttachment(PlayerCamera); // ArmsRoot is attached to the camera
+
+	// Attach the character's mesh to the ArmsRoot (arms follow camera's rotation)
+	GetMesh()->SetupAttachment(ArmsRoot); // Mesh follows the arms root, which is attached to the camera
+
+	// Make sure to call SetupStimulusSource for AI perception, if needed
 	SetupStimulusSource();
 }
+
 
 void APlayerCharacter::BeginPlay()
 {
@@ -80,17 +90,6 @@ void APlayerCharacter::BeginPlay()
 		GameMode->FadeIn(this);
 	}
 }
-
-void APlayerCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	if (Weapon2Equipped && CurrentGun && CurrentGun->IsA<ARifle>() && bIsShooting)
-	{
-		Shoot();
-	}
-}
-
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -115,6 +114,69 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &APlayerCharacter::StartShooting);
 	PlayerInputComponent->BindAction("Shoot", IE_Released, this, &APlayerCharacter::StopShooting);
 }
+
+void APlayerCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	UpdateFirstPersonMeshSway(DeltaTime);
+
+	if (Weapon2Equipped && CurrentGun && CurrentGun->IsA<ARifle>() && bIsShooting)
+	{
+		Shoot();
+	}
+}
+void APlayerCharacter::UpdateFirstPersonMeshSway(float DeltaTime)
+{
+    if (!PlayerCamera || !ArmsRoot) return;
+
+    // Store the default (initial) rotation of the camera
+    static FRotator DefaultCameraRotation = PlayerCamera->GetComponentRotation();
+    static FRotator InitialMeshRotation = GetMesh()->GetRelativeRotation();
+
+    // Calculate sway based on cached inputs, and clamp them within defined limits
+    float ClampedPitchInput = FMath::Clamp(CachedPitchInput, -1.0f, 1.0f);  // Limiting the pitch input
+    float ClampedYawInput = FMath::Clamp(CachedYawInput, -1.0f, 1.0f);      // Limiting the yaw input
+
+    // Apply sway based on the input and the sway amount
+    TargetSwayRotation.Pitch = ClampedPitchInput * SwayAmount;  // Apply sway pitch
+    TargetSwayRotation.Yaw = ClampedYawInput * SwayAmount;      // Apply sway yaw
+
+    // Clamp the sway values based on the maximum sway angle
+    TargetSwayRotation.Pitch = FMath::Clamp(TargetSwayRotation.Pitch, -MaxSwayAngle, MaxSwayAngle);
+    TargetSwayRotation.Yaw = FMath::Clamp(TargetSwayRotation.Yaw, -MaxSwayAngle, MaxSwayAngle);
+
+    // Smoothly interpolate toward the target sway position
+    CurrentSwayRotation = FMath::RInterpTo(CurrentSwayRotation, TargetSwayRotation, DeltaTime, SwaySmoothing);
+
+    // If no input is detected, smoothly reset the sway to 0 (i.e., reset mesh back to the camera rotation)
+    if (FMath::Abs(CachedPitchInput) < 0.01f && FMath::Abs(CachedYawInput) < 0.01f)
+    {
+        // Slowly interpolate the sway back to zero (resetting the mesh)
+        CurrentSwayRotation = FMath::RInterpTo(CurrentSwayRotation, FRotator(0.0f, 0.0f, 0.0f), DeltaTime, SwaySmoothing);
+    }
+
+    // Now apply the sway to the mesh's rotation, but with respect to the camera's default rotation
+    FRotator NewMeshRotation = DefaultCameraRotation; // Start with the camera's rotation as the base
+
+    // Add the calculated sway offsets
+    NewMeshRotation.Pitch += CurrentSwayRotation.Pitch;  // Apply pitch sway
+    NewMeshRotation.Yaw += CurrentSwayRotation.Yaw;      // Apply yaw sway
+
+    // Ensure roll is not affected (zero out roll)
+    NewMeshRotation.Roll = 0.0f;
+	
+    GetMesh()->SetRelativeRotation(NewMeshRotation);
+}
+
+
+
+
+
+
+
+
+
 
 void APlayerCharacter::StartShooting()
 {
@@ -163,11 +225,13 @@ void APlayerCharacter::MoveRight(float Value)
 
 void APlayerCharacter::Yaw(float Value)
 {
+	CachedYawInput = Value;
 	AddControllerYawInput(Value);
 }
 
 void APlayerCharacter::Pitch(float Value)
 {
+	CachedPitchInput = Value;
 	AddControllerPitchInput(Value);
 }
 
@@ -435,3 +499,4 @@ float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 
 	return DamageAmount;
 }
+
