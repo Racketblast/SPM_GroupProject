@@ -51,6 +51,7 @@ void AArenaGameMode::PlayerDeath()
 		}
 		GI->StartDialogueRowName = DeathDialogue;
 		GI->StartDialogue();
+		GI->StartDialogueRowName = "";
 
 		if (TimeUntilDone != 0.f)
 		{
