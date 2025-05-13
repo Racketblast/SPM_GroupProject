@@ -45,6 +45,9 @@ public:
 	bool bTeleportAfterTimer = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
+	bool bCanTeleportIfVisibleToPlayer = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
 	float MaxTimeToReachDestination = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -65,6 +68,8 @@ public:
 	float FireCooldown = 2.0f; // Sekunder mellan skot som fienden skjuter
 
 	void IsMoving();
+
+	bool IsVisibleToPlayer() const; 
 
 protected:
 	virtual void BeginPlay() override;
