@@ -54,6 +54,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnEnemyKilled(); // Måste kalla på detta från enemy klassen, när enemy dör
 
+	// För widgets, så man kan få antalet fiender som kommer nästa wave
+	UFUNCTION(BlueprintCallable)
+	int32 GetUpcomingEnemyCount() const { return UpcomingEnemyCount; }
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -61,6 +65,10 @@ protected:
 	void SpawnEnemy();
 	void TickGracePeriod();
 	void EndWave();
+	void PreviewNextWaveEnemyCount();
+
+	UFUNCTION()
+	FWaveData GenerateWaveData(int32 WaveIndex) const;
 
 	//Widget
 	UFUNCTION(BlueprintCallable)
@@ -117,4 +125,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FlyingEnemy")
 	float MinAltitude = 100.0f;
+
+	// Upcoming enemies
+	int32 UpcomingEnemyCount = 0;
 };
