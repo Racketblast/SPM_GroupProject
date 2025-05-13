@@ -67,6 +67,9 @@ protected:
 	void EndWave();
 	void PreviewNextWaveEnemyCount();
 
+	UFUNCTION()
+	FWaveData GenerateWaveData(int32 WaveIndex) const;
+
 	//Widget
 	UFUNCTION(BlueprintCallable)
 	int32 GetCurrentWaveNumber() const;

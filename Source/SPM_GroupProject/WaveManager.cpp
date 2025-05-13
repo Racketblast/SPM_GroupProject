@@ -35,6 +35,41 @@ void AWaveManager::BeginPlay()
 	StartNextWave();
 }
 
+FWaveData AWaveManager::GenerateWaveData(int32 WaveIndex) const
+{
+	FWaveData ResultWave;
+
+	if (Waves.IsValidIndex(WaveIndex))
+	{
+		ResultWave = Waves[WaveIndex];
+	}
+	else 
+	{
+		// DefaultWave
+		ResultWave = DefaultWave;
+
+		// Fallback för om man glömmer att fylla i DefaultWave i unreal.
+		if (ResultWave.EnemyTypes.Num() == 0 && EnemyClass)
+		{
+			FEnemyTypeData DefaultType;
+			DefaultType.EnemyClass = EnemyClass;
+			DefaultType.MinCount = 5 + WaveIndex * 2;
+			ResultWave.EnemyTypes.Add(DefaultType);
+			ResultWave.MaxExtraCount = 3 + WaveIndex;
+		}
+
+		// Här skrivs koden som bestämmer hur svårt default wavesen ska vara. 
+		for (FEnemyTypeData& Type : ResultWave.EnemyTypes)
+		{
+			Type.MinCount += (WaveIndex + 1) * DefaultWaveDifficultyMultiplier;
+		}
+		//ResultWave.MaxExtraCount += (WaveIndex + 1);
+	}
+
+	return ResultWave;
+}
+
+
 // Funktionen som startar waven. 
 void AWaveManager::StartNextWave()
 {
@@ -48,8 +83,10 @@ void AWaveManager::StartNextWave()
 	{
 		GI->bIsWave = true;
 	}
+
+	ActiveWaveData = GenerateWaveData(CurrentWaveIndex);
 	
-	if (Waves.IsValidIndex(CurrentWaveIndex))
+	/*if (Waves.IsValidIndex(CurrentWaveIndex))
 	{
 		ActiveWaveData = Waves[CurrentWaveIndex];
 	}
@@ -75,7 +112,7 @@ void AWaveManager::StartNextWave()
 			Type.MinCount += (CurrentWaveIndex + 1)  * DefaultWaveDifficultyMultiplier;             // ökar minimum spawnas av varje enemy type
 		}
 		//ActiveWaveData.MaxExtraCount += (CurrentWaveIndex + 1);            // ökar maximum spawns
-	}
+	}*/
 
 	//För challenges
 	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
@@ -277,35 +314,15 @@ void AWaveManager::EndWave()
 
 void AWaveManager::PreviewNextWaveEnemyCount()
 {
-	if (!Waves.IsValidIndex(CurrentWaveIndex + 1) && !DefaultWave.EnemyTypes.Num())
+	/*if (!Waves.IsValidIndex(CurrentWaveIndex + 1) && !DefaultWave.EnemyTypes.Num())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No valid wave data to preview."));
 		return;
-	}
+	}*/
 
-	FWaveData PreviewWave = Waves.IsValidIndex(CurrentWaveIndex + 1) ? Waves[CurrentWaveIndex + 1] : DefaultWave;
+	int32 PreviewWaveIndex = CurrentWaveIndex + 1;
 
-	// Ifall man är på DefaultWave
-	if (!Waves.IsValidIndex(CurrentWaveIndex + 1))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("DefaultWave"));
-
-		if (PreviewWave.EnemyTypes.Num() == 0 && EnemyClass)
-		{
-			FEnemyTypeData DefaultType;
-			DefaultType.EnemyClass = EnemyClass;
-			DefaultType.MinCount = 5 + (CurrentWaveIndex + 1) * 2;
-			PreviewWave.EnemyTypes.Add(DefaultType);
-			PreviewWave.MaxExtraCount = 3 + (CurrentWaveIndex + 1);
-		}
-		
-		for (FEnemyTypeData& Type : PreviewWave.EnemyTypes)
-		{
-			Type.MinCount += (CurrentWaveIndex + 1) * DefaultWaveDifficultyMultiplier;
-		}
-		
-		//PreviewWave.MaxExtraCount += (CurrentWaveIndex + 1);
-	}
+	FWaveData PreviewWave = GenerateWaveData(PreviewWaveIndex);
 
 	int32 TotalEnemies = 0;
 	for (const FEnemyTypeData& Type : PreviewWave.EnemyTypes)
