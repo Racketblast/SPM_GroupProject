@@ -73,8 +73,8 @@ void AWaveManager::StartNextWave()
 		for (FEnemyTypeData& Type : ActiveWaveData.EnemyTypes)
 		{
 			Type.MinCount += (CurrentWaveIndex + 1)  * DefaultWaveDifficultyMultiplier;             // ökar minimum spawnas av varje enemy type
-			ActiveWaveData.MaxExtraCount += (CurrentWaveIndex + 1);            // ökar maximum spawns
 		}
+		//ActiveWaveData.MaxExtraCount += (CurrentWaveIndex + 1);            // ökar maximum spawns
 	}
 
 	//För challenges
@@ -253,7 +253,7 @@ void AWaveManager::EndWave()
 
 	UE_LOG(LogTemp, Warning, TEXT("Grace period started: %d seconds"), GraceSecondsRemaining);
 
-	//PreviewNextWaveEnemyCount();
+	PreviewNextWaveEnemyCount();
 
 	// Challenges
 	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
@@ -289,11 +289,22 @@ void AWaveManager::PreviewNextWaveEnemyCount()
 	if (!Waves.IsValidIndex(CurrentWaveIndex + 1))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("DefaultWave"));
+
+		if (PreviewWave.EnemyTypes.Num() == 0 && EnemyClass)
+		{
+			FEnemyTypeData DefaultType;
+			DefaultType.EnemyClass = EnemyClass;
+			DefaultType.MinCount = 5 + (CurrentWaveIndex + 1) * 2;
+			PreviewWave.EnemyTypes.Add(DefaultType);
+			PreviewWave.MaxExtraCount = 3 + (CurrentWaveIndex + 1);
+		}
+		
 		for (FEnemyTypeData& Type : PreviewWave.EnemyTypes)
 		{
 			Type.MinCount += (CurrentWaveIndex + 1) * DefaultWaveDifficultyMultiplier;
-			PreviewWave.MaxExtraCount += (CurrentWaveIndex + 1);
 		}
+		
+		//PreviewWave.MaxExtraCount += (CurrentWaveIndex + 1);
 	}
 
 	int32 TotalEnemies = 0;
