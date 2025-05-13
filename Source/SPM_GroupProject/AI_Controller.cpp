@@ -64,5 +64,3 @@ void AAI_Controller::OnTargetDetected(AActor* Actor, FAIStimulus const Stimulus)
 		GetBlackboardComponent()->SetValueAsBool("CanSeePlayerCharacter", Stimulus.WasSuccessfullySensed());
 	}
 }
-
-

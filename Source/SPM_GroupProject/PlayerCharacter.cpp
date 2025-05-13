@@ -146,6 +146,7 @@ void APlayerCharacter::ThrowGrenade()
 		FRotator SpawnRotation = PlayerCamera->GetComponentRotation();
 
 		AExplosive* SpawnedGrenade = GetWorld()->SpawnActor<AExplosive>(GrenadeClass, SpawnLocation, SpawnRotation);
+		SpawnedGrenade->SetInstigator(this);
 		GrenadeNum--;
 	}
 }
@@ -189,6 +190,12 @@ void APlayerCharacter::SetupStimulusSource()
 		StimulusSource->RegisterWithPerceptionSystem();
 	}
 }
+void APlayerCharacter::EnemyHitFalse()
+{
+	bEnemyHit = false;
+	UE_LOG(LogTemp, Error, TEXT("hit false (player)"));
+}
+
 
 void APlayerCharacter::Shoot()
 {
