@@ -102,6 +102,8 @@ public:
 private:
 	FTimerHandle TimerHandle;
 	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);
+
+	void BuyWeapon(EUpgradeType Weapon);
 };
 
 
