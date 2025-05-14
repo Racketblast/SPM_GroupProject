@@ -29,11 +29,6 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 	if (!Player) return EBTNodeResult::Failed;
 
 	
-	/*const bool bShouldUpdate = OwnerComp.GetBlackboardComponent()->GetValueAsBool("bUpdatePlayerLocationNow");
-	if (!bShouldUpdate)
-	{
-		return EBTNodeResult::Failed;
-	}*/
 	OwnerComp.GetBlackboardComponent()->SetValueAsBool("bUpdatePlayerLocationNow", false);
 	
 

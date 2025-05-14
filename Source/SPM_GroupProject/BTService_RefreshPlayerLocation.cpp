@@ -32,10 +32,11 @@ void UBTService_RefreshPlayerLocation::TickNode(UBehaviorTreeComponent& OwnerCom
 	{
 		TimeSinceLastUpdate = 0.0f;
 
-		UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
-		if (Blackboard)
+		UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent();
+		if (BlackboardComp)
 		{
-			Blackboard->SetValueAsBool(UpdatePlayerLocationKey.SelectedKeyName, true);
+			BlackboardComp->SetValueAsBool(UpdatePlayerLocationKey.SelectedKeyName, true);
+			BlackboardComp->SetValueAsBool(UpdatePlayerLocationKey.SelectedKeyName, false);
 		}
 	}
 }

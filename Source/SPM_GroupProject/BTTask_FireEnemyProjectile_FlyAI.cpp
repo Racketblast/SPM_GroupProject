@@ -28,7 +28,7 @@ EBTNodeResult::Type UBTTask_FireEnemyProjectile_FlyAI::ExecuteTask(UBehaviorTree
 			ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 			if (!Player || !ProjectileClass) return EBTNodeResult::Failed;
 
-			FVector MuzzleLocation = AICharacter->GetActorLocation() + AICharacter->GetActorForwardVector() * 100.f + FVector(0, 0, 50.f);
+			FVector MuzzleLocation = AICharacter->GetActorLocation() + AICharacter->GetActorForwardVector() * 200.f + FVector(0, 0, 50.f);
 			FVector Direction = (Player->GetActorLocation() - MuzzleLocation).GetSafeNormal();
 			FRotator FireRotation = Direction.Rotation();
 

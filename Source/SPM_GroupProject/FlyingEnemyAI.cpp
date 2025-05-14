@@ -88,6 +88,14 @@ void AFlyingEnemyAI::Tick(float DeltaTime)
 			bIsMovingToTarget = false;
 		}
 	}
+	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
+	if (!Player) return;
+
+	FVector ToPlayer = Player->GetActorLocation() - GetActorLocation();
+	FRotator LookAtRotation = FRotationMatrix::MakeFromX(ToPlayer).Rotator();
+
+	SetActorRotation(LookAtRotation);
 }
 
 void AFlyingEnemyAI::TeleportToValidLocationNearPlayer()
