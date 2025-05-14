@@ -30,7 +30,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
 	UBehaviorTree* BehaviorTree;
-	
+
+	UPROPERTY(BlueprintReadWrite)
+	bool bIsAttacking = false;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	class UAudioComponent* AudioComponent;
