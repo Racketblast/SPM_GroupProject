@@ -139,9 +139,6 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
                     UE_LOG(LogTemp, Error, TEXT("hit activated (from gun)"));
                     Player->EnemyHitFalse();
                 }
-
-
-                
                         // Apply damage if no custom function is found
                         UGameplayStatics::ApplyPointDamage(
                             HitActor,
