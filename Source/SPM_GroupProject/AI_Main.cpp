@@ -4,6 +4,7 @@
 #include "AI_Main.h"
 
 #include "MoneyBox.h"
+#include "Components/AudioComponent.h"
 #include "WaveManager.h"
 #include "EngineUtils.h"
 
@@ -13,6 +14,7 @@ AAI_Main::AAI_Main()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AISoundComponent"));
 }
 
 UBehaviorTree* AAI_Main::GetBehaviorTree() const
