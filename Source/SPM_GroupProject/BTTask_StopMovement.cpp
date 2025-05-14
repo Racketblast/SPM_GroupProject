@@ -2,6 +2,8 @@
 #include "AI_Controller.h"
 #include "AI_Main.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "Navigation/PathFollowingComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 UBTTask_StopMovement::UBTTask_StopMovement()
@@ -11,15 +13,17 @@ UBTTask_StopMovement::UBTTask_StopMovement()
 
 EBTNodeResult::Type UBTTask_StopMovement::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	if (AAI_Controller* Controller = Cast<AAI_Controller>(OwnerComp.GetAIOwner()))
+	if (AAIController* Cont = Cast<AAIController>(OwnerComp.GetAIOwner()))
 	{
-		if (AAI_Main* AICharacter = Cast<AAI_Main>(Controller->GetPawn()))
+		//  stoppar chase movement utan att påverka physics och navlink moves
+		if (Cont->GetPathFollowingComponent())
 		{
-			// Stop the character's movement
-			AICharacter->GetCharacterMovement()->StopMovementImmediately();
-			
-			return EBTNodeResult::Succeeded;
+			Cont->StopMovement();
+			OwnerComp.GetBlackboardComponent()->ClearValue(FName("PlayerLocation"));
+
 		}
+
+		return EBTNodeResult::Succeeded;
 	}
 	return EBTNodeResult::Failed;
 }
