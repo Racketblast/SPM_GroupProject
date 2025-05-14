@@ -72,7 +72,11 @@ void UBTTask_FlyToPlayerLocation::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 
 				if (AFlyingEnemyAI* Enemy = Cast<AFlyingEnemyAI>(Pawn))
 				{
-					if (Enemy->bTeleportIfStuck)
+					bool bPlayerSeesEnemy = Enemy->IsVisibleToPlayer();
+
+					UE_LOG(LogTemp, Warning, TEXT("IfStuck PlayerSeesEnemy: %s"), bPlayerSeesEnemy ? TEXT("true") : TEXT("false"));
+					
+					if (Enemy->bTeleportIfStuck && (Enemy->bCanTeleportIfVisibleToPlayer || !bPlayerSeesEnemy))
 					{
 						// Teleport mode
 						FVector NewLocation;

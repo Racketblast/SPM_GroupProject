@@ -68,6 +68,9 @@ void AFlyingEnemyAI::Tick(float DeltaTime)
 
 			bool bHasLineOfSight = AIController && AIController->HasLineOfSightToPlayer();
 			bool bInRange = false;
+			bool bPlayerSeesEnemy = IsVisibleToPlayer();
+
+			UE_LOG(LogTemp, Warning, TEXT("Timer PlayerSeesEnemy: %s"), bPlayerSeesEnemy ? TEXT("true") : TEXT("false"));
 
 			if (Player)
 			{
@@ -76,7 +79,8 @@ void AFlyingEnemyAI::Tick(float DeltaTime)
 			}
 
 			// Teleporterar bara om fienden inte redan är inrange och har line of sight
-			if (!(bHasLineOfSight && bInRange))
+			// och ifall teleportering när spelaren är på eller ifall spelaren inte ser fienden
+			if ((!(bHasLineOfSight && bInRange)) && (bCanTeleportIfVisibleToPlayer || !bPlayerSeesEnemy))
 			{
 				TeleportToValidLocationNearPlayer();
 			}
@@ -84,6 +88,14 @@ void AFlyingEnemyAI::Tick(float DeltaTime)
 			bIsMovingToTarget = false;
 		}
 	}
+	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+
+	if (!Player) return;
+
+	FVector ToPlayer = Player->GetActorLocation() - GetActorLocation();
+	FRotator LookAtRotation = FRotationMatrix::MakeFromX(ToPlayer).Rotator();
+
+	SetActorRotation(LookAtRotation);
 }
 
 void AFlyingEnemyAI::TeleportToValidLocationNearPlayer()
@@ -205,4 +217,34 @@ void AFlyingEnemyAI::IsMoving()
 {
 	DestinationStartTime = GetWorld()->GetTimeSeconds();
 	bIsMovingToTarget = true;
+}
+
+// Används för teleport för fienden
+bool AFlyingEnemyAI::IsVisibleToPlayer() const
+{
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	if (!PC || !Player) return false;
+
+	// Är fienden på skärmen
+	FVector2D ScreenLocation;
+	if (!PC->ProjectWorldLocationToScreen(GetActorLocation(), ScreenLocation))
+		return false;
+
+	int32 ScreenX, ScreenY;
+	PC->GetViewportSize(ScreenX, ScreenY);
+	if (ScreenLocation.X < 0.f || ScreenLocation.X > ScreenX ||
+		ScreenLocation.Y < 0.f || ScreenLocation.Y > ScreenY)
+		return false;
+
+	// Är fienden synlig för spelaren, alltså line of sight
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(Player);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		Hit, Player->GetPawnViewLocation(), GetActorLocation(), ECC_Visibility, Params);
+
+	return !bHit || Hit.GetActor() == this;
 }

@@ -27,7 +27,7 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 
 	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if (!Player) return EBTNodeResult::Failed;
-
+	
 	FVector PlayerLocation = Player->GetActorLocation();
 	FVector TargetLocation = PlayerLocation;
 
@@ -159,8 +159,11 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 	if (FlyingEnemy)
 	{
 		FlyingEnemy->IsMoving();
-	}
+	}	
 
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+	OwnerComp.GetBlackboardComponent()->SetValueAsFloat(FName("LastPlayerLocationUpdateTime"), CurrentTime);
+	
 	OwnerComp.GetBlackboardComponent()->SetValueAsVector(BlackboardKey.SelectedKeyName, TargetLocation);
 	return EBTNodeResult::Succeeded;
 }

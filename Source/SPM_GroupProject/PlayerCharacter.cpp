@@ -269,7 +269,7 @@ void APlayerCharacter::EnemyHitFalse()
 				bEnemyHit = false;
 				UE_LOG(LogTemp, Error, TEXT("hit false (player)"));
 			},
-			0.2f,
+			0.01f,
 			false
 		);
 	});
