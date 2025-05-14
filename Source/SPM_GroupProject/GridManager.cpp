@@ -44,7 +44,7 @@ void AGridManager::GenerateGrid()
 
 				// Debug
 				FColor Color = NewNode->bIsWalkable ? FColor::Green : FColor::Red;
-				DrawDebugBox(GetWorld(), WorldPos, FVector(CellSize * 0.5f), Color, true, -1.f, 0, 5.f);
+				//DrawDebugBox(GetWorld(), WorldPos, FVector(CellSize * 0.5f), Color, true, -1.f, 0, 5.f);
 
 				Grid.Add(Index, NewNode);
 			}
@@ -89,7 +89,7 @@ void AGridManager::UpdateNodeWalkability(const FIntVector& Index)
 
 		//Debug
 		FColor Color = Node->bIsWalkable ? FColor::Green : FColor::Red;
-		DrawDebugBox(GetWorld(), Node->WorldLocation, FVector(CellSize * 0.5f), Color, true, -1.f, 0, 5.f);
+		//DrawDebugBox(GetWorld(), Node->WorldLocation, FVector(CellSize * 0.5f), Color, true, -1.f, 0, 5.f);
 	}
 }
 

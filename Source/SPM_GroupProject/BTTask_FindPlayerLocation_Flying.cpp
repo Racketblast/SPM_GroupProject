@@ -28,6 +28,15 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if (!Player) return EBTNodeResult::Failed;
 
+	
+	/*const bool bShouldUpdate = OwnerComp.GetBlackboardComponent()->GetValueAsBool("bUpdatePlayerLocationNow");
+	if (!bShouldUpdate)
+	{
+		return EBTNodeResult::Failed;
+	}*/
+	OwnerComp.GetBlackboardComponent()->SetValueAsBool("bUpdatePlayerLocationNow", false);
+	
+
 	FVector PlayerLocation = Player->GetActorLocation();
 	FVector TargetLocation = PlayerLocation;
 
