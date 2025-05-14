@@ -163,6 +163,7 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 
 	float CurrentTime = GetWorld()->GetTimeSeconds();
 	OwnerComp.GetBlackboardComponent()->SetValueAsFloat(FName("LastPlayerLocationUpdateTime"), CurrentTime);
+	//UE_LOG(LogTemp, Warning, TEXT("Updated LastPlayerLocationUpdateTime to: %f"), CurrentTime);
 	
 	OwnerComp.GetBlackboardComponent()->SetValueAsVector(BlackboardKey.SelectedKeyName, TargetLocation);
 	return EBTNodeResult::Succeeded;

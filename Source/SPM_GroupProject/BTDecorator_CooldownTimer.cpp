@@ -15,6 +15,10 @@ bool UBTDecorator_CooldownTimer::CalculateRawConditionValue(UBehaviorTreeCompone
 	{
 		float LastTime = Blackboard->GetValueAsFloat(TimeKey);
 		float CurrentTime = OwnerComp.GetWorld()->GetTimeSeconds();
+
+		/*UE_LOG(LogTemp, Warning, TEXT("Cooldown check: current=%f, last=%f, passed=%d"),
+		CurrentTime, LastTime, (CurrentTime - LastTime) >= Cooldown);*/
+		
 		return (CurrentTime - LastTime) >= Cooldown;
 	}
 	return false;
