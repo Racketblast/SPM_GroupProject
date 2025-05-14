@@ -124,7 +124,12 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
         }
         AActor* HitActor = Hit.GetActor();
         LastHitActor = HitActor;
-
+        if (HitActor)
+        {
+            if (HitActor->FindFunction("OnLineTraceHit"))
+            {
+                HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
+            }
         if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
         {
             if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
@@ -135,14 +140,8 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
             }
 
 
-            if (HitActor)
-            {
-                if (HitActor->FindFunction("OnLineTraceHit"))
-                {
-                    HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
-                }
-                else
-                {
+           
+               
                     // Apply damage if no custom function is found
                     UGameplayStatics::ApplyPointDamage(
                         HitActor,
@@ -153,7 +152,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
                         this,
                         DamageType
                     );
-                }
+                
             }
 
         }}
