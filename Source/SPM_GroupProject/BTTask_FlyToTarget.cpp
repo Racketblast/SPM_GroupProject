@@ -59,7 +59,8 @@ void UBTTask_FlyToTarget::MoveToward(UBehaviorTreeComponent& OwnerComp, float De
     FVector Direction = (CurrentPoint - AIPawn->GetActorLocation()).GetSafeNormal();
     float Speed = 600.f;
 
-    AIPawn->AddMovementInput(Direction, Speed * DeltaSeconds);
+    //AIPawn->AddMovementInput(Direction, Speed * DeltaSeconds);
+    AIPawn->AddMovementInput(Direction);
 
     if (FVector::Dist(AIPawn->GetActorLocation(), CurrentPoint) < AcceptanceRadius)
     {
