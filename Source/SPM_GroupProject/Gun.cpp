@@ -25,6 +25,8 @@ void AGun::BeginPlay()
 	Super::BeginPlay();
 	BaseWeaponDamage = WeaponDamage;
 	BaseRoundsPerSecond = RoundsPerSecond;
+	BaseTotalAmmo = TotalAmmo;
+	BaseMaxAmmo = MaxAmmo;
 
 	// 🔊 Initialize reload audio component
 	if (!ReloadAudioComponent)

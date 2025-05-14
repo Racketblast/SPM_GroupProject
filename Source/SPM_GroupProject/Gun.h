@@ -16,7 +16,9 @@ public:
 	void SetOwnerCharacter(class APlayerCharacter* NewOwner);
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun")
 	bool bHasInfiniteReloads = false;
-	
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 BaseTotalAmmo;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 TotalAmmo = 90;
 	AGun();  // 
@@ -41,6 +43,16 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	class UNiagaraSystem* MuzzleFlash;
 	USceneComponent* GetMuzzlePoint() const { return MuzzlePoint; }
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 BaseMaxAmmo;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	int32 CurrentAmmo = MaxAmmo;
+	
 	//Upgrade variables
 	UPROPERTY()
 	bool bHasAppliedUpgrades = false;
@@ -52,12 +64,6 @@ protected:
 	
 	UPROPERTY()
 	APlayerCharacter* OwnerCharacter;
-
-	UPROPERTY(EditAnywhere)
-	int32 MaxAmmo;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	int32 CurrentAmmo = MaxAmmo;
 	
 	bool bIsReloading = false;
 
@@ -69,9 +75,22 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	USoundBase* ReloadSound;
 
-	// Audio component for reload sound
+
 	UPROPERTY(VisibleAnywhere, Category = "Sound")
 	UAudioComponent* ReloadAudioComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase*FireSound;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase*MagEmptySound;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Sound")
+	UAudioComponent* FireAudioComponent;
+
+	// Audio component for reload sound
+	UPROPERTY(VisibleAnywhere, Category = "Sound")
+	UAudioComponent* MagEmptyAudioComponent;
 	UPROPERTY(EditAnywhere, Category = "Recoil")
 	float RecoilPitchMin = -3.0f;  // Upward
 
@@ -84,7 +103,11 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Recoil")
 	float RecoilYawMax = -0.5f;
-	// Header file
+
+	FRotator TargetControlRotation;
+	bool bIsRecoiling = false;
+	float RecoilInterpSpeed = 10.0f; // Adjust for smoothness
+
 
 
 };

@@ -33,6 +33,16 @@ void ATeleporter::Use_Implementation(APlayerCharacter* Player)
 		if (!CachedGameInstance->bIsWave && CachedGameInstance->UnlockedLevels.Contains(TargetLevelName))
 		{
 			CachedGameInstance->Money += Player->PickedUpMoney;
+			
+			//Plays the mission incomplete dialogue for return
+			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+			{
+				if ( TargetLevelName == "Hub")
+				{
+					GI->StartDialogueRowName = "ReturnMissionIncomplete";
+				}
+			}
+			
 			// För level unlock 
 			if (UMissionSubsystem* MissionSub = CachedGameInstance->GetSubsystem<UMissionSubsystem>())
 			{
@@ -90,6 +100,7 @@ void ATeleporter::ChangeTexture()
 		if (WaveMaterial)
 		{
 			CubeMeshComponent->SetMaterial(0, WaveMaterial);
+			CubeMeshComponent->SetRenderCustomDepth(false);
 		}
 		if (TeleportSkyBeam && UGameplayStatics::GetCurrentLevelName(this,true) != TEXT("Hub"))
 		{
@@ -101,6 +112,7 @@ void ATeleporter::ChangeTexture()
 		if (GracePeriodMaterial)
 		{
 			CubeMeshComponent->SetMaterial(0, GracePeriodMaterial);
+			CubeMeshComponent->SetRenderCustomDepth(true);
 		}
 		if (TeleportSkyBeam && UGameplayStatics::GetCurrentLevelName(this,true) != TEXT("Hub"))
 		{

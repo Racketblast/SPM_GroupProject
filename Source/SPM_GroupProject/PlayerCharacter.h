@@ -24,6 +24,14 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+public:
+	UPROPERTY(BlueprintReadOnly)
+	bool bEnemyHit = false;
+
+	UFUNCTION(BlueprintCallable)
+	void EnemyHitFalse();
+
+
 	UPROPERTY(EditAnywhere)
 	USceneComponent* Hand;
 
@@ -77,6 +85,8 @@ protected:
 	virtual void Jump() override;
 	virtual void Landed(const FHitResult& Hit) override;
 	void AirDash();
+	void UpdateFirstPersonMeshSway(float DeltaTime);
+
 
 	bool Weapon1Equipped = false;
 	bool Weapon2Equipped = false;
@@ -122,4 +132,21 @@ private:
 
 	class UAIPerceptionStimuliSourceComponent* StimulusSource;
 	void SetupStimulusSource();
+	FTimerHandle EnemyHitResetTimerHandle;
+	UPROPERTY(EditAnywhere, Category = "Sway")
+	float SwayAmount = 2.5f;
+
+	UPROPERTY(EditAnywhere, Category = "Sway")
+	float SwaySmoothing = 10.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Sway")
+	float MaxSwayAngle = 10.0f;
+
+	FRotator TargetSwayRotation;
+	FRotator CurrentSwayRotation;
+	UPROPERTY(VisibleAnywhere, Category = "Sway")
+	USceneComponent* ArmsRoot;
+	float CachedYawInput = 0.0f;
+	float CachedPitchInput = 0.0f;
+
 };

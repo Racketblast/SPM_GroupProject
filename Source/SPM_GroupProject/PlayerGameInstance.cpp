@@ -11,7 +11,6 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Slate/SGameLayerManager.h"
 
 bool UPlayerGameInstance::HasBought(const EUpgradeType Upgrade) const
 {
@@ -308,6 +307,44 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 				Player->CurrentGun->bIsUpgraded = true;
 			}
 			break;
+			
+			//Ammo Size
+		case EUpgradeType::PistolAmmoSize:
+			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
+			{
+				Player->GetWeaponInstance("Pistol")->TotalAmmo = Player->GetWeaponInstance("Pistol")->BaseTotalAmmo + (3 * UpgradeInfo->UpgradeOwned);
+				Player->GetWeaponInstance("Pistol")->MaxAmmo = Player->GetWeaponInstance("Pistol")->BaseMaxAmmo + (3 * UpgradeInfo->UpgradeOwned);
+				Player->GetWeaponInstance("Pistol")->CurrentAmmo = Player->GetWeaponInstance("Pistol")->MaxAmmo;
+				Player->CurrentGun->bIsUpgraded = true;
+			}
+			break;
+		case EUpgradeType::RifleAmmoSize:
+			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
+			{
+				Player->GetWeaponInstance("Rifle")->TotalAmmo = Player->GetWeaponInstance("Rifle")->BaseTotalAmmo * (1 + 0.5 * UpgradeInfo->UpgradeOwned);
+				Player->GetWeaponInstance("Rifle")->MaxAmmo = Player->GetWeaponInstance("Rifle")->BaseMaxAmmo * (1 + 0.5 * UpgradeInfo->UpgradeOwned);
+				Player->GetWeaponInstance("Rifle")->CurrentAmmo = Player->GetWeaponInstance("Rifle")->MaxAmmo;
+				Player->CurrentGun->bIsUpgraded = true;
+			}
+			break;
+		case EUpgradeType::ShotgunAmmoSize:
+			if (Player-> CurrentGun == Player->GetWeaponInstance("Shotgun"))
+			{
+				Player->GetWeaponInstance("Shotgun")->TotalAmmo = Player->GetWeaponInstance("Shotgun")->BaseTotalAmmo + 2 * UpgradeInfo->UpgradeOwned;
+				Player->GetWeaponInstance("Shotgun")->MaxAmmo = Player->GetWeaponInstance("Shotgun")->BaseMaxAmmo + 2 * UpgradeInfo->UpgradeOwned;
+				Player->GetWeaponInstance("Shotgun")->CurrentAmmo = Player->GetWeaponInstance("Shotgun")->MaxAmmo;
+				Player->CurrentGun->bIsUpgraded = true;
+			}
+			break;
+		case EUpgradeType::RocketLauncherAmmoSize:
+			if (Player-> CurrentGun == Player->GetWeaponInstance("RocketLauncher"))
+			{
+				Player->GetWeaponInstance("RocketLauncher")->TotalAmmo = Player->GetWeaponInstance("RocketLauncher")->BaseTotalAmmo + 2 * UpgradeInfo->UpgradeOwned;
+				Player->GetWeaponInstance("RocketLauncher")->MaxAmmo = Player->GetWeaponInstance("RocketLauncher")->BaseMaxAmmo + 2 * UpgradeInfo->UpgradeOwned;
+				Player->GetWeaponInstance("RocketLauncher")->CurrentAmmo = Player->GetWeaponInstance("RocketLauncher")->MaxAmmo;
+				Player->CurrentGun->bIsUpgraded = true;
+			}
+			break;
 		default:
 			break;
 		}
@@ -412,7 +449,9 @@ void UPlayerGameInstance::StartDialogue()
 {
 	if (!EventDialogueInfo)
 		return;
-	
+
+	if (!bCanPlayDialogue)
+		return;
 	CurrentDialogueRowName = StartDialogueRowName;
 	
 	if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(StartDialogueRowName, TEXT("")))

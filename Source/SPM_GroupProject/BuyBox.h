@@ -25,12 +25,6 @@ public:
 	UPROPERTY(EditAnywhere, Category="Upgrade")
 	EUpgradeType TargetUpgradeName;
 	
-	UPROPERTY(EditAnywhere, Category="Upgrade")
-	EUpgradeCategory TargetUpgradeCategory;
-
-	UPROPERTY(EditAnywhere, Category="Upgrade")
-	int32 TargetUpgradeCost;
-	
 	UPROPERTY(EditDefaultsOnly, Category="Upgrade")
 	class USoundBase* BuySound;
 	

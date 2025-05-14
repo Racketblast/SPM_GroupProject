@@ -36,6 +36,8 @@ public:
 	TMap<EUpgradeType,FUpgradeInfo> UpgradeMap;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bCanPlayDialogue = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName CurrentDialogueRowName;
 	FName StartDialogueRowName;
 	FName NextDialogueRowName;
