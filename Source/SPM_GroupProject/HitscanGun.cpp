@@ -12,6 +12,9 @@
 #include "Sound/SoundBase.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "AI_Main.h"
+#include "GameFramework/DamageType.h"
+#include "Engine/EngineTypes.h"
 
 void AHitscanGun::BeginPlay()
 {
@@ -26,6 +29,21 @@ void AHitscanGun::BeginPlay()
             FireAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
         }
     }
+    if (!MagEmptyAudioComponent)
+    {
+        MagEmptyAudioComponent = NewObject<UAudioComponent>(this, TEXT("FireAudioComponent"));
+        if (MagEmptyAudioComponent)
+        {
+            MagEmptyAudioComponent->RegisterComponent();
+           MagEmptyAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+        }
+    }
+}
+void AHitscanGun::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+
+  
 }
 
 void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
@@ -34,18 +52,30 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
     {
         return;
     }
+   
 
     const float CurrentTime = GetWorld()->GetTimeSeconds();
     const float TimeBetweenShots = 1.0f / RoundsPerSecond;
 
-    if (CurrentTime - LastFireTime < TimeBetweenShots || CurrentAmmo <= 0)
+    if (CurrentTime - LastFireTime < TimeBetweenShots)
     {
         return;
     }
 
     LastFireTime = CurrentTime;
-
-    // 🔊 Play fire sound using audio component
+    if (CurrentAmmo <= 0)
+    {
+        if (MagEmptySound  && MagEmptyAudioComponent)
+        {
+            if (MagEmptyAudioComponent->IsPlaying())
+            {
+                MagEmptyAudioComponent->Stop();
+            }
+            MagEmptyAudioComponent->SetSound(MagEmptySound);
+            MagEmptyAudioComponent->Play();
+            return;
+        }
+    }
     if (FireSound && FireAudioComponent)
     {
         if (FireAudioComponent->IsPlaying())
@@ -95,7 +125,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
         AActor* HitActor = Hit.GetActor();
         LastHitActor = HitActor;
 
-        if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
+        if (AActor* HitCharacter = Cast<AActor>(HitActor))
         {
             if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
             {
@@ -105,57 +135,28 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
             }
 
 
-            static const FName AIHealthName = TEXT("AIHealth");
-
-            if (FIntProperty* HealthProp = FindFProperty<FIntProperty>(HitCharacter->GetClass(), AIHealthName))
+            if (HitActor)
             {
-                int32 CurrentHealth = HealthProp->GetPropertyValue_InContainer(HitCharacter);
-                CurrentHealth -= static_cast<int32>(WeaponDamage);
-
-                if (CurrentHealth <= 0)
+                if (HitActor->FindFunction("OnLineTraceHit"))
                 {
-                    TSubclassOf<AMoneyBox> MoneyBoxClass = LoadClass<AMoneyBox>(nullptr, TEXT("/Game/Blueprints/BP_MoneyBox.BP_MoneyBox_C"));
-                    if (MoneyBoxClass)
-                    {
-                        FTransform SpawnTransform = HitCharacter->GetTransform();
-                        FVector NewLocation = SpawnTransform.GetLocation();
-                        NewLocation.Z -= 100.0f;
-                        SpawnTransform.SetLocation(NewLocation);
-                        GetWorld()->SpawnActor<AMoneyBox>(MoneyBoxClass, SpawnTransform);
-                    }
-
-                    HitCharacter->Destroy();
-
-                    for (TActorIterator<AWaveManager> It(GetWorld()); It; ++It)
-                    {
-                        if (AWaveManager* WaveManager = *It)
-                        {
-                            WaveManager->OnEnemyKilled();
-                            break;
-                        }
-                    }
+                    HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
                 }
                 else
                 {
-                    HealthProp->SetPropertyValue_InContainer(HitCharacter, CurrentHealth);
+                    // Apply damage if no custom function is found
+                    UGameplayStatics::ApplyPointDamage(
+                        HitActor,
+                        WeaponDamage,
+                        ShotDirection,
+                        Hit,
+                        OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
+                        this,
+                        DamageType
+                    );
                 }
             }
-        }
-        else if (HitActor)
-        {
-            if (HitActor->FindFunction("OnLineTraceHit"))
-            {
-                HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
-            }
-        }
-    }
-    else
-    {
-        //DrawDebugLine(GetWorld(), FireLocation, End, FColor::Blue, false, 1.0f, 0, 1.0f);
-    }
 
-    CurrentAmmo--;
-
+        }}
     if (OwnerCharacter)
     {
         APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
@@ -171,7 +172,5 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
             PC->SetControlRotation(ControlRotation);
         }
     }
-    
+    CurrentAmmo--;
 }
-
-

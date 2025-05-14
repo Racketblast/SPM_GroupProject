@@ -11,9 +11,12 @@
 
 void AArenaGameMode::FadeIn(const AActor* PlayingActor)
 {
-	if (TeleportInSound)
+	if (PlayingActor)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportInSound, PlayingActor->GetActorLocation());
+		if (TeleportInSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportInSound, PlayingActor->GetActorLocation());
+		}
 	}
 	if (FadeInTransition)
 	{
@@ -26,9 +29,12 @@ void AArenaGameMode::FadeIn(const AActor* PlayingActor)
 
 void AArenaGameMode::FadeOut(const AActor* PlayingActor)
 {
-	if (TeleportOutSound)
+	if (PlayingActor)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportOutSound, PlayingActor->GetActorLocation());
+		if (TeleportOutSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), TeleportOutSound, PlayingActor->GetActorLocation());
+		}
 	}
 	if (FadeOutTransition)
 	{
