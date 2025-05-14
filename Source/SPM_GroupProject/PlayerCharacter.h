@@ -149,4 +149,7 @@ private:
 	float CachedYawInput = 0.0f;
 	float CachedPitchInput = 0.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Audio")
+	USoundBase* DamageSound;
+
 };
