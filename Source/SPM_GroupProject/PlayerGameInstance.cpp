@@ -11,6 +11,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Containers/Map.h"
 
 bool UPlayerGameInstance::HasBought(const EUpgradeType Upgrade) const
 {
@@ -477,6 +478,32 @@ void UPlayerGameInstance::RestartGame()
 		UnlockedLevels.Add(LevelOrder[3]);
 		CurrentGameFlag = 0;
 	}
+}
+
+bool UPlayerGameInstance::HasGameChanged()
+{
+	Save = Cast<USwarmedSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
+	if (Save)
+	{
+		if (Money != Save->SavedMoney)
+			return true;
+		if (UpgradeMap.Num() != Save->SavedUpgradeMap.Num())
+			return true;
+		for (const TPair<EUpgradeType, FUpgradeInfo>& UpgradeType : UpgradeMap)
+		{
+			const FUpgradeInfo* ValueB = Save->SavedUpgradeMap.Find(UpgradeType.Key);
+			if (!ValueB || *ValueB != UpgradeType.Value)
+				return true;
+		}
+		if (CurrentWeapon != Save->SavedCurrentWeapon)
+			return true;
+		if (!UnlockedLevels.Includes(Save->SavedUnlockedLevels) || !Save->SavedUnlockedLevels.Includes(UnlockedLevels))
+			return true;
+		if (CurrentGameFlag != Save->SavedCurrentGameFlag)
+			return true;
+	}
+	
+	return false;
 }
 
 void UPlayerGameInstance::StartDialogue()

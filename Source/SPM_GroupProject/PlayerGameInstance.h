@@ -55,6 +55,9 @@ public:
 	void SaveGame();
 	UFUNCTION(BlueprintCallable)
 	void RestartGame();
+	UFUNCTION(BlueprintCallable)
+	bool HasGameChanged();
+	
 	
 	UFUNCTION(BlueprintCallable)
 	bool HasBought(const EUpgradeType Upgrade) const;
