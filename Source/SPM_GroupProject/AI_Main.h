@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "GameFramework/Character.h"
+
 #include "AI_Main.generated.h"
 
 UCLASS()
@@ -41,4 +42,15 @@ public:
 
 private:
 	bool bIsDead = false;
+	
+	FVector LastKnownLocation;
+	float TimeSinceLastMovement = 2.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Teleport Check")
+	float StuckCheckInterval = 5.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Teleport Check")
+	float MinMoveDistance = 10.0f;
+
+	bool IsOutsideNavMesh() const;
 };

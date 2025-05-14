@@ -5,6 +5,10 @@
 
 #include "MoneyBox.h"
 #include "WaveManager.h"
+#include "AI_Controller.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "NavigationSystem.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "EngineUtils.h"
 
 // Sets default values
@@ -66,7 +70,43 @@ void AAI_Main::BeginPlay()
 void AAI_Main::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	// check if AI is jumping/falling across nav links
+	if (UCharacterMovementComponent* MovementComp = GetCharacterMovement())
+	{
+		if (MovementComp->IsFalling() || MovementComp->IsFlying())
+		{
+			// Skippar teleport midair
+			return;
+		}
+	}
 
+	FVector CurrentLocation = GetActorLocation();
+	float DistanceMovedSq = FVector::DistSquared(CurrentLocation, LastKnownLocation);
+
+	// reset timer
+	if (DistanceMovedSq > MinMoveDistance * MinMoveDistance)
+	{
+		LastKnownLocation = CurrentLocation;
+		TimeSinceLastMovement = 3.f;
+	}
+	else
+	{
+		TimeSinceLastMovement += DeltaTime;
+	}
+
+	// If stuck or off-navmesh, set Blackboard flag
+	if (TimeSinceLastMovement > StuckCheckInterval || IsOutsideNavMesh())
+	{
+		if (AAI_Controller* AICont = Cast<AAI_Controller>(GetController()))
+		{
+			if (UBlackboardComponent* BB = AICont->GetBlackboardComponent())
+			{
+				BB->SetValueAsBool(FName("TeleportToNavmesh"), true);
+			}
+			
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -74,5 +114,15 @@ void AAI_Main::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+
+bool AAI_Main::IsOutsideNavMesh() const
+{
+	const UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+	if (!NavSys) return false;
+
+	FNavLocation NavLocation;
+	return !NavSys->ProjectPointToNavigation(GetActorLocation(), NavLocation);
 }
 
