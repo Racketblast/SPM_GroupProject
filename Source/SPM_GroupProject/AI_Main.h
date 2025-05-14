@@ -32,6 +32,8 @@ protected:
 	UBehaviorTree* BehaviorTree;
 	
 
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	class UAudioComponent* AudioComponent;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
