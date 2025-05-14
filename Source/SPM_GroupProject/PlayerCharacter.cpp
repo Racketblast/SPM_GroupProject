@@ -141,7 +141,7 @@ void APlayerCharacter::UpdateFirstPersonMeshSway(float DeltaTime)
 
     // Apply sway based on the input and the sway amount
     TargetSwayRotation.Pitch = ClampedPitchInput * SwayAmount;  // Apply sway pitch
-    TargetSwayRotation.Yaw = ClampedYawInput * SwayAmount;      // Apply sway yaw
+    TargetSwayRotation.Yaw = -ClampedYawInput * SwayAmount;      // Apply sway yaw
 
     // Clamp the sway values based on the maximum sway angle
     TargetSwayRotation.Pitch = FMath::Clamp(TargetSwayRotation.Pitch, -MaxSwayAngle, MaxSwayAngle);
