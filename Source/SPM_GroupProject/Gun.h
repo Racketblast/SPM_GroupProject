@@ -104,7 +104,9 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Recoil")
 	float RecoilYawMax = -0.5f;
 
-
+	FRotator TargetControlRotation;
+	bool bIsRecoiling = false;
+	float RecoilInterpSpeed = 10.0f; // Adjust for smoothness
 
 
 

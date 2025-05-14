@@ -125,7 +125,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
         AActor* HitActor = Hit.GetActor();
         LastHitActor = HitActor;
 
-        if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
+        if (AActor* HitCharacter = Cast<AActor>(HitActor))
         {
             if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
             {
@@ -135,23 +135,28 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
             }
 
 
-            UGameplayStatics::ApplyPointDamage(
-        HitActor,
-        WeaponDamage,
-        ShotDirection,
-        Hit,
-        OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
-        this,
-        DamageType
-    );
+            if (HitActor)
+            {
+                if (HitActor->FindFunction("OnLineTraceHit"))
+                {
+                    HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
+                }
+                else
+                {
+                    // Apply damage if no custom function is found
+                    UGameplayStatics::ApplyPointDamage(
+                        HitActor,
+                        WeaponDamage,
+                        ShotDirection,
+                        Hit,
+                        OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
+                        this,
+                        DamageType
+                    );
+                }
+            }
 
-
-            
-
-          
-    
-        }
-    }
+        }}
     if (OwnerCharacter)
     {
         APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
@@ -169,5 +174,3 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
     }
     CurrentAmmo--;
 }
-
-
