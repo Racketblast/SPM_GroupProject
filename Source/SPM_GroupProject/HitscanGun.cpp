@@ -125,7 +125,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
         AActor* HitActor = Hit.GetActor();
         LastHitActor = HitActor;
 
-        if (AActor* HitCharacter = Cast<AActor>(HitActor))
+        if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
         {
             if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
             {
