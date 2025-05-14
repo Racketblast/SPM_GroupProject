@@ -124,35 +124,35 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
         }
         AActor* HitActor = Hit.GetActor();
         LastHitActor = HitActor;
+
         if (HitActor)
         {
             if (HitActor->FindFunction("OnLineTraceHit"))
             {
                 HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
             }
-        if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
-        {
-            if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
+            if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
             {
-                Player->bEnemyHit = true;
-                UE_LOG(LogTemp, Error, TEXT("hit activated (from gun)"));
-                Player->EnemyHitFalse();
-            }
+                if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
+                {
+                    Player->bEnemyHit = true;
+                    UE_LOG(LogTemp, Error, TEXT("hit activated (from gun)"));
+                    Player->EnemyHitFalse();
+                }
 
 
-           
-               
-                    // Apply damage if no custom function is found
-                    UGameplayStatics::ApplyPointDamage(
-                        HitActor,
-                        WeaponDamage,
-                        ShotDirection,
-                        Hit,
-                        OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
-                        this,
-                        DamageType
-                    );
                 
+                        // Apply damage if no custom function is found
+                        UGameplayStatics::ApplyPointDamage(
+                            HitActor,
+                            WeaponDamage,
+                            ShotDirection,
+                            Hit,
+                            OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
+                            this,
+                    DamageType
+                );
+                 
             }
 
         }}
