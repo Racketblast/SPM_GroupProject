@@ -126,6 +126,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 		Shoot();
 	}
 }
+
 void APlayerCharacter::UpdateFirstPersonMeshSway(float DeltaTime)
 {
     if (!PlayerCamera || !ArmsRoot) return;
@@ -483,6 +484,10 @@ float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 	if (bIsDead) return 0;
 
 	PlayerHealth -= DamageAmount;
+	if (DamageSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, DamageSound, GetActorLocation());
+	}
 	if (PlayerHealth <= 0)
 	{
 		PlayerHealth = 0;
