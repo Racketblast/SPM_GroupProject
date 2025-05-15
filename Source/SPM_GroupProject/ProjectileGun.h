@@ -27,6 +27,6 @@ private:
 	void ResetFire();
 	// ProjectileGun.h
 
-
+void ApplyRecoilTranslation();
 
 };

@@ -63,7 +63,8 @@ public:
 	AGun* GetWeaponInstance(const FName WeaponName) const;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-
+	UPROPERTY(VisibleAnywhere, Category = "Sway")
+	USceneComponent* ArmsRoot;
 protected:
 	UPROPERTY(EditAnywhere)
 	class UCameraComponent* PlayerCamera;
@@ -144,8 +145,7 @@ private:
 
 	FRotator TargetSwayRotation;
 	FRotator CurrentSwayRotation;
-	UPROPERTY(VisibleAnywhere, Category = "Sway")
-	USceneComponent* ArmsRoot;
+	
 	float CachedYawInput = 0.0f;
 	float CachedPitchInput = 0.0f;
 

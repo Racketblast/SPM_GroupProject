@@ -187,6 +187,7 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 	}
 
 	CurrentAmmo--;
+	ApplyRecoilTranslation();
 
 	if (OwnerCharacter)
 	{
@@ -209,4 +210,44 @@ void AShotgun::EnemyHitFalse()
 {
 	bEnemyHit = false;
 	UE_LOG(LogTemp, Error, TEXT("hit false"));
+}
+void AShotgun::ApplyRecoilTranslation()
+{
+	// Check if we have a valid reference to the player character and the ArmsRoot component
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OwnerCharacter);
+	if (PlayerCharacter && PlayerCharacter->ArmsRoot)
+	{
+		// Get the direction the player is facing in world space (backward direction from player)
+		FVector BackwardDirection = -PlayerCharacter->GetActorForwardVector(); // This points backward in world space
+
+		// Check if recoil has been applied already, to avoid applying it multiple times
+		if (!bRecoilApplied)
+		{
+			// Store the original position of the arms root before applying recoil
+			OriginalArmsRootLocation = PlayerCharacter->ArmsRoot->GetRelativeLocation();
+
+			// Apply recoil translation in world space (backward toward the player)
+			FVector RecoilTranslation = BackwardDirection * RecoilAmount; // Recoil backwards in world space
+			PlayerCharacter->ArmsRoot->AddWorldOffset(RecoilTranslation); // Apply the offset in world space
+
+			// Set the recoil flag to true so we don't apply it again
+			bRecoilApplied = true;
+
+			// Set up a timer to return the arms root to the original position after 0.2 seconds
+			FTimerHandle TimerHandle;
+
+			// Set the timer to move the arms back to the original position after 0.2 seconds
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, [PlayerCharacter, this]()
+			{
+				// Reset the arms to the original position
+				if (PlayerCharacter && PlayerCharacter->ArmsRoot)
+				{
+					PlayerCharacter->ArmsRoot->SetRelativeLocation(OriginalArmsRootLocation);
+				}
+
+				// After resetting, allow recoil to be applied again
+				bRecoilApplied = false;
+			}, 0.25f, false); // 0.2 seconds delay
+		}
+	}
 }

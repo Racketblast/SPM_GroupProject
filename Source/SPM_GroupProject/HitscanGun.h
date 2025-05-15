@@ -1,5 +1,6 @@
 #pragma once
 
+#include "PlayerCharacter.h"
 #include "CoreMinimal.h"
 #include "Gun.h"
 #include "HitscanGun.generated.h"
@@ -23,6 +24,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	class UNiagaraSystem* BulletHitEffect;
 	virtual void Tick(float DeltaTime) override;
+	void ApplyRecoilTranslation();
+	
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	float Range = 2000.0f;
@@ -32,4 +35,8 @@ protected:
 
 
 	float LastFireTime = 0.f;
+	// Variable to store the original location of the ArmsRoot before recoil
+	// Flag to ensure recoil is only applied once per shot
+
 };
+
