@@ -134,7 +134,7 @@ private:
 	void SetupStimulusSource();
 	FTimerHandle EnemyHitResetTimerHandle;
 	UPROPERTY(EditAnywhere, Category = "Sway")
-	float SwayAmount = 2.5f;
+	float SwayAmount = 2.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Sway")
 	float SwaySmoothing = 10.0f;
