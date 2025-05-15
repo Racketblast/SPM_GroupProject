@@ -9,22 +9,22 @@
 #include "Kismet/GameplayStatics.h"
 
 void AAmmoBox::CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                                               UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (APlayerCharacter* Player = Cast<APlayerCharacter>(OtherActor))
 	{
 		if (Cast<UCapsuleComponent>(OtherComp) == Player->GetCapsuleComponent())
 		{
-			if (Player->CurrentGun)
+			if (AGun* Weapon = Player->GetWeaponInstance(ToWeapon))
 			{
-				if (AGun* Weapon = Player->GetWeaponInstance(ToWeapon))
+				if (Weapon->TotalAmmo < Weapon->MaxTotalAmmo)
 				{
 					UE_LOG(LogTemp, Warning, TEXT("AmmoBoxTriggered"));
-					Weapon->TotalAmmo += AmmoAmount;
+					Weapon->TotalAmmo += Weapon->MaxTotalAmmo/5;
 					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CollectablePickUpSound, GetActorLocation());
-					Destroy();	
 				}
 			}
+			Destroy();
 		}
 	}
 }

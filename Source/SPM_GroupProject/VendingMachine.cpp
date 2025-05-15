@@ -45,9 +45,12 @@ void AVendingMachine::UseVendingMachine()
 			case EVendingMachineSpewOut::AmmoRifle:
 				if (AGun* Weapon = Player->GetWeaponInstance("Rifle"))
 				{
-					if (IfPlayerHasEnoughMoney(Player,GI))
+					if (Weapon->TotalAmmo < Weapon->MaxTotalAmmo)
 					{
-						Weapon->TotalAmmo += SpewOutAmount;
+						if (IfPlayerHasEnoughMoney(Player,GI))
+						{
+							Weapon->TotalAmmo += SpewOutAmount;
+						}
 					}
 				}
 				break;
