@@ -92,6 +92,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Challenge")
 	void SetRewardMoneyAmount(int32 MoneyAmount);
 
+	void SetTimeToAdd(float NewTimeToAdd);
+
 	void LoadChallengeDataFromManager();
 
 	// för animationer
@@ -126,7 +128,7 @@ public:
 	bool ShouldShowChallengeTimer() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Challenges") //  Kalla på denna funktion när fienderna dör
-	void AddTimeToWaveChallenge(float TimeToAdd); 
+	void AddTimeToWaveChallenge(); 
 
 private:
 	UPROPERTY()
@@ -139,6 +141,8 @@ private:
 	EChallengeType LastChallengeType = EChallengeType::None;
 
 	bool bIsChallengeActive = true;
+
+	float TimeToAdd = 1.0f;
 
 	UPROPERTY()
 	int32 RewardMoneyAmount = 100;

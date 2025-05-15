@@ -237,6 +237,12 @@ void AWaveManager::OnEnemyKilled()
 {
 	EnemiesKilledThisWave++;
 	UE_LOG(LogTemp, Warning, TEXT("Enemy died"));
+
+	//För challenges
+	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+	{
+		ChallengeSub->AddTimeToWaveChallenge();
+	}
 	
 	if (EnemiesKilledThisWave >= TotalEnemiesToSpawn)
 	{

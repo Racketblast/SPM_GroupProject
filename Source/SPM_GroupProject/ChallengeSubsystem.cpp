@@ -315,7 +315,7 @@ void UChallengeSubsystem::NotifyWaveCleared()
 }
 
 // Denna funktion används inte just nu, men om man kallar på den när fiender dör så kommer spelaren att få tillbaka lite tid till timern, när dem har challngen att klara en wave inom en viss tid. 
-void UChallengeSubsystem::AddTimeToWaveChallenge(float TimeToAdd)
+void UChallengeSubsystem::AddTimeToWaveChallenge()
 {
 	if (CurrentChallenge.Type != EChallengeType::ClearWaveInTime || !bIsChallengeActive)
 		return;
@@ -346,6 +346,11 @@ void UChallengeSubsystem::AddTimeToWaveChallenge(float TimeToAdd)
 
 		UE_LOG(LogTemp, Log, TEXT("Added %.1f seconds to wave timer. New time: %.1f"), TimeToAdd, NewTime);
 	}
+}
+
+void UChallengeSubsystem::SetTimeToAdd(float NewTimeToAdd)
+{
+	TimeToAdd = NewTimeToAdd;
 }
 
 // för widget

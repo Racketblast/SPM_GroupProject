@@ -21,6 +21,10 @@ public:
 	int32 BaseTotalAmmo;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	int32 TotalAmmo = 90;
+	UPROPERTY(BlueprintReadOnly)
+	int32 BaseMaxTotalAmmo;
+	UPROPERTY(BlueprintReadOnly)
+	int32 MaxTotalAmmo = TotalAmmo;
 	AGun();  // 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float WeaponDamage = 20;

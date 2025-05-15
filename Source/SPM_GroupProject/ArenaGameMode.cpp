@@ -8,6 +8,7 @@
 #include "LevelSequenceActor.h"
 #include "LevelSequencePlayer.h"
 #include "PlayerGameInstance.h"
+#include "GameFramework/Character.h"
 
 void AArenaGameMode::FadeIn(const AActor* PlayingActor)
 {
@@ -42,6 +43,9 @@ void AArenaGameMode::FadeOut(const AActor* PlayingActor)
 		ALevelSequenceActor* OutActor;
 		SequencePlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(GetWorld(), FadeOutTransition, Settings, OutActor);
 		SequencePlayer->Play();
+
+		ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+		Player->DisableInput(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	}
 }
 

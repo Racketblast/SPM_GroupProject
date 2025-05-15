@@ -48,6 +48,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge")
 	float ClearWaveTimeLimit = 30.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge")
+	float TimeToAddOnEnemyKilled = 1.0f;
+
 	// för animationer
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge") // ändrade från int32 till float, om detta skappar problem, så ändra tillbaka
 	float SuccessAnimationTimer = 1;
