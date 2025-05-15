@@ -68,7 +68,8 @@ protected:
 	
 	UPROPERTY()
 	APlayerCharacter* OwnerCharacter;
-	
+
+	UPROPERTY(BlueprintReadOnly)
 	bool bIsReloading = false;
 
 	FTimerHandle ReloadTimerHandle;
