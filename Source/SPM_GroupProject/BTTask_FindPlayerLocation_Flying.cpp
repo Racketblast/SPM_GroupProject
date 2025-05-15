@@ -27,6 +27,8 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation_Flying::ExecuteTask(UBehaviorTree
 
 	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if (!Player) return EBTNodeResult::Failed;
+
+	//UE_LOG(LogTemp, Warning, TEXT("Executing FindPlayerLocation"));
 	
 	FVector PlayerLocation = Player->GetActorLocation();
 	FVector TargetLocation = PlayerLocation;

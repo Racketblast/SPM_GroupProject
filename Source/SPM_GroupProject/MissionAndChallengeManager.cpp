@@ -36,6 +36,8 @@ void AMissionAndChallengeManager::BeginPlay()
 			ChallengeSubsystem->SetRewardMoneyAmount(DefaultChallengeRewardAmount);
 
 			ChallengeSubsystem->SetAnimationTimers(SuccessAnimationTimer, FailedAnimationTimer, StartedChallengeAnimationTimer); // för animationer
+
+			ChallengeSubsystem->SetTimeToAdd(TimeToAddOnEnemyKilled);
 		}
 	}
 }
