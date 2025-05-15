@@ -45,9 +45,23 @@ void AVendingMachine::UseVendingMachine()
 			case EVendingMachineSpewOut::AmmoRifle:
 				if (AGun* Weapon = Player->GetWeaponInstance("Rifle"))
 				{
-					if (IfPlayerHasEnoughMoney(Player,GI))
+					if (Weapon->TotalAmmo < Weapon->MaxTotalAmmo)
 					{
-						Weapon->TotalAmmo += SpewOutAmount;
+						if (IfPlayerHasEnoughMoney(Player,GI))
+						{
+							Weapon->TotalAmmo += Weapon->MaxTotalAmmo/5;
+							if (Weapon->TotalAmmo > Weapon->MaxTotalAmmo)
+							{
+								Weapon->TotalAmmo = Weapon->MaxTotalAmmo;
+							}
+						}
+					}
+					else
+					{
+						if (CantBuySound)
+						{
+							UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantBuySound, GetActorLocation());
+						}
 					}
 				}
 				break;
