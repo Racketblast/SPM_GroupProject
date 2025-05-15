@@ -125,35 +125,31 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
         AActor* HitActor = Hit.GetActor();
         LastHitActor = HitActor;
 
-        if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
+        if (HitActor)
         {
-            if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
+            if (HitActor->FindFunction("OnLineTraceHit"))
             {
-                Player->bEnemyHit = true;
-                UE_LOG(LogTemp, Error, TEXT("hit activated (from gun)"));
-                Player->EnemyHitFalse();
+                HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
             }
-
-
-            if (HitActor)
+            if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
             {
-                if (HitActor->FindFunction("OnLineTraceHit"))
+                if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
                 {
-                    HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
+                    Player->bEnemyHit = true;
+                    UE_LOG(LogTemp, Error, TEXT("hit activated (from gun)"));
+                    Player->EnemyHitFalse();
                 }
-                else
-                {
-                    // Apply damage if no custom function is found
-                    UGameplayStatics::ApplyPointDamage(
-                        HitActor,
-                        WeaponDamage,
-                        ShotDirection,
-                        Hit,
-                        OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
-                        this,
-                        DamageType
-                    );
-                }
+                        // Apply damage if no custom function is found
+                        UGameplayStatics::ApplyPointDamage(
+                            HitActor,
+                            WeaponDamage,
+                            ShotDirection,
+                            Hit,
+                            OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
+                            this,
+                    DamageType
+                );
+                 
             }
 
         }}
