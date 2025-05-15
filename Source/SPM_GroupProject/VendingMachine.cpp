@@ -50,6 +50,10 @@ void AVendingMachine::UseVendingMachine()
 						if (IfPlayerHasEnoughMoney(Player,GI))
 						{
 							Weapon->TotalAmmo += SpewOutAmount;
+							if (Weapon->TotalAmmo > Weapon->MaxTotalAmmo)
+							{
+								Weapon->TotalAmmo = Weapon->MaxTotalAmmo;
+							}
 						}
 					}
 				}

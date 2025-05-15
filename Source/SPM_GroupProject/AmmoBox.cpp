@@ -21,6 +21,10 @@ void AAmmoBox::CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedCo
 				{
 					UE_LOG(LogTemp, Warning, TEXT("AmmoBoxTriggered"));
 					Weapon->TotalAmmo += Weapon->MaxTotalAmmo/5;
+					if (Weapon->TotalAmmo > Weapon->MaxTotalAmmo)
+					{
+						Weapon->TotalAmmo = Weapon->MaxTotalAmmo;
+					}
 					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CollectablePickUpSound, GetActorLocation());
 				}
 			}
