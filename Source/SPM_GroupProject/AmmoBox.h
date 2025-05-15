@@ -12,8 +12,6 @@ class SPM_GROUPPROJECT_API AAmmoBox : public ACollectableBox
 	GENERATED_BODY()
 public:	
 	UPROPERTY(EditAnywhere, Category="Ammo")
-	int32 AmmoAmount = 30;
-	UPROPERTY(EditAnywhere, Category="Ammo")
 	FName ToWeapon = "Rifle";
 private:
 	virtual void CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
