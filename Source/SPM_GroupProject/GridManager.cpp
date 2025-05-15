@@ -43,8 +43,11 @@ void AGridManager::GenerateGrid()
 				NewNode->bIsWalkable = !bHit;
 
 				// Debug
-				FColor Color = NewNode->bIsWalkable ? FColor::Green : FColor::Red;
-				//DrawDebugBox(GetWorld(), WorldPos, FVector(CellSize * 0.5f), Color, true, -1.f, 0, 5.f);
+				if (bEnableDebug)
+				{
+					FColor Color = NewNode->bIsWalkable ? FColor::Green : FColor::Red;
+					DrawDebugBox(GetWorld(), WorldPos, FVector(CellSize * 0.5f), Color, true, -1.f, 0, 5.f);
+				}
 
 				Grid.Add(Index, NewNode);
 			}
@@ -88,17 +91,96 @@ void AGridManager::UpdateNodeWalkability(const FIntVector& Index)
 		Node->bIsWalkable = !bHit;
 
 		//Debug
-		FColor Color = Node->bIsWalkable ? FColor::Green : FColor::Red;
-		//DrawDebugBox(GetWorld(), Node->WorldLocation, FVector(CellSize * 0.5f), Color, true, -1.f, 0, 5.f);
+		if (bEnableDebug)
+		{
+			FColor Color = Node->bIsWalkable ? FColor::Green : FColor::Red;
+			DrawDebugBox(GetWorld(), Node->WorldLocation, FVector(CellSize * 0.5f), Color, true, -1.f, 0, 5.f);
+		}
 	}
 }
 
 TArray<FVector> AGridManager::FindPath(const FVector& StartLocation, const FVector& EndLocation)
 {
+    FIntVector StartIndex = GetIndexFromWorldLocation(StartLocation);
+    FIntVector EndIndex = GetIndexFromWorldLocation(EndLocation);
 
+    auto StartNode = GetNodeAt(StartIndex);
+    auto EndNode = GetNodeAt(EndIndex);
 
-	// Ingen path hittades
-	return {};
+    if (!StartNode.IsValid() || !EndNode.IsValid() || !EndNode->bIsWalkable)
+    {
+        return {};
+    }
+
+    TArray<TSharedPtr<FGridNode>> OpenSet;
+    TSet<FIntVector> ClosedSet;
+
+    OpenSet.Add(StartNode);
+
+    StartNode->GCost = 0;
+    StartNode->HCost = FVector::Dist(StartNode->WorldLocation, EndNode->WorldLocation);
+    StartNode->Parent = nullptr;
+
+    while (OpenSet.Num() > 0)
+    {
+        // Get node with lowest FCost
+        OpenSet.Sort([](const TSharedPtr<FGridNode>& A, const TSharedPtr<FGridNode>& B) {
+            return A->FCost() < B->FCost();
+        });
+
+        TSharedPtr<FGridNode> CurrentNode = OpenSet[0];
+        OpenSet.RemoveAt(0);
+        ClosedSet.Add(CurrentNode->GridIndex);
+
+        if (CurrentNode->GridIndex == EndIndex)
+        {
+            // Reconstruct path
+            TArray<FVector> Path;
+            while (CurrentNode.IsValid())
+            {
+                Path.Add(CurrentNode->WorldLocation);
+                CurrentNode = CurrentNode->Parent;
+            }
+            Algo::Reverse(Path);
+            return Path;
+        }
+
+        // Get neighbors
+        for (int32 dx = -1; dx <= 1; ++dx)
+        {
+            for (int32 dy = -1; dy <= 1; ++dy)
+            {
+                for (int32 dz = -1; dz <= 1; ++dz)
+                {
+                    if (dx == 0 && dy == 0 && dz == 0)
+                        continue;
+
+                    FIntVector NeighborIndex = CurrentNode->GridIndex + FIntVector(dx, dy, dz);
+                    auto Neighbor = GetNodeAt(NeighborIndex);
+
+                    if (!Neighbor.IsValid() || !Neighbor->bIsWalkable || ClosedSet.Contains(NeighborIndex))
+                        continue;
+
+                    float NewGCost = CurrentNode->GCost + FVector::Dist(CurrentNode->WorldLocation, Neighbor->WorldLocation);
+
+                    if (NewGCost < Neighbor->GCost || !OpenSet.Contains(Neighbor))
+                    {
+                        Neighbor->GCost = NewGCost;
+                        Neighbor->HCost = FVector::Dist(Neighbor->WorldLocation, EndNode->WorldLocation);
+                        Neighbor->Parent = CurrentNode;
+
+                        if (!OpenSet.Contains(Neighbor))
+                        {
+                            OpenSet.Add(Neighbor);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Ingen väg hittades 
+    return {};
 }
 
 

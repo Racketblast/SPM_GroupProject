@@ -31,7 +31,7 @@ void AHitscanGun::BeginPlay()
     }
     if (!MagEmptyAudioComponent)
     {
-        MagEmptyAudioComponent = NewObject<UAudioComponent>(this, TEXT("FireAudioComponent"));
+        MagEmptyAudioComponent = NewObject<UAudioComponent>(this, TEXT("MagEmptyAudioComponent"));
         if (MagEmptyAudioComponent)
         {
             MagEmptyAudioComponent->RegisterComponent();

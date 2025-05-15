@@ -11,6 +11,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Containers/Map.h"
 
 bool UPlayerGameInstance::HasBought(const EUpgradeType Upgrade) const
 {
@@ -50,9 +51,10 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 {
 	// Gets the info from the object in the map if you have it, if not then it will use the default values
 	FUpgradeInfo* UpgradeInfo = UpgradeMap.Find(Upgrade);
+	FUpgradeInfo TempInfo;
 	if (!UpgradeInfo)
 	{
-		FUpgradeInfo TempInfo = SetDefaultUpgradeInfo(Upgrade);
+		TempInfo = SetDefaultUpgradeInfo(Upgrade);
 		UpgradeInfo = &TempInfo;
 	}
 	
@@ -60,35 +62,38 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 	if (UpgradeInfo->UpgradeOwned < UpgradeInfo->TotalUpgradeOwned)
 	{
 		// If you can buy the product
-		if (UpgradeInfo->UpgradeCost <= Money)
+		if (UpgradeInfo->UpgradeCosts.IsValidIndex(UpgradeInfo->UpgradeOwned))
 		{
-			if (CanBuySound)
+			if (UpgradeInfo->UpgradeCosts[UpgradeInfo->UpgradeOwned] <= Money)
 			{
+				if (CanBuySound)
+				{
+					if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+					{
+						UGameplayStatics::PlaySoundAtLocation(GetWorld(), CanBuySound, Player->GetActorLocation());
+					}
+				}
+				Money -= UpgradeInfo->UpgradeCosts[UpgradeInfo->UpgradeOwned];
+				UpgradeInfo->UpgradeOwned++;
+				//Adds the upgrade to the map if it is not in there 
+				if (!UpgradeMap.Contains(Upgrade))
+				{
+					UpgradeMap.Add(Upgrade, *UpgradeInfo);
+				}
+			
 				if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
 				{
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CanBuySound, Player->GetActorLocation());
-				}
-			}
-			Money -= UpgradeInfo->UpgradeCost;
-			UpgradeInfo->UpgradeOwned++;
-			UpgradeInfo->UpgradeCost *= 1.2;
-			//Adds the upgrade to the map if it is not in there 
-			if (!UpgradeMap.Contains(Upgrade))
-			{
-				UpgradeMap.Add(Upgrade, *UpgradeInfo);
-			}
-			
-			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
-			{
-				if (UpgradeInfo->UpgradeCategory == EUpgradeCategory::Weapon)
-				{
-					SetCurrentWeapon(Upgrade);
-					Player->SelectWeapon(*ConvertUpgradeTypeToString(Upgrade));
-				}
-				else
-				{
-					UE_LOG(LogTemp, Display,TEXT("Upgrade is called"));
-					UseUpgradeFunction(Upgrade, Player);
+					if (UpgradeInfo->UpgradeCategory == EUpgradeCategory::Weapon)
+					{
+						BuyWeapon(Upgrade);
+						SetCurrentWeapon(Upgrade);
+						Player->SelectWeapon(*ConvertUpgradeTypeToString(Upgrade));
+					}
+					else
+					{
+						UE_LOG(LogTemp, Display,TEXT("Upgrade is called"));
+						UseUpgradeFunction(Upgrade, Player);
+					}
 				}
 			}
 		}
@@ -136,6 +141,35 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 	}
 }
 
+void UPlayerGameInstance::BuyWeapon(EUpgradeType Weapon)
+{
+	switch (Weapon)
+	{
+	case EUpgradeType::Pistol:
+		BuyUpgrade(EUpgradeType::PistolDamage10);
+		BuyUpgrade(EUpgradeType::PistolFiringSpeed10);
+		BuyUpgrade(EUpgradeType::PistolAmmoSize);
+		break;
+	case EUpgradeType::Rifle:
+		BuyUpgrade(EUpgradeType::RifleDamage10);
+		BuyUpgrade(EUpgradeType::RifleFiringSpeed10);
+		BuyUpgrade(EUpgradeType::RifleAmmoSize);
+		break;
+	case EUpgradeType::Shotgun:
+		BuyUpgrade(EUpgradeType::ShotgunDamage10);
+		BuyUpgrade(EUpgradeType::ShotgunFiringSpeed10);
+		BuyUpgrade(EUpgradeType::ShotgunAmmoSize);
+		break;
+	case EUpgradeType::RocketLauncher:
+		BuyUpgrade(EUpgradeType::RocketLauncherDamage10);
+		BuyUpgrade(EUpgradeType::RocketLauncherFiringSpeed10);
+		BuyUpgrade(EUpgradeType::RocketLauncherAmmoSize);
+		break;
+	default:
+		break;
+	}
+}
+
 FName UPlayerGameInstance::GetArrayName()
 {
 	FString CombinedString;
@@ -176,7 +210,7 @@ FUpgradeInfo UPlayerGameInstance::GetUpgradeInfo(const EUpgradeType Upgrade) con
 			return UpgradeType.Value;
 		}
 	}
-	return {EUpgradeCategory::None,0,0,0};
+	return {EUpgradeCategory::None,{0},0,0,{0}};
 }
 
 void UPlayerGameInstance::ApplyAllUpgradeFunctions(APlayerCharacter* Player)
@@ -195,8 +229,7 @@ void UPlayerGameInstance::UseUpgradeFunction(const EUpgradeType Upgrade, APlayer
 {
 	if (Player != nullptr)
 	{
-		FUpgradeInfo* UpgradeInfo = UpgradeMap.Find(Upgrade);
-		if (UpgradeInfo)
+		if (FUpgradeInfo* UpgradeInfo = UpgradeMap.Find(Upgrade))
 		{
 			switch (UpgradeInfo->UpgradeCategory)
 			{
@@ -223,7 +256,7 @@ void UPlayerGameInstance::UpgradePlayerStats(const EUpgradeType Upgrade, class A
 	switch (Upgrade)
 	{
 	case EUpgradeType::Health20:
-		Player->PlayerMaxHealth = Player->BasePlayerMaxHealth + 20 * UpgradeInfo->UpgradeOwned;
+		Player->PlayerMaxHealth = Player->BasePlayerMaxHealth + UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 		Player->PlayerHealth = Player->PlayerMaxHealth;
 		break;
 	case EUpgradeType::HealthMax:
@@ -252,28 +285,28 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 		case EUpgradeType::PistolDamage10:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
 			{
-				Player->GetWeaponInstance("Pistol")->WeaponDamage = Player->GetWeaponInstance("Pistol")->BaseWeaponDamage * (1 + 0.1 * UpgradeInfo->UpgradeOwned);
+				Player->GetWeaponInstance("Pistol")->WeaponDamage = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->CurrentGun->bIsUpgraded = true;
 			}
 			break;
 		case EUpgradeType::RifleDamage10:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
 			{
-				Player->GetWeaponInstance("Rifle")->WeaponDamage = Player->GetWeaponInstance("Rifle")->BaseWeaponDamage * (1 + 0.1 * UpgradeInfo->UpgradeOwned);
+				Player->GetWeaponInstance("Rifle")->WeaponDamage = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->CurrentGun->bIsUpgraded = true;
 			}
 			break;
 		case EUpgradeType::ShotgunDamage10:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Shotgun"))
 			{
-				Player->GetWeaponInstance("Shotgun")->WeaponDamage = Player->GetWeaponInstance("Shotgun")->BaseWeaponDamage * (1 + 0.1 * UpgradeInfo->UpgradeOwned);
+				Player->GetWeaponInstance("Shotgun")->WeaponDamage = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->CurrentGun->bIsUpgraded = true;
 			}
 			break;
 		case EUpgradeType::RocketLauncherDamage10:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("RocketLauncher"))
 			{
-				Player->GetWeaponInstance("RocketLauncher")->WeaponDamage = Player->GetWeaponInstance("RocketLauncher")->BaseWeaponDamage * (1 + 0.1 * UpgradeInfo->UpgradeOwned);
+				Player->GetWeaponInstance("RocketLauncher")->WeaponDamage = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->CurrentGun->bIsUpgraded = true;
 			}
 			break;	
@@ -282,28 +315,28 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 		case EUpgradeType::PistolFiringSpeed10:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
 			{
-				Player->GetWeaponInstance("Pistol")->RoundsPerSecond = Player->GetWeaponInstance("Pistol")->BaseRoundsPerSecond * (1 + 0.1 * UpgradeInfo->UpgradeOwned);
+				Player->GetWeaponInstance("Pistol")->RoundsPerSecond = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->CurrentGun->bIsUpgraded = true;
 			}
 			break;
 		case EUpgradeType::RifleFiringSpeed10:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
 			{
-				Player->GetWeaponInstance("Rifle")->RoundsPerSecond = Player->GetWeaponInstance("Rifle")->BaseRoundsPerSecond * (1 + 0.1 * UpgradeInfo->UpgradeOwned);
+				Player->GetWeaponInstance("Rifle")->RoundsPerSecond = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->CurrentGun->bIsUpgraded = true;
 			}
 			break;
 		case EUpgradeType::ShotgunFiringSpeed10:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Shotgun"))
 			{
-				Player->GetWeaponInstance("Shotgun")->RoundsPerSecond = Player->GetWeaponInstance("Shotgun")->BaseRoundsPerSecond * (1 + 0.1 * UpgradeInfo->UpgradeOwned);
+				Player->GetWeaponInstance("Shotgun")->RoundsPerSecond = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->CurrentGun->bIsUpgraded = true;
 			}
 			break;
 		case EUpgradeType::RocketLauncherFiringSpeed10:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("RocketLauncher"))
 			{
-				Player->GetWeaponInstance("RocketLauncher")->RoundsPerSecond = Player->GetWeaponInstance("RocketLauncher")->BaseRoundsPerSecond * (1 + 0.1 * UpgradeInfo->UpgradeOwned);
+				Player->GetWeaponInstance("RocketLauncher")->RoundsPerSecond = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->CurrentGun->bIsUpgraded = true;
 			}
 			break;
@@ -312,8 +345,10 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 		case EUpgradeType::PistolAmmoSize:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
 			{
-				Player->GetWeaponInstance("Pistol")->TotalAmmo = Player->GetWeaponInstance("Pistol")->BaseTotalAmmo + (3 * UpgradeInfo->UpgradeOwned);
-				Player->GetWeaponInstance("Pistol")->MaxAmmo = Player->GetWeaponInstance("Pistol")->BaseMaxAmmo + (3 * UpgradeInfo->UpgradeOwned);
+				UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+				Player->GetWeaponInstance("Pistol")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+				Player->GetWeaponInstance("Pistol")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+				Player->GetWeaponInstance("Pistol")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->GetWeaponInstance("Pistol")->CurrentAmmo = Player->GetWeaponInstance("Pistol")->MaxAmmo;
 				Player->CurrentGun->bIsUpgraded = true;
 			}
@@ -321,8 +356,9 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 		case EUpgradeType::RifleAmmoSize:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
 			{
-				Player->GetWeaponInstance("Rifle")->TotalAmmo = Player->GetWeaponInstance("Rifle")->BaseTotalAmmo * (1 + 0.5 * UpgradeInfo->UpgradeOwned);
-				Player->GetWeaponInstance("Rifle")->MaxAmmo = Player->GetWeaponInstance("Rifle")->BaseMaxAmmo * (1 + 0.5 * UpgradeInfo->UpgradeOwned);
+				Player->GetWeaponInstance("Rifle")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+				Player->GetWeaponInstance("Rifle")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+				Player->GetWeaponInstance("Rifle")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]/5;
 				Player->GetWeaponInstance("Rifle")->CurrentAmmo = Player->GetWeaponInstance("Rifle")->MaxAmmo;
 				Player->CurrentGun->bIsUpgraded = true;
 			}
@@ -330,8 +366,9 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 		case EUpgradeType::ShotgunAmmoSize:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Shotgun"))
 			{
-				Player->GetWeaponInstance("Shotgun")->TotalAmmo = Player->GetWeaponInstance("Shotgun")->BaseTotalAmmo + 2 * UpgradeInfo->UpgradeOwned;
-				Player->GetWeaponInstance("Shotgun")->MaxAmmo = Player->GetWeaponInstance("Shotgun")->BaseMaxAmmo + 2 * UpgradeInfo->UpgradeOwned;
+				Player->GetWeaponInstance("Shotgun")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+				Player->GetWeaponInstance("Shotgun")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+				Player->GetWeaponInstance("Shotgun")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]/5;
 				Player->GetWeaponInstance("Shotgun")->CurrentAmmo = Player->GetWeaponInstance("Shotgun")->MaxAmmo;
 				Player->CurrentGun->bIsUpgraded = true;
 			}
@@ -339,8 +376,9 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 		case EUpgradeType::RocketLauncherAmmoSize:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("RocketLauncher"))
 			{
-				Player->GetWeaponInstance("RocketLauncher")->TotalAmmo = Player->GetWeaponInstance("RocketLauncher")->BaseTotalAmmo + 2 * UpgradeInfo->UpgradeOwned;
-				Player->GetWeaponInstance("RocketLauncher")->MaxAmmo = Player->GetWeaponInstance("RocketLauncher")->BaseMaxAmmo + 2 * UpgradeInfo->UpgradeOwned;
+				Player->GetWeaponInstance("RocketLauncher")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+				Player->GetWeaponInstance("RocketLauncher")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+				Player->GetWeaponInstance("RocketLauncher")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]/5;
 				Player->GetWeaponInstance("RocketLauncher")->CurrentAmmo = Player->GetWeaponInstance("RocketLauncher")->MaxAmmo;
 				Player->CurrentGun->bIsUpgraded = true;
 			}
@@ -357,6 +395,7 @@ FString UPlayerGameInstance::ConvertUpgradeTypeToString(const EUpgradeType Type)
 	EnumString.RemoveFromStart(TEXT("EUpgradeType::"));
 	return EnumString;
 }
+
 
 UPlayerGameInstance::UPlayerGameInstance()
 {
@@ -443,6 +482,32 @@ void UPlayerGameInstance::RestartGame()
 		UnlockedLevels.Add(LevelOrder[3]);
 		CurrentGameFlag = 0;
 	}
+}
+
+bool UPlayerGameInstance::HasGameChanged()
+{
+	Save = Cast<USwarmedSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
+	if (Save)
+	{
+		if (Money != Save->SavedMoney)
+			return true;
+		if (UpgradeMap.Num() != Save->SavedUpgradeMap.Num())
+			return true;
+		for (const TPair<EUpgradeType, FUpgradeInfo>& UpgradeType : UpgradeMap)
+		{
+			const FUpgradeInfo* ValueB = Save->SavedUpgradeMap.Find(UpgradeType.Key);
+			if (!ValueB || *ValueB != UpgradeType.Value)
+				return true;
+		}
+		if (CurrentWeapon != Save->SavedCurrentWeapon)
+			return true;
+		if (!UnlockedLevels.Includes(Save->SavedUnlockedLevels) || !Save->SavedUnlockedLevels.Includes(UnlockedLevels))
+			return true;
+		if (CurrentGameFlag != Save->SavedCurrentGameFlag)
+			return true;
+	}
+	
+	return false;
 }
 
 void UPlayerGameInstance::StartDialogue()

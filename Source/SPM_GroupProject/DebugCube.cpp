@@ -83,25 +83,28 @@ void ADebugCube::GiveAllWeapons()
 		{
 			if (!GI->UpgradeMap.Contains(EUpgradeType::Pistol))
 			{
-				GI->UpgradeMap.Add(EUpgradeType::Pistol, GI->SetDefaultUpgradeInfo(EUpgradeType::Pistol));
-				GI->SetCurrentWeapon(EUpgradeType::Pistol);
+				GI->Money += 1000;
+				GI->BuyUpgrade(EUpgradeType::Pistol,nullptr,nullptr);
 			}
 			// Rifle
 			if (!GI->UpgradeMap.Contains(EUpgradeType::Rifle))
 			{
-				GI->UpgradeMap.Add(EUpgradeType::Rifle, GI->SetDefaultUpgradeInfo(EUpgradeType::Rifle));
+				GI->Money += 1000;
+				GI->BuyUpgrade(EUpgradeType::Rifle,nullptr,nullptr);
 			}
 
 			// Shotgun
 			if (!GI->UpgradeMap.Contains(EUpgradeType::Shotgun))
 			{
-				GI->UpgradeMap.Add(EUpgradeType::Shotgun, GI->SetDefaultUpgradeInfo(EUpgradeType::Shotgun));
+				GI->Money += 1000;
+				GI->BuyUpgrade(EUpgradeType::Shotgun,nullptr,nullptr);
 			}
 
 			// Rocket Launcher
 			if (!GI->UpgradeMap.Contains(EUpgradeType::RocketLauncher))
 			{
-				GI->UpgradeMap.Add(EUpgradeType::RocketLauncher, GI->SetDefaultUpgradeInfo(EUpgradeType::RocketLauncher));
+				GI->Money += 1000;
+				GI->BuyUpgrade(EUpgradeType::RocketLauncher,nullptr,nullptr);
 			}
 		}
 	}

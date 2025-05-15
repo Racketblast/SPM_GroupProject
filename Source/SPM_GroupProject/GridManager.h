@@ -49,6 +49,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CellSize = 200.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bEnableDebug = false;
+
 	TMap<FIntVector, TSharedPtr<FGridNode>> Grid;
 
 	TSharedPtr<FGridNode> GetNodeAt(const FIntVector& Index) const;
