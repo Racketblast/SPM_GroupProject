@@ -38,10 +38,14 @@ float AAI_Main::TakeDamage(float DamageAmount, struct FDamageEvent const& Damage
 		UE_LOG(LogTemp, Error, TEXT("AI dead"));
 			AIHealth = 0;
 			bIsDead = true;
-			TSubclassOf<AMoneyBox> MoneyBoxClass = LoadClass<AMoneyBox>(nullptr, TEXT("/Game/Blueprints/BP_MoneyBox.BP_MoneyBox_C"));
-			if (MoneyBoxClass)
+			if (AIDrop)
 			{
-				GetWorld()->SpawnActor<AMoneyBox>(MoneyBoxClass, GetTransform());
+				//Sets rotation so it does not look wierd
+				FTransform Transform = GetTransform();
+				Transform.SetRotation({0,0,0,0});
+				
+				ACollectableBox* CollectableBox = GetWorld()->SpawnActor<ACollectableBox>(AIDrop);
+				CollectableBox->SetActorTransform(Transform);
 			}
 			
 			for (TActorIterator<AWaveManager> It(GetWorld()); It; ++It)

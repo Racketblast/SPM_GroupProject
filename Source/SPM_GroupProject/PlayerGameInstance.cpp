@@ -424,19 +424,38 @@ void UPlayerGameInstance::Init()
 	}
 	
 	//Loads the saved game
+	LoadGame();
+	
+	//Creates a new saved game if nothing exists
+	/*else
+	{
+		if (SaveGameObject)
+		{
+			Save = Cast<USwarmedSaveGame>(UGameplayStatics::CreateSaveGameObject(SaveGameObject));
+			if (Save)
+			{
+				Save->SavedMoney = Money;
+				Save->SavedUpgradeMap = UpgradeMap;
+				Save->SavedCurrentWeapon = CurrentWeapon;
+				Save->SavedUnlockedLevels = UnlockedLevels;
+				Save->SavedCurrentGameFlag = CurrentGameFlag;
+				UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
+			}
+		}
+	}*/
+}
+
+void UPlayerGameInstance::SaveGame()
+{
 	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
 	{
-		Save = Cast<USwarmedSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
-		if (Save)
-		{
-			Money = Save->SavedMoney;
-			UpgradeMap = Save->SavedUpgradeMap;
-			CurrentWeapon = Save->SavedCurrentWeapon;
-			UnlockedLevels = Save->SavedUnlockedLevels;
-			CurrentGameFlag = Save->SavedCurrentGameFlag;
-		}
+		Save->SavedMoney = Money;
+		Save->SavedUpgradeMap = UpgradeMap;
+		Save->SavedCurrentWeapon = CurrentWeapon;
+		Save->SavedUnlockedLevels = UnlockedLevels;
+		Save->SavedCurrentGameFlag = CurrentGameFlag;
+		UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
 	}
-	//Creates a new saved game if nothing exists
 	else
 	{
 		if (SaveGameObject)
@@ -455,33 +474,34 @@ void UPlayerGameInstance::Init()
 	}
 }
 
-void UPlayerGameInstance::SaveGame()
+void UPlayerGameInstance::LoadGame()
 {
+	//Loads the saved game
 	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
 	{
-		Save->SavedMoney = Money;
-		Save->SavedUpgradeMap = UpgradeMap;
-		Save->SavedCurrentWeapon = CurrentWeapon;
-		Save->SavedUnlockedLevels = UnlockedLevels;
-		Save->SavedCurrentGameFlag = CurrentGameFlag;
-		UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
+		Save = Cast<USwarmedSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
+		if (Save)
+		{
+			Money = Save->SavedMoney;
+			UpgradeMap = Save->SavedUpgradeMap;
+			CurrentWeapon = Save->SavedCurrentWeapon;
+			UnlockedLevels = Save->SavedUnlockedLevels;
+			CurrentGameFlag = Save->SavedCurrentGameFlag;
+		}
 	}
 }
 
 void UPlayerGameInstance::RestartGame()
 {
-	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
-	{
-		Money = 0;
-		UpgradeMap = {};
-		UnlockedLevels = {};
-		Save->SavedCurrentWeapon = EUpgradeType::None;
-		UnlockedLevels.Add(LevelOrder[0]);
-		UnlockedLevels.Add(LevelOrder[1]);
-		UnlockedLevels.Add(LevelOrder[2]);
-		UnlockedLevels.Add(LevelOrder[3]);
-		CurrentGameFlag = 0;
-	}
+	Money = 0;
+	UpgradeMap = {};
+	UnlockedLevels = {};
+	CurrentWeapon = EUpgradeType::None;
+	UnlockedLevels.Add(LevelOrder[0]);
+	UnlockedLevels.Add(LevelOrder[1]);
+	UnlockedLevels.Add(LevelOrder[2]);
+	UnlockedLevels.Add(LevelOrder[3]);
+	CurrentGameFlag = 0;
 }
 
 bool UPlayerGameInstance::HasGameChanged()
