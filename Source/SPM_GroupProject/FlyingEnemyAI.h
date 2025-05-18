@@ -6,9 +6,7 @@
 #include "AI_Main.h"
 #include "FlyingEnemyAI.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class SPM_GROUPPROJECT_API AFlyingEnemyAI : public AAI_Main
 {
@@ -47,6 +45,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
 	bool bCanTeleportIfVisibleToPlayer = true;
 
+	UPROPERTY(EditAnywhere, Category = "Teleport")
+	float TeleportProximityThreshold = 0.f; 
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
 	float MaxTimeToReachDestination = 10.0f;
 
@@ -69,12 +70,29 @@ public:
 
 	void IsMoving();
 
-	bool IsVisibleToPlayer() const; 
+	bool IsVisibleToPlayer() const;
+
+	
+	// För UBTTask_FlyToPlayerLocation task
+	UPROPERTY(EditAnywhere, Category = "Flight")
+	float ZOffset;
+
+	UPROPERTY(EditAnywhere, Category = "Randomization")
+	bool bAddRandomOffset;
+
+	UPROPERTY(EditAnywhere, Category = "Randomization", meta = (EditCondition = "bAddRandomOffset"))
+	float RandomRadius;
+
+	UPROPERTY(EditAnywhere, Category = "Obstacle Avoidance")
+	float ObstacleCheckDistance = 200.f; // Hur stort området är som fienden kållar efter hinder
+
+	UPROPERTY(EditAnywhere, Category = "Obstacle Avoidance")
+	float ObstacleClearance = 100.f; 
 
 protected:
 	virtual void BeginPlay() override;
 	
-	float ShootingRange = 600.f;
+	//float ShootingRange = 600.f;
 	
 	bool bHasRecentlyShot = false;
 

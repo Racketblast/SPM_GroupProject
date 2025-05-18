@@ -76,6 +76,13 @@ void AFlyingEnemyAI::Tick(float DeltaTime)
 			{
 				float DistanceToPlayer = FVector::Dist(GetActorLocation(), Player->GetActorLocation());
 				bInRange = DistanceToPlayer <= AIController->PlayerRangeThreshold;
+
+				if (DistanceToPlayer <= TeleportProximityThreshold)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Skipping teleport: already near player (%.2f)"), DistanceToPlayer);
+					bIsMovingToTarget = false;
+					return;
+				}
 			}
 
 			// Teleporterar bara om fienden inte redan är inrange och har line of sight
@@ -215,8 +222,15 @@ void AFlyingEnemyAI::NotifyFired()
 
 void AFlyingEnemyAI::IsMoving()
 {
-	DestinationStartTime = GetWorld()->GetTimeSeconds();
-	bIsMovingToTarget = true;
+	/*DestinationStartTime = GetWorld()->GetTimeSeconds();
+	bIsMovingToTarget = true;*/
+	UE_LOG(LogTemp, Warning, TEXT("IsMoving."));
+	if (!bIsMovingToTarget)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("bIsMovingToTarget is false."));
+		DestinationStartTime = GetWorld()->GetTimeSeconds(); 
+		bIsMovingToTarget = true;
+	}
 }
 
 // Används för teleport för fienden

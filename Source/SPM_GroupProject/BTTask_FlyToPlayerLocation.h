@@ -38,6 +38,15 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float BackoffCooldownTime = 1.5f;
 
+	void MoveTowardTarget(APawn* Pawn, const FVector& TargetLocation);
+
+	void CheckIfStuck(UBehaviorTreeComponent& OwnerComp, APawn* Pawn, const FVector& TargetLocation);
+
+	UPROPERTY(EditAnywhere, Category = "Targeting")
+	float TargetUpdateInterval = 2.0f;
+
+	float TimeSinceLastTargetUpdate = 0.0f;
+
 private:
 	FVector LastLocation;
 	float TimeSinceLastMove = 0.0f;
