@@ -15,6 +15,8 @@ public:
 	AProjectile();
 	UPROPERTY(EditAnywhere)
 	float TCount = 3;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float ProjectileDamage = 20.f;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

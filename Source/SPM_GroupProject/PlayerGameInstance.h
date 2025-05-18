@@ -37,8 +37,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bCanPlayDialogue = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	FName CurrentDialogueRowName;
+	UPROPERTY(BlueprintReadWrite)
 	FName StartDialogueRowName;
 	FName NextDialogueRowName;
 
@@ -53,6 +54,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SaveGame();
+	UFUNCTION(BlueprintCallable)
+	void LoadGame();
 	UFUNCTION(BlueprintCallable)
 	void RestartGame();
 	UFUNCTION(BlueprintCallable)

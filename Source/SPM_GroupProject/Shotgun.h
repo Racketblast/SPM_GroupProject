@@ -11,7 +11,7 @@ class SPM_GROUPPROJECT_API AShotgun : public AGun
 
 public:
 	virtual void Fire(FVector FireLocation, FRotator FireRotation) override;
-
+	void ApplyRecoilTranslation();
 	UPROPERTY(BlueprintReadOnly, Category = "Hit Result")
 	AActor* LastHitActor;
 
@@ -36,4 +36,5 @@ protected:
 	
 
 	float LastFireTime = 0.f;
+
 };

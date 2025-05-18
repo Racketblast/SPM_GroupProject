@@ -68,7 +68,8 @@ protected:
 	
 	UPROPERTY()
 	APlayerCharacter* OwnerCharacter;
-	
+
+	UPROPERTY(BlueprintReadOnly)
 	bool bIsReloading = false;
 
 	FTimerHandle ReloadTimerHandle;
@@ -112,6 +113,10 @@ protected:
 	bool bIsRecoiling = false;
 	float RecoilInterpSpeed = 10.0f; // Adjust for smoothness
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recoil")
+	float RecoilAmount = 10.0f;
+	FVector OriginalArmsRootLocation;
+	bool bRecoilApplied = false;
 
 
 };

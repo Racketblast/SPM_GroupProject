@@ -8,6 +8,7 @@
 
 #include "AI_Main.generated.h"
 
+
 UCLASS()
 class SPM_GROUPPROJECT_API AAI_Main : public ACharacter
 {
@@ -23,6 +24,10 @@ public:
 	int32 AIHealth;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 MaxAIHealth = 100;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float AIDamage = 20;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TSubclassOf<class ACollectableBox> AIDrop;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 protected:
