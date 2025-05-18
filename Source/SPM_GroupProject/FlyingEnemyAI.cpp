@@ -4,6 +4,7 @@
 #include "FlyingEnemyAI.h"
 #include "FlyingAI_Controller.h"
 #include "EnemyAIUtils.h"
+#include "EngineUtils.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -218,16 +219,15 @@ bool AFlyingEnemyAI::IsFireCooldownElapsed() const
 void AFlyingEnemyAI::NotifyFired()
 {
 	LastFireTime = GetWorld()->GetTimeSeconds();
+	DestinationStartTime = GetWorld()->GetTimeSeconds(); 
 }
 
 void AFlyingEnemyAI::IsMoving()
 {
-	/*DestinationStartTime = GetWorld()->GetTimeSeconds();
-	bIsMovingToTarget = true;*/
-	UE_LOG(LogTemp, Warning, TEXT("IsMoving."));
+	//UE_LOG(LogTemp, Warning, TEXT("IsMoving."));
 	if (!bIsMovingToTarget)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("bIsMovingToTarget is false."));
+		//UE_LOG(LogTemp, Warning, TEXT("bIsMovingToTarget is false."));
 		DestinationStartTime = GetWorld()->GetTimeSeconds(); 
 		bIsMovingToTarget = true;
 	}
@@ -240,16 +240,20 @@ bool AFlyingEnemyAI::IsVisibleToPlayer() const
 	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	if (!PC || !Player) return false;
 
-	// Är fienden på skärmen
-	FVector2D ScreenLocation;
-	if (!PC->ProjectWorldLocationToScreen(GetActorLocation(), ScreenLocation))
-		return false;
+	FVector PlayerViewLoc;
+	FRotator PlayerViewRot;
+	PC->GetPlayerViewPoint(PlayerViewLoc, PlayerViewRot);
 
-	int32 ScreenX, ScreenY;
-	PC->GetViewportSize(ScreenX, ScreenY);
-	if (ScreenLocation.X < 0.f || ScreenLocation.X > ScreenX ||
-		ScreenLocation.Y < 0.f || ScreenLocation.Y > ScreenY)
+	// Kållar om fienden är framför spelaren
+	FVector DirectionToEnemy = (GetActorLocation() - PlayerViewLoc).GetSafeNormal();
+	float Dot = FVector::DotProduct(PlayerViewRot.Vector(), DirectionToEnemy);
+	
+	//UE_LOG(LogTemp, Warning, TEXT("Dot to enemy: %.2f"), Dot);
+	
+	if (Dot < 0.5f) // Runt 60 degrees, så ungefär 120 grader syn fält
+	{
 		return false;
+	}
 
 	// Är fienden synlig för spelaren, alltså line of sight
 	FHitResult Hit;
@@ -257,8 +261,24 @@ bool AFlyingEnemyAI::IsVisibleToPlayer() const
 	Params.AddIgnoredActor(this);
 	Params.AddIgnoredActor(Player);
 
+	// Ignorera också alla andra flygande fiender från line of sight checken. 
+	for (TActorIterator<AFlyingEnemyAI> It(GetWorld()); It; ++It)
+	{
+		AFlyingEnemyAI* OtherEnemy = *It;
+		if (OtherEnemy && OtherEnemy != this)
+		{
+			Params.AddIgnoredActor(OtherEnemy);
+		}
+	}
+
 	bool bHit = GetWorld()->LineTraceSingleByChannel(
-		Hit, Player->GetPawnViewLocation(), GetActorLocation(), ECC_Visibility, Params);
+		Hit, PlayerViewLoc, GetActorLocation(), ECC_Visibility, Params);
+
+	
+	/*if (bHit)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Hit actor: %s"), *GetNameSafe(Hit.GetActor()));  
+	}*/
 
 	return !bHit || Hit.GetActor() == this;
 }
