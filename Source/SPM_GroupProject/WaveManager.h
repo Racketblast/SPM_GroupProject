@@ -7,6 +7,7 @@
 #include "Engine/TargetPoint.h"
 #include "Blueprint/UserWidget.h"
 #include "EnemySpawnPoint.h"
+#include "NiagaraSystem.h"
 #include "WaveManager.generated.h"
 
 
@@ -128,4 +129,17 @@ protected:
 
 	// Upcoming enemies
 	int32 UpcomingEnemyCount = 0;
+
+	//För vfx
+	UPROPERTY(EditDefaultsOnly, Category="Spawning")
+	UNiagaraSystem* SpawnEffect;
+	
+	TMap<UNiagaraComponent*, TSubclassOf<AActor>> PendingSpawns;
+
+	void PlaySpawnVFXAndThenSpawnEnemy(TSubclassOf<AActor> EnemyClass, const FVector& SpawnLocation);
+
+	UFUNCTION()
+	void OnSpawnVFXFinished(UNiagaraComponent* PSystem);
+
+	void SpawnEnemyAtLocation(TSubclassOf<AActor> EnemyClass, const FVector& SpawnLocation);
 };
