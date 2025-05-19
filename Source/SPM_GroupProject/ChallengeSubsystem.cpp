@@ -128,7 +128,7 @@ void UChallengeSubsystem::HandleChallengeFailure()
 	bHasFailedCurrentChallenge = true;
 	bChallengeJustFailed = true;
 
-	UE_LOG(LogTemp, Error, TEXT("Challenge Failed!"));
+	UE_LOG(LogTemp, Warning, TEXT("Challenge Failed!"));
 	//ResetChallengeStatus(); // För att bara aktivera en animation för en sekund och sedan sätta tillbaka variablerna till false.
 
 	GetWorld()->GetTimerManager().SetTimer( // För att aktivera en animation och sedan stänga av den vid rätt tillfälle 
