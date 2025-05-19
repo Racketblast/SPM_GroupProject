@@ -207,10 +207,10 @@ void APortal::CheckViewportSize() const
 	UGameplayStatics::GetPlayerController(GetWorld(),0)->GetViewportSize(ViewportX, ViewportY);
 	ViewportX /= ViewpointResolutionDivider;
 	ViewportY /= ViewpointResolutionDivider;
-	if (ViewportX == PortalRenderTarget->SizeX && ViewportY == PortalRenderTarget->SizeY)
-	{
+	if (!PortalRenderTarget)
 		return;
-	}
+	if (ViewportX == PortalRenderTarget->SizeX && ViewportY == PortalRenderTarget->SizeY)
+		return;
 	UE_LOG(LogTemp, Display, TEXT("Resizing"));
 	PortalRenderTarget->ResizeTarget(ViewportX, ViewportY);
 }
