@@ -65,6 +65,12 @@ void AGun::Reload()
 
 	UE_LOG(LogTemp, Warning, TEXT("Reload started..."));
 
+	
+	if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
+	{
+		Player->bCanSwitchWeapons = false;
+	}
+	
 	// 🔊 Play reload sound
 	if (ReloadSound && ReloadAudioComponent)
 	{
@@ -100,9 +106,14 @@ void AGun::FinishReload()
 			TotalAmmo = 0;
 		}
 	}
-
+	
 	bIsReloading = false;
-
+	
+	if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
+	{
+		Player->bCanSwitchWeapons = true;
+	}
+	
 	UE_LOG(LogTemp, Warning, TEXT("Reload complete. CurrentAmmo: %d, TotalAmmo: %d"), CurrentAmmo, TotalAmmo);
 }
 

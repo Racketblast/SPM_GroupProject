@@ -43,31 +43,37 @@ void APlayerCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	BasePlayerMaxHealth = PlayerMaxHealth;
-
+	
 	Weapon1Instance = GetWorld()->SpawnActor<AGun>(GWeapon1);
 	Weapon1Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
 	Weapon1Instance->SetOwnerCharacter(this);
 	Weapon1Instance->SetActorHiddenInGame(true);
 	Weapon1Instance->SetActorEnableCollision(false);
-
+		
 	Weapon2Instance = GetWorld()->SpawnActor<AGun>(GWeapon2);
 	Weapon2Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
 	Weapon2Instance->SetOwnerCharacter(this);
 	Weapon2Instance->SetActorHiddenInGame(true);
 	Weapon2Instance->SetActorEnableCollision(false);
-
+	
 	Weapon3Instance = GetWorld()->SpawnActor<AGun>(GWeapon3);
 	Weapon3Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
 	Weapon3Instance->SetOwnerCharacter(this);
 	Weapon3Instance->SetActorHiddenInGame(true);
 	Weapon3Instance->SetActorEnableCollision(false);
-
+	
 	Weapon4Instance = GetWorld()->SpawnActor<AGun>(GWeapon4);
 	Weapon4Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
 	Weapon4Instance->SetOwnerCharacter(this);
 	Weapon4Instance->SetActorHiddenInGame(true);
 	Weapon4Instance->SetActorEnableCollision(false);
-
+	
+	Weapon5Instance = GetWorld()->SpawnActor<AGun>(GWeapon5);
+	Weapon5Instance->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_rSocket"));
+	Weapon5Instance->SetOwnerCharacter(this);
+	Weapon5Instance->SetActorHiddenInGame(true);
+	Weapon5Instance->SetActorEnableCollision(false);
+	
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
 			// Pistol
@@ -171,15 +177,6 @@ void APlayerCharacter::UpdateFirstPersonMeshSway(float DeltaTime)
 	
     GetMesh()->SetRelativeRotation(NewMeshRotation);
 }
-
-
-
-
-
-
-
-
-
 
 void APlayerCharacter::StartShooting()
 {
@@ -299,6 +296,7 @@ void APlayerCharacter::Shoot()
 		else if (CurrentGun == Weapon2Instance) ChallengeSubsystem->NotifyWeaponFired(WeaponName2);
 		else if (CurrentGun == Weapon3Instance) ChallengeSubsystem->NotifyWeaponFired(WeaponName3);
 		else if (CurrentGun == Weapon4Instance) ChallengeSubsystem->NotifyWeaponFired(WeaponName4);
+		else if (CurrentGun == Weapon5Instance) ChallengeSubsystem->NotifyWeaponFired(WeaponName5);
 	}
 }
 
@@ -318,108 +316,157 @@ void APlayerCharacter::SelectWeapon(FName Weapon)
 		else if (Weapon == WeaponName2) SelectWeapon2();
 		else if (Weapon == WeaponName3) SelectWeapon3();
 		else if (Weapon == WeaponName4) SelectWeapon4();
+		else if (Weapon == WeaponName5) SelectWeapon5();
 	}
 }
 
 void APlayerCharacter::SelectWeapon1()
 {
-	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	if (bCanSwitchWeapons)
 	{
-		if (!Weapon1Equipped && GI->HasBought(WeaponName1))
+		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 		{
-			GI->SetCurrentWeapon(WeaponName1);
-			Weapon1Equipped = true;
-			Weapon2Equipped = Weapon3Equipped = Weapon4Equipped = false;
-
-			if (Weapon1Instance)
+			if (!Weapon1Equipped && GI->HasBought(WeaponName1))
 			{
-				Weapon1Instance->SetActorHiddenInGame(false);
-				Weapon1Instance->SetActorEnableCollision(true);
-				CurrentGun = Weapon1Instance;
-				CurrentGun->CheckForUpgrades();
-			}
+				GI->SetCurrentWeapon(WeaponName1);
+				Weapon1Equipped = true;
+				Weapon2Equipped = Weapon3Equipped = Weapon4Equipped = false;
 
-			if (Weapon2Instance) Weapon2Instance->SetActorHiddenInGame(true);
-			if (Weapon3Instance) Weapon3Instance->SetActorHiddenInGame(true);
-			if (Weapon4Instance) Weapon4Instance->SetActorHiddenInGame(true);
+				if (Weapon1Instance)
+				{
+					Weapon1Instance->SetActorHiddenInGame(false);
+					Weapon1Instance->SetActorEnableCollision(true);
+					CurrentGun = Weapon1Instance;
+					CurrentGun->CheckForUpgrades();
+				}
+
+				if (Weapon2Instance) Weapon2Instance->SetActorHiddenInGame(true);
+				if (Weapon3Instance) Weapon3Instance->SetActorHiddenInGame(true);
+				if (Weapon4Instance) Weapon4Instance->SetActorHiddenInGame(true);
+				if (Weapon5Instance) Weapon5Instance->SetActorHiddenInGame(true);
+			}
 		}
 	}
 }
 
 void APlayerCharacter::SelectWeapon2()
 {
-	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	if (bCanSwitchWeapons)
 	{
-		if (!Weapon2Equipped && GI->HasBought(WeaponName2))
+		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 		{
-			GI->SetCurrentWeapon(WeaponName2);
-			Weapon2Equipped = true;
-			Weapon1Equipped = Weapon3Equipped = Weapon4Equipped = false;
-
-			if (Weapon2Instance)
+			if (!Weapon2Equipped && GI->HasBought(WeaponName2))
 			{
-				Weapon2Instance->SetActorHiddenInGame(false);
-				Weapon2Instance->SetActorEnableCollision(true);
-				CurrentGun = Weapon2Instance;
-				CurrentGun->CheckForUpgrades();
-			}
+				GI->SetCurrentWeapon(WeaponName2);
+				Weapon2Equipped = true;
+				Weapon1Equipped = Weapon3Equipped = Weapon4Equipped = false;
 
-			if (Weapon1Instance) Weapon1Instance->SetActorHiddenInGame(true);
-			if (Weapon3Instance) Weapon3Instance->SetActorHiddenInGame(true);
-			if (Weapon4Instance) Weapon4Instance->SetActorHiddenInGame(true);
+				if (Weapon2Instance)
+				{
+					Weapon2Instance->SetActorHiddenInGame(false);
+					Weapon2Instance->SetActorEnableCollision(true);
+					CurrentGun = Weapon2Instance;
+					CurrentGun->CheckForUpgrades();
+				}
+
+				if (Weapon1Instance) Weapon1Instance->SetActorHiddenInGame(true);
+				if (Weapon3Instance) Weapon3Instance->SetActorHiddenInGame(true);
+				if (Weapon4Instance) Weapon4Instance->SetActorHiddenInGame(true);
+				if (Weapon5Instance) Weapon5Instance->SetActorHiddenInGame(true);
+			}
 		}
 	}
 }
 
 void APlayerCharacter::SelectWeapon3()
 {
-	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	if (bCanSwitchWeapons)
 	{
-		if (!Weapon3Equipped && GI->HasBought(WeaponName3))
+		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 		{
-			GI->SetCurrentWeapon(WeaponName3);
-			Weapon3Equipped = true;
-			Weapon1Equipped = Weapon2Equipped = Weapon4Equipped = false;
-
-			if (Weapon3Instance)
+			if (!Weapon3Equipped && GI->HasBought(WeaponName3))
 			{
-				Weapon3Instance->SetActorHiddenInGame(false);
-				Weapon3Instance->SetActorEnableCollision(true);
-				CurrentGun = Weapon3Instance;
-				CurrentGun->CheckForUpgrades();
-			}
+				GI->SetCurrentWeapon(WeaponName3);
+				Weapon3Equipped = true;
+				Weapon1Equipped = Weapon2Equipped = Weapon4Equipped = false;
 
-			if (Weapon1Instance) Weapon1Instance->SetActorHiddenInGame(true);
-			if (Weapon2Instance) Weapon2Instance->SetActorHiddenInGame(true);
-			if (Weapon4Instance) Weapon4Instance->SetActorHiddenInGame(true);
+				if (Weapon3Instance)
+				{
+					Weapon3Instance->SetActorHiddenInGame(false);
+					Weapon3Instance->SetActorEnableCollision(true);
+					CurrentGun = Weapon3Instance;
+					CurrentGun->CheckForUpgrades();
+				}
+
+				if (Weapon1Instance) Weapon1Instance->SetActorHiddenInGame(true);
+				if (Weapon2Instance) Weapon2Instance->SetActorHiddenInGame(true);
+				if (Weapon4Instance) Weapon4Instance->SetActorHiddenInGame(true);
+				if (Weapon5Instance) Weapon5Instance->SetActorHiddenInGame(true);
+			}
 		}
 	}
 }
 
 void APlayerCharacter::SelectWeapon4()
 {
-	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	if (bCanSwitchWeapons)
 	{
-		if (!Weapon4Equipped && GI->HasBought(WeaponName4))
+		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 		{
-			GI->SetCurrentWeapon(WeaponName4);
-			Weapon4Equipped = true;
-			Weapon1Equipped = Weapon2Equipped = Weapon3Equipped = false;
-
-			if (Weapon4Instance)
+			if (!Weapon4Equipped && GI->HasBought(WeaponName4))
 			{
-				Weapon4Instance->SetActorHiddenInGame(false);
-				Weapon4Instance->SetActorEnableCollision(true);
-				CurrentGun = Weapon4Instance;
-				CurrentGun->CheckForUpgrades();
-			}
+				GI->SetCurrentWeapon(WeaponName4);
+				Weapon4Equipped = true;
+				Weapon1Equipped = Weapon2Equipped = Weapon3Equipped = false;
 
-			if (Weapon1Instance) Weapon1Instance->SetActorHiddenInGame(true);
-			if (Weapon2Instance) Weapon2Instance->SetActorHiddenInGame(true);
-			if (Weapon3Instance) Weapon3Instance->SetActorHiddenInGame(true);
+				if (Weapon4Instance)
+				{
+					Weapon4Instance->SetActorHiddenInGame(false);
+					Weapon4Instance->SetActorEnableCollision(true);
+					CurrentGun = Weapon4Instance;
+					CurrentGun->CheckForUpgrades();
+				}
+
+				if (Weapon1Instance) Weapon1Instance->SetActorHiddenInGame(true);
+				if (Weapon2Instance) Weapon2Instance->SetActorHiddenInGame(true);
+				if (Weapon3Instance) Weapon3Instance->SetActorHiddenInGame(true);
+				if (Weapon5Instance) Weapon5Instance->SetActorHiddenInGame(true);
+			}
 		}
 	}
 }
+
+void APlayerCharacter::SelectWeapon5()
+{
+	if (bCanSwitchWeapons)
+	{
+		
+		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+		{
+			if (!Weapon5Equipped)
+			{
+				GI->SetCurrentWeapon(WeaponName5);
+				Weapon5Equipped = true;
+				Weapon1Equipped = Weapon2Equipped = Weapon3Equipped = Weapon4Equipped = false;
+
+				if (Weapon5Instance)
+				{
+					Weapon5Instance->SetActorHiddenInGame(false);
+					Weapon5Instance->SetActorEnableCollision(true);
+					CurrentGun = Weapon5Instance;
+				}
+
+				bCanSwitchWeapons = false;
+				
+				if (Weapon1Instance) Weapon1Instance->SetActorHiddenInGame(true);
+				if (Weapon2Instance) Weapon2Instance->SetActorHiddenInGame(true);
+				if (Weapon3Instance) Weapon3Instance->SetActorHiddenInGame(true);
+				if (Weapon4Instance) Weapon4Instance->SetActorHiddenInGame(true);
+			}
+		}
+	}
+}
+
 
 void APlayerCharacter::Use()
 {
@@ -456,6 +503,7 @@ AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
 	if (WeaponName == WeaponName2) return Weapon2Instance;
 	if (WeaponName == WeaponName3) return Weapon3Instance;
 	if (WeaponName == WeaponName4) return Weapon4Instance;
+	if (WeaponName == WeaponName5) return Weapon5Instance;
 
 	return nullptr;
 }
