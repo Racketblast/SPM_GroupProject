@@ -111,6 +111,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Challenge")
 	bool GetJustStartedChallenge() const; 
 	void ResetJustStartedChallenge();
+
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	int32 GetCurrentChallengeRewardAmount() const; 
 	
 	// För tids baserad challenge
 	FTimerHandle TimerHandle_WaveTimeLimit;
