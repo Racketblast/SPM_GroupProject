@@ -101,8 +101,9 @@ public:
 	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradePlayerStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradeGunStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
-
-	void StartDialogue();
+	
+	UFUNCTION(BlueprintCallable)
+	void StartDialogue(UAudioComponent* AudioComponent = nullptr);
 	UFUNCTION()
 	void PlayNextDialogue();
 private:
