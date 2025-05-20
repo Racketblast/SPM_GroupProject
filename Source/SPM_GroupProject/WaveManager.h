@@ -118,11 +118,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Wave Config")
 	int32 DefaultWaveDifficultyMultiplier = 2;
 
-	UPROPERTY(EditAnywhere, Category = "Spawning") // vet inte om dett akommer att behövas i slutändan
+	UPROPERTY(EditAnywhere, Category = "Spawning") 
 	int32 EnemiesPerSpawnBatch = 2;
 
-	UPROPERTY(EditAnywhere, Category = "Spawning")
-	int32 MaxConcurrentSpawnVFX = 2;
+	/*UPROPERTY(EditAnywhere, Category = "Spawning")
+	int32 MaxConcurrentSpawnVFX = 2;*/
 
 	int32 CurrentWaveIndex;
 	
@@ -158,7 +158,7 @@ protected:
 	int32 UpcomingEnemyCount = 0;
 
 	//För vfx
-	UPROPERTY(EditDefaultsOnly, Category="Spawning")
+	UPROPERTY(EditAnywhere, Category="Spawning")
 	UNiagaraSystem* SpawnEffect;
 
 	void PlaySpawnVFXAndThenSpawnEnemy(TSubclassOf<AActor> EnemyClass, const FVector& SpawnLocation);

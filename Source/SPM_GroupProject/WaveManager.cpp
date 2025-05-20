@@ -236,7 +236,7 @@ void AWaveManager::SpawnEnemy()
 
 void AWaveManager::HandleNextSpawnInQueue()
 {
-	while (ActiveVFXCount < MaxConcurrentSpawnVFX && !SpawnVFXQueue.IsEmpty())
+	while (ActiveVFXCount < EnemiesPerSpawnBatch && !SpawnVFXQueue.IsEmpty())
 	{
 		FPendingEnemySpawnData SpawnData;
 		if (SpawnVFXQueue.Dequeue(SpawnData))
