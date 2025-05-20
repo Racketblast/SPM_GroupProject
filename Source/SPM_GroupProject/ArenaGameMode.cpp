@@ -98,7 +98,7 @@ void AArenaGameMode::BeginPlay()
 			{
 				GI->StartDialogueRowName = "Intro";
 			}
-			
+			UE_LOG(LogTemp, Warning, TEXT("Starting Dialogue %i"),GI->CurrentGameFlag);
 			GI->StartDialogue();
 		}
 	}
