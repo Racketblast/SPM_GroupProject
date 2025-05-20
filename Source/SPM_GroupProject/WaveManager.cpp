@@ -70,12 +70,37 @@ void AWaveManager::StartNextWave()
 		ChallengeSub->ResetChallengeStatus();
 	}*/
 	
+	SpawnQueue.Empty();
+	
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
 		GI->bIsWave = true;
 	}
 
 	ActiveWaveData = GenerateWaveData(CurrentWaveIndex);
+
+	// Lägger till fienderna som måste finnas med  (MinCount)
+	for (const FEnemyTypeData& Type : ActiveWaveData.EnemyTypes)
+	{
+		for (int32 i = 0; i < Type.MinCount; ++i)
+		{
+			SpawnQueue.Add(Type.EnemyClass);
+		}
+	}
+
+	// Lägger till slumpade extra fiender (MaxExtraCount)
+	for (int32 i = 0; i < ActiveWaveData.MaxExtraCount; ++i)
+	{
+		int32 RandIndex = FMath::RandRange(0, ActiveWaveData.EnemyTypes.Num() - 1);
+		SpawnQueue.Add(ActiveWaveData.EnemyTypes[RandIndex].EnemyClass);
+	}
+
+	// Blandar om Arrayn
+	for (int32 i = SpawnQueue.Num() - 1; i > 0; --i)
+	{
+		int32 j = FMath::RandRange(0, i);
+		SpawnQueue.Swap(i, j);
+	}
 	
 	/*if (Waves.IsValidIndex(CurrentWaveIndex))
 	{
@@ -139,7 +164,41 @@ void AWaveManager::StartNextWave()
 // Denna funktion är den som faktisk spawnar in enemies 
 void AWaveManager::SpawnEnemy()
 {
-	if (EnemiesSpawnedInCurrentWave >= TotalEnemiesToSpawn)
+	if (!SpawnQueue.IsValidIndex(EnemiesSpawnedInCurrentWave))
+	{
+		GetWorldTimerManager().ClearTimer(EnemySpawnTimer);
+		return;
+	}
+
+	TSubclassOf<AActor> SelectedClass = SpawnQueue[EnemiesSpawnedInCurrentWave];
+
+	// Filtrerar giltiga spawn points
+	TArray<AEnemySpawnPoint*> ValidSpawnPoints;
+	for (AEnemySpawnPoint* Point : SpawnPoints)
+	{
+		if (Point && Point->CanSpawn(SelectedClass))
+		{
+			ValidSpawnPoints.Add(Point);
+		}
+	}
+
+	// Försöker igen ifall inga fungerande spawnpoints hittades 
+	if (ValidSpawnPoints.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No valid spawn points for %s"), *SelectedClass->GetName());
+		GetWorldTimerManager().SetTimerForNextTick(this, &AWaveManager::SpawnEnemy);
+		return;
+	}
+
+	int32 RandomSpawnIndex = FMath::RandRange(0, ValidSpawnPoints.Num() - 1);
+	FVector SpawnLocation = ValidSpawnPoints[RandomSpawnIndex]->GetActorLocation();
+
+	SpawnedCountPerType.FindOrAdd(SelectedClass)++;
+	EnemiesSpawnedInCurrentWave++;
+
+	PlaySpawnVFXAndThenSpawnEnemy(SelectedClass, SpawnLocation);
+	
+	/*if (EnemiesSpawnedInCurrentWave >= TotalEnemiesToSpawn)
 	{
 		GetWorldTimerManager().ClearTimer(EnemySpawnTimer);
 		return;
@@ -168,31 +227,33 @@ void AWaveManager::SpawnEnemy()
 	}
 	
 	
-		// Här används EnemySpawnPoint klassen
-		TArray<AEnemySpawnPoint*> ValidSpawnPoints;
-		for (AEnemySpawnPoint* Point : SpawnPoints)
+	// Här används EnemySpawnPoint klassen
+	TArray<AEnemySpawnPoint*> ValidSpawnPoints;
+	for (AEnemySpawnPoint* Point : SpawnPoints)
+	{
+		if (Point && Point->CanSpawn(SelectedClass))
 		{
-			if (Point && Point->CanSpawn(SelectedClass))
-			{
-				ValidSpawnPoints.Add(Point);
-			}
+			ValidSpawnPoints.Add(Point);
 		}
+	}
 
-		// Har gjort så att koden körs om och försöker spawna en fiende igen, ifall den misslyckas med att spawna en fiende. 
-		if (ValidSpawnPoints.Num() == 0)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("No valid spawn points for %s"), *SelectedClass->GetName());
-			GetWorldTimerManager().SetTimerForNextTick(this, &AWaveManager::SpawnEnemy);
-			return;
-		}
+	// Har gjort så att koden körs om och försöker spawna en fiende igen, ifall den misslyckas med att spawna en fiende. 
+	if (ValidSpawnPoints.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No valid spawn points for %s"), *SelectedClass->GetName());
+		GetWorldTimerManager().SetTimerForNextTick(this, &AWaveManager::SpawnEnemy);
+		return;
+	}
 
-		int32 RandomSpawnIndex = FMath::RandRange(0, ValidSpawnPoints.Num() - 1);
-		FVector SpawnLocation = ValidSpawnPoints[RandomSpawnIndex]->GetActorLocation();
+	int32 RandomSpawnIndex = FMath::RandRange(0, ValidSpawnPoints.Num() - 1);
+	FVector SpawnLocation = ValidSpawnPoints[RandomSpawnIndex]->GetActorLocation();
 
-		SpawnedCountPerType.FindOrAdd(SelectedClass)++;
-		EnemiesSpawnedInCurrentWave++;
 	
-		PlaySpawnVFXAndThenSpawnEnemy(SelectedClass, SpawnLocation);
+
+	SpawnedCountPerType.FindOrAdd(SelectedClass)++;
+	EnemiesSpawnedInCurrentWave++;
+
+	PlaySpawnVFXAndThenSpawnEnemy(SelectedClass, SpawnLocation);*/
 		
 		
 		/*FActorSpawnParameters SpawnParams;
@@ -218,7 +279,6 @@ void AWaveManager::SpawnEnemy()
 			UE_LOG(LogTemp, Warning, TEXT("Spawned enemy: %i"), EnemiesSpawnedInCurrentWave);
 			break;
 		}*/
-	
 }
 
 
@@ -327,6 +387,11 @@ void AWaveManager::TickGracePeriod()
 		CurrentWaveIndex++;
 
 		UE_LOG(LogTemp, Warning, TEXT("Grace period ended. Starting next wave..."));
+		// Challenges debuging
+		if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+		{
+			int32 f = ChallengeSub->GetCurrentChallengeRewardAmount();
+		}
 		StartNextWave();
 		return;
 	}

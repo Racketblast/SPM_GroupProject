@@ -186,6 +186,7 @@ int32 UChallengeSubsystem::GetCurrentChallengeRewardAmount() const
 		UE_LOG(LogTemp, Warning, TEXT("No custom reward found for challenge %s. Using default."), *UEnum::GetValueAsString(CurrentChallenge.Type));
 	}
 	
+	UE_LOG(LogTemp, Warning, TEXT("Reward found for challenge %s. Reward amount is %d."), *UEnum::GetValueAsString(CurrentChallenge.Type), FoundReward ? *FoundReward : RewardMoneyAmount);
 	return FoundReward ? *FoundReward : RewardMoneyAmount;
 }
 

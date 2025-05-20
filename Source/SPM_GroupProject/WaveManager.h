@@ -111,6 +111,9 @@ protected:
 
 	FTimerHandle EnemySpawnTimer;
 
+	UPROPERTY()
+	TArray<TSubclassOf<AActor>> SpawnQueue;
+
 	// Settingsen för Grace period 
 	UPROPERTY(EditAnywhere, Category = "Wave Config")
 	float GracePeriodDuration = 60.0f; // i sekunder
