@@ -223,11 +223,11 @@ void AWaveManager::SpawnEnemy()
 		SpawnedCountPerType.FindOrAdd(SelectedClass)++;
 		EnemiesSpawnedInCurrentWave++;
 
-		// Queue instead of direct spawn
+		// Queue 
 		SpawnVFXQueue.Enqueue(FPendingEnemySpawnData(SelectedClass, SpawnLocation));
 	}
 
-	// Start spawning if not already doing so
+	// Börjar spawna ifall det inte redan gör det
 	if (!bIsSpawningEnemy)
 	{
 		HandleNextSpawnInQueue();
@@ -236,9 +236,19 @@ void AWaveManager::SpawnEnemy()
 
 void AWaveManager::HandleNextSpawnInQueue()
 {
-	if (SpawnVFXQueue.IsEmpty())
+	while (ActiveVFXCount < MaxConcurrentSpawnVFX && !SpawnVFXQueue.IsEmpty())
 	{
-		// Finished this batch
+		FPendingEnemySpawnData SpawnData;
+		if (SpawnVFXQueue.Dequeue(SpawnData))
+		{
+			ActiveVFXCount++;
+			PlaySpawnVFXAndThenSpawnEnemy(SpawnData.EnemyClass, SpawnData.SpawnLocation);
+		}
+	}
+	
+	//Ifall queuen är tom och det inte finns några vfx som är aktiva, så börjar nästa batch. 
+	if (ActiveVFXCount == 0 && SpawnVFXQueue.IsEmpty())
+	{
 		bIsSpawningEnemy = false;
 
 		if (EnemiesSpawnedInCurrentWave < SpawnQueue.Num())
@@ -255,15 +265,6 @@ void AWaveManager::HandleNextSpawnInQueue()
 		{
 			GetWorldTimerManager().ClearTimer(EnemySpawnTimer);
 		}
-		return;
-	}
-
-	bIsSpawningEnemy = true;
-
-	FPendingEnemySpawnData SpawnData;
-	if (SpawnVFXQueue.Dequeue(SpawnData))
-	{
-		PlaySpawnVFXAndThenSpawnEnemy(SpawnData.EnemyClass, SpawnData.SpawnLocation);
 	}
 }
 
@@ -288,13 +289,13 @@ void AWaveManager::PlaySpawnVFXAndThenSpawnEnemy(TSubclassOf<AActor> EnemyType, 
 	
 	if (!NiagaraComponent)
 	{
-		// Fallback if VFX fails
+		// Ifall vfx inte fungerar, så spawnar fiender ändå
 		SpawnEnemyAtLocation(EnemyType, SpawnLocation);
 		return;
 	}
 
-	// Bind lambda to handle the spawn after VFX completes    AddUniqueDynamic
-	NiagaraComponent->OnSystemFinished.AddDynamic(this, &AWaveManager::OnSpawnVFXFinished);
+	// Gör så att OnSpawnVFXFinished körs efter vfx är klar
+	NiagaraComponent->OnSystemFinished.AddUniqueDynamic(this, &AWaveManager::OnSpawnVFXFinished);
 
 	PendingSpawnQueue.Add(NiagaraComponent, EnemyType);
 }
@@ -307,10 +308,11 @@ void AWaveManager::OnSpawnVFXFinished(UNiagaraComponent* PSystem)
 	FVector SpawnLocation = PSystem->GetComponentLocation();
 
 	PendingSpawnQueue.Remove(PSystem);
+	ActiveVFXCount--; 
 
 	SpawnEnemyAtLocation(EnemyType, SpawnLocation);
-
-
+	
+	//Försöker att spawna nästa vfx i queuen
 	HandleNextSpawnInQueue();
 }
 

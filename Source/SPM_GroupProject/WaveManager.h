@@ -177,5 +177,5 @@ protected:
 	bool bIsSpawningEnemy = false; 	// Håller kåll på om en VFX spelas upp just nu. 
 
 	void HandleNextSpawnInQueue();
-	
+
 };
