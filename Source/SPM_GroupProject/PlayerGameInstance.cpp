@@ -424,19 +424,38 @@ void UPlayerGameInstance::Init()
 	}
 	
 	//Loads the saved game
+	LoadGame();
+	
+	//Creates a new saved game if nothing exists
+	/*else
+	{
+		if (SaveGameObject)
+		{
+			Save = Cast<USwarmedSaveGame>(UGameplayStatics::CreateSaveGameObject(SaveGameObject));
+			if (Save)
+			{
+				Save->SavedMoney = Money;
+				Save->SavedUpgradeMap = UpgradeMap;
+				Save->SavedCurrentWeapon = CurrentWeapon;
+				Save->SavedUnlockedLevels = UnlockedLevels;
+				Save->SavedCurrentGameFlag = CurrentGameFlag;
+				UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
+			}
+		}
+	}*/
+}
+
+void UPlayerGameInstance::SaveGame()
+{
 	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
 	{
-		Save = Cast<USwarmedSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
-		if (Save)
-		{
-			Money = Save->SavedMoney;
-			UpgradeMap = Save->SavedUpgradeMap;
-			CurrentWeapon = Save->SavedCurrentWeapon;
-			UnlockedLevels = Save->SavedUnlockedLevels;
-			CurrentGameFlag = Save->SavedCurrentGameFlag;
-		}
+		Save->SavedMoney = Money;
+		Save->SavedUpgradeMap = UpgradeMap;
+		Save->SavedCurrentWeapon = CurrentWeapon;
+		Save->SavedUnlockedLevels = UnlockedLevels;
+		Save->SavedCurrentGameFlag = CurrentGameFlag;
+		UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
 	}
-	//Creates a new saved game if nothing exists
 	else
 	{
 		if (SaveGameObject)
@@ -455,62 +474,67 @@ void UPlayerGameInstance::Init()
 	}
 }
 
-void UPlayerGameInstance::SaveGame()
+void UPlayerGameInstance::LoadGame()
 {
+	//Loads the saved game
 	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
 	{
-		Save->SavedMoney = Money;
-		Save->SavedUpgradeMap = UpgradeMap;
-		Save->SavedCurrentWeapon = CurrentWeapon;
-		Save->SavedUnlockedLevels = UnlockedLevels;
-		Save->SavedCurrentGameFlag = CurrentGameFlag;
-		UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
+		Save = Cast<USwarmedSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
+		if (Save)
+		{
+			Money = Save->SavedMoney;
+			UpgradeMap = Save->SavedUpgradeMap;
+			CurrentWeapon = Save->SavedCurrentWeapon;
+			UnlockedLevels = Save->SavedUnlockedLevels;
+			CurrentGameFlag = Save->SavedCurrentGameFlag;
+		}
 	}
 }
 
 void UPlayerGameInstance::RestartGame()
 {
-	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
-	{
-		Money = 0;
-		UpgradeMap = {};
-		UnlockedLevels = {};
-		Save->SavedCurrentWeapon = EUpgradeType::None;
-		UnlockedLevels.Add(LevelOrder[0]);
-		UnlockedLevels.Add(LevelOrder[1]);
-		UnlockedLevels.Add(LevelOrder[2]);
-		UnlockedLevels.Add(LevelOrder[3]);
-		CurrentGameFlag = 0;
-	}
+	Money = 0;
+	UpgradeMap = {};
+	UnlockedLevels = {};
+	CurrentWeapon = EUpgradeType::None;
+	UnlockedLevels.Add(LevelOrder[0]);
+	UnlockedLevels.Add(LevelOrder[1]);
+	UnlockedLevels.Add(LevelOrder[2]);
+	UnlockedLevels.Add(LevelOrder[3]);
+	CurrentGameFlag = 0;
 }
 
 bool UPlayerGameInstance::HasGameChanged()
 {
-	Save = Cast<USwarmedSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
-	if (Save)
+	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
 	{
-		if (Money != Save->SavedMoney)
-			return true;
-		if (UpgradeMap.Num() != Save->SavedUpgradeMap.Num())
-			return true;
-		for (const TPair<EUpgradeType, FUpgradeInfo>& UpgradeType : UpgradeMap)
+		Save = Cast<USwarmedSaveGame>(UGameplayStatics::LoadGameFromSlot("Save1",0));
+		if (Save)
 		{
-			const FUpgradeInfo* ValueB = Save->SavedUpgradeMap.Find(UpgradeType.Key);
-			if (!ValueB || *ValueB != UpgradeType.Value)
+			if (Money != Save->SavedMoney)
+				return true;
+			if (UpgradeMap.Num() != Save->SavedUpgradeMap.Num())
+				return true;
+			for (const TPair<EUpgradeType, FUpgradeInfo>& UpgradeType : UpgradeMap)
+			{
+				const FUpgradeInfo* ValueB = Save->SavedUpgradeMap.Find(UpgradeType.Key);
+				if (!ValueB || *ValueB != UpgradeType.Value)
+					return true;
+			}
+			if (CurrentWeapon != Save->SavedCurrentWeapon)
+				return true;
+			if (!UnlockedLevels.Includes(Save->SavedUnlockedLevels) || !Save->SavedUnlockedLevels.Includes(UnlockedLevels))
+				return true;
+			if (CurrentGameFlag != Save->SavedCurrentGameFlag)
 				return true;
 		}
-		if (CurrentWeapon != Save->SavedCurrentWeapon)
-			return true;
-		if (!UnlockedLevels.Includes(Save->SavedUnlockedLevels) || !Save->SavedUnlockedLevels.Includes(UnlockedLevels))
-			return true;
-		if (CurrentGameFlag != Save->SavedCurrentGameFlag)
-			return true;
+		return false;
 	}
 	
-	return false;
+	return true;
 }
 
-void UPlayerGameInstance::StartDialogue()
+void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
 {
 	if (!EventDialogueInfo)
 		return;
@@ -540,7 +564,7 @@ void UPlayerGameInstance::StartDialogue()
 
 			//Plays the dialogue for the amount of time the sound plays
 			float TimeUntilNextDialogue = 0.0f;
-			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+			if ( APawn* Player = Cast<APawn>(UGameplayStatics::GetPlayerPawn(this, 0)))
 			{
 				if (Row->DialogueSound)
 				{
@@ -567,7 +591,7 @@ void UPlayerGameInstance::PlayNextDialogue()
 			NextDialogueRowName = Row->NextDialogue;
 			//Plays the dialogue for the amount of time the sound plays
 			float TimeUntilNextDialogue = 0.0f;
-			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+			if ( APawn* Player = Cast<APawn>(UGameplayStatics::GetPlayerPawn(this, 0)))
 			{
 				if (Row->DialogueSound)
 				{

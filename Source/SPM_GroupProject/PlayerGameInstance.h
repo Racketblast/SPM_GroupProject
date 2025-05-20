@@ -37,8 +37,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bCanPlayDialogue = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	FName CurrentDialogueRowName;
+	UPROPERTY(BlueprintReadWrite)
 	FName StartDialogueRowName;
 	FName NextDialogueRowName;
 
@@ -53,6 +54,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SaveGame();
+	UFUNCTION(BlueprintCallable)
+	void LoadGame();
 	UFUNCTION(BlueprintCallable)
 	void RestartGame();
 	UFUNCTION(BlueprintCallable)
@@ -98,8 +101,9 @@ public:
 	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradePlayerStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradeGunStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
-
-	void StartDialogue();
+	
+	UFUNCTION(BlueprintCallable)
+	void StartDialogue(UAudioComponent* AudioComponent = nullptr);
 	UFUNCTION()
 	void PlayNextDialogue();
 private:

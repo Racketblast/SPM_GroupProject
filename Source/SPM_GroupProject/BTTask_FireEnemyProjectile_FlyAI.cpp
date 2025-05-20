@@ -37,9 +37,19 @@ EBTNodeResult::Type UBTTask_FireEnemyProjectile_FlyAI::ExecuteTask(UBehaviorTree
 			SpawnParams.Instigator = AICharacter;
 
 			AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, FireRotation, SpawnParams);
-			if (Projectile && Projectile->ProjectileComponent)
+
+			if (Projectile)
 			{
-				Projectile->ProjectileComponent->Velocity = Direction * Projectile->ProjectileComponent->InitialSpeed;
+				//Applies AIDamage to projectile
+				if (AAI_Main* AI = Cast<AAI_Main>(Controller->GetPawn()))
+				{
+					Projectile->ProjectileDamage = AI->AIDamage;
+				}
+			
+				if (Projectile->ProjectileComponent)
+				{
+					Projectile->ProjectileComponent->Velocity = Direction * Projectile->ProjectileComponent->InitialSpeed;
+				}
 			}
 
 			AICharacter->NotifyFired(); 
