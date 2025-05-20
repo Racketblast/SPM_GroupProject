@@ -109,3 +109,14 @@ void AArenaGameMode::ReturnToHub()
 	UE_LOG(LogTemp, Display, TEXT("Return to Hub"));
 	UGameplayStatics::OpenLevel(this, "Hub");
 }
+
+
+
+void AArenaGameMode::GoToEnding()
+{
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		GI->CurrentGameFlag = 9;
+	}
+	UGameplayStatics::OpenLevel(this, "CinematicHub");
+}

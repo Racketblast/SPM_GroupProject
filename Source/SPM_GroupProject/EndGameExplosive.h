@@ -14,4 +14,11 @@ class SPM_GROUPPROJECT_API AEndGameExplosive : public AImpactExplosive
 {
 	GENERATED_BODY()
 	virtual void Explode() override;
+
+public:
+	UPROPERTY(BlueprintReadOnly)
+	class ULevelSequencePlayer* SequencePlayer;
+	
+	UPROPERTY(EditDefaultsOnly, Category="Transition")
+	class ULevelSequence* FadeOutTransition;
 };
