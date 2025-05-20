@@ -68,6 +68,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bCanSwitchWeapons = true;
+
+	UPROPERTY(BlueprintReadOnly)
+	UUserWidget* UseWidget;
 protected:
 	UPROPERTY(EditAnywhere)
 	class UCameraComponent* PlayerCamera;
@@ -161,5 +164,10 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Audio")
 	USoundBase* DamageSound;
+	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> UseWidgetClass;
 
+	void CheckforUse();
+	AActor* LastUseTarget;
 };

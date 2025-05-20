@@ -21,4 +21,6 @@ class SPM_GROUPPROJECT_API IPlayerUseInterface
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "PlayerInteraction")
 	void Use(class APlayerCharacter* Player);
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "PlayerInteraction")
+	void ShowInteractable(bool bShow);
 };

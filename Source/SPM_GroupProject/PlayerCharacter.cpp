@@ -15,6 +15,7 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Explosive.h"
+#include "Blueprint/UserWidget.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -97,7 +98,14 @@ void APlayerCharacter::BeginPlay()
 	{
 		GameMode->FadeIn(this);
 	}
+
+	//For creating the UseWidget
+	if (UseWidgetClass)
+	{
+		UseWidget = CreateWidget<UUserWidget>(GetWorld(), UseWidgetClass);
+	}
 }
+
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -133,6 +141,8 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		Shoot();
 	}
+	
+	CheckforUse();
 }
 
 void APlayerCharacter::UpdateFirstPersonMeshSway(float DeltaTime)
@@ -487,6 +497,40 @@ void APlayerCharacter::Use()
 			}
 		}
 	}
+}
+
+void APlayerCharacter::CheckforUse()
+{
+	FVector Start = PlayerCamera->GetComponentLocation();
+	FVector End = Start + PlayerCamera->GetForwardVector() * UseDistance;
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params))
+	{
+		if (AActor* Actor = HitResult.GetActor())
+		{
+			if (Actor->GetClass()->ImplementsInterface(UPlayerUseInterface::StaticClass()))
+			{
+				if (LastUseTarget != Actor)
+				{
+					LastUseTarget = Actor;
+					IPlayerUseInterface::Execute_ShowInteractable(LastUseTarget, true);
+					UseWidget->AddToViewport();
+				}
+				return;
+			}
+		}
+	}
+
+	if (UseWidget && UseWidget->IsInViewport())
+	{
+		IPlayerUseInterface::Execute_ShowInteractable(LastUseTarget, false);
+		UseWidget->RemoveFromParent();
+	}
+
+	LastUseTarget = nullptr;
 }
 
 void APlayerCharacter::HealPlayer(int32 HealAmount)
