@@ -30,6 +30,11 @@ void AEndGameGunPickup::Use_Implementation(APlayerCharacter* Player)
 	Destroy();
 }
 
+void AEndGameGunPickup::ShowInteractable_Implementation(bool bShow)
+{
+	StaticMeshComponent->SetRenderCustomDepth(bShow);
+}
+
 // Called when the game starts or when spawned
 void AEndGameGunPickup::BeginPlay()
 {

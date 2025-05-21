@@ -18,6 +18,7 @@ class SPM_GROUPPROJECT_API USwarmedSaveGame : public USaveGame
 {
 	GENERATED_BODY()
 public:
+	//Game saved
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 SavedMoney;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -28,4 +29,14 @@ public:
 	int32 SavedCurrentGameFlag;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSet<FName> SavedUnlockedLevels;
+
+	//Options saved
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SavedMouseSensitivityScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SavedMasterVolumeScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SavedSFXVolumeScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float SavedMusicVolumeScale;
 };

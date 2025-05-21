@@ -16,6 +16,8 @@ public:
 	// Sets default values for this actor's properties
 	ADebugCube();
 	virtual void Use_Implementation(APlayerCharacter* Player) override;
+	
+	virtual void ShowInteractable_Implementation(bool bShow) override;
 
 	UPROPERTY(EditAnywhere, Category="Debug")
 	bool bLevel = false;
