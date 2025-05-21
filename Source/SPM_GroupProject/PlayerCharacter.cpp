@@ -236,12 +236,20 @@ void APlayerCharacter::MoveRight(float Value)
 void APlayerCharacter::Yaw(float Value)
 {
 	CachedYawInput = Value;
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		Value *= GI->MouseSensitivityScale;
+	}
 	AddControllerYawInput(Value);
 }
 
 void APlayerCharacter::Pitch(float Value)
 {
 	CachedPitchInput = Value;
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		Value *= GI->MouseSensitivityScale;
+	}
 	AddControllerPitchInput(Value);
 }
 
