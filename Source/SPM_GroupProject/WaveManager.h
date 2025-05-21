@@ -138,11 +138,31 @@ protected:
 	UPROPERTY()
 	TArray<TSubclassOf<AActor>> SpawnQueue;
 
+
+	// Grace perioden för innan den första waven börjar.  
+	FTimerHandle FirstWaveGraceTimer;
+
+	UPROPERTY(EditAnywhere, Category = "Wave Config")
+	float FirstWaveTimer = 5.0f;
+
+	int32 FirstGraceSecondsRemaining;
+
+	bool bIsFirstGracePeriod = false;
+
+	void UpdateFirstWaveCountdown();
+
+	UFUNCTION(BlueprintCallable, Category = "Wave")
+	float GetFirstGraceSecondsRemaining() const { return FirstGraceSecondsRemaining; }
+
+	UFUNCTION(BlueprintCallable, Category = "Wave")
+	bool IsFirstGracePeriod() const { return bIsFirstGracePeriod; }
+
 	// Settingsen för Grace period 
 	UPROPERTY(EditAnywhere, Category = "Wave Config")
 	float GracePeriodDuration = 60.0f; // i sekunder
 
 	FTimerHandle GracePeriodTimer;
+	
 	int32 GraceSecondsRemaining;
 
 	bool bIsGracePeriod = false;

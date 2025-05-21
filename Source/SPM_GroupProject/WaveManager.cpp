@@ -23,7 +23,38 @@ void AWaveManager::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	StartNextWave();
+	//StartNextWave();
+
+	FirstGraceSecondsRemaining = FirstWaveTimer;
+	bIsFirstGracePeriod = false;
+	//UE_LOG(LogTemp, Warning, TEXT("bIsFirstGracePeriod BeginPlay: %s"), bIsFirstGracePeriod ? TEXT("true") : TEXT("false"));
+	
+	GetWorldTimerManager().SetTimer(
+	FirstWaveGraceTimer,
+	this,
+	&AWaveManager::UpdateFirstWaveCountdown,
+	 1.0f, 
+	true
+	);
+}
+
+void AWaveManager::UpdateFirstWaveCountdown()
+{
+	bIsFirstGracePeriod = true;
+
+	//FirstGraceSecondsRemaining -= 1.0f;
+
+	UE_LOG(LogTemp, Warning, TEXT("Time until game starts: %i"), FirstGraceSecondsRemaining);
+	//UE_LOG(LogTemp, Warning, TEXT("bIsFirstGracePeriod: %s"), bIsFirstGracePeriod ? TEXT("true") : TEXT("false"));
+
+	if (FirstGraceSecondsRemaining <= 0.0f)
+	{
+		GetWorldTimerManager().ClearTimer(FirstWaveGraceTimer);
+		bIsFirstGracePeriod = false;
+		StartNextWave();
+	}
+
+	FirstGraceSecondsRemaining -= 1.0f;
 }
 
 FWaveData AWaveManager::GenerateWaveData(int32 WaveIndex) const
@@ -69,7 +100,7 @@ void AWaveManager::StartNextWave()
 	{
 		ChallengeSub->ResetChallengeStatus();
 	}*/
-	
+	//UE_LOG(LogTemp, Warning, TEXT("bIsFirstGracePeriod StartNextWave: %s"), bIsFirstGracePeriod ? TEXT("true") : TEXT("false"));
 	SpawnQueue.Empty();
 	
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
@@ -321,7 +352,8 @@ void AWaveManager::SpawnEnemyAtLocation(TSubclassOf<AActor> EnemyType, const FVe
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-	AActor* SpawnedEnemy = GetWorld()->SpawnActor<AActor>(EnemyType, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
+	AActor* SpawnedEnemy = GetWorld()->SpawnActor<AActor>(EnemyType, SpawnLocation, FRotator::ZeroRotator, SpawnParams); // Det som faktiskt spawnar fienden
+	
 	if (SpawnedEnemy)
 	{
 		if (AFlyingEnemyAI* FlyingEnemy = Cast<AFlyingEnemyAI>(SpawnedEnemy))
@@ -377,7 +409,7 @@ void AWaveManager::TickGracePeriod()
 		return;
 	}
 
-	// Skriv ut GraceSecondsRemaining direkt till skärmen. Använder nu en Widget istället, dock är den 1 sekund fel, men tror det är ok
+	// Skriv ut GraceSecondsRemaining direkt till skärmen. Använder nu en Widget istället
 	/*GEngine->AddOnScreenDebugMessage(
 		-1,
 		1.1f,
