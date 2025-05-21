@@ -27,7 +27,7 @@ EBTNodeResult::Type UBTTask_JumpToNavMesh::ExecuteTask(UBehaviorTreeComponent& O
 	{
 		const FVector JumpDirection = (NearestPoint.Location - CurrentLocation).GetSafeNormal();
 		FVector LaunchVelocity = JumpDirection * 600.f;
-		LaunchVelocity.Z = 800.f;
+		LaunchVelocity.Z = 500.f;
 
 		Character->LaunchCharacter(LaunchVelocity, true, true);
 
