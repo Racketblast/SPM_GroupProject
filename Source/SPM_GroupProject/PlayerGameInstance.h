@@ -70,7 +70,7 @@ public:
 	//Options
 	UPROPERTY(BlueprintReadWrite)
 	float MouseSensitivityScale = 1.0f;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	class USoundMix* SoundMix;
 	UPROPERTY(EditDefaultsOnly)
 	class USoundClass* MasterSoundClass;
