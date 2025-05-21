@@ -42,6 +42,11 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	class UAudioComponent* AudioComponent;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	class UNiagaraSystem* DamageEffect;
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	UNiagaraSystem* DeathEffect;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
