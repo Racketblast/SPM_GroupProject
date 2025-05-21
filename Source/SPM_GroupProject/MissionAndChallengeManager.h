@@ -13,7 +13,7 @@ struct FChallengeRewardData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EChallengeType ChallengeType;
+	EChallengeType ChallengeType = EChallengeType::None;;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FText ChallengeDescription;
