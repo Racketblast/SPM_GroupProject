@@ -61,23 +61,16 @@ void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
 		{
 			Projectile->SetInstigator(Cast<APawn>(OwnerCharacter));  
 		}
-    if (OwnerCharacter)
-    {
-        APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
-        if (PC)
-        {
-            float RecoilPitch = FMath::FRandRange(RecoilPitchMin, RecoilPitchMax);
-            float RecoilYaw = FMath::FRandRange(RecoilYawMin, RecoilYawMax);
+		if (OwnerCharacter)
+		{
+			float RecoilPitch = FMath::FRandRange(RecoilPitchMin, RecoilPitchMax);
+			float RecoilYaw = FMath::FRandRange(RecoilYawMin, RecoilYawMax);
 
-            FRotator ControlRotation = PC->GetControlRotation();
-            ControlRotation.Pitch -= RecoilPitch;
-            ControlRotation.Yaw += RecoilYaw;
-
-            PC->SetControlRotation(ControlRotation);
-        }
-    }
+			OwnerCharacter->AddRecoilImpulse(FRotator(-RecoilPitch, RecoilYaw, 0.f)); // Negative pitch = up kick
+			ApplyRecoilTranslation(); 
+		}
 		CurrentAmmo--;
-		ApplyRecoilTranslation();
+		//ApplyRecoilTranslation();
 		UE_LOG(LogTemp, Warning, TEXT("Fired! Current Ammo: %d"), CurrentAmmo);
 
 		if (FireSound && FireAudioComponent)

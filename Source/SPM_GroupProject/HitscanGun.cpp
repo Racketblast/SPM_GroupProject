@@ -46,6 +46,7 @@ void AHitscanGun::Tick(float DeltaTime)
   
 }
 
+
 void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 {
     if (bIsReloading)
@@ -155,20 +156,13 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
         }}
     if (OwnerCharacter)
     {
-        APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
-        if (PC)
-        {
-            float RecoilPitch = FMath::FRandRange(RecoilPitchMin, RecoilPitchMax);
-            float RecoilYaw = FMath::FRandRange(RecoilYawMin, RecoilYawMax);
+        float RecoilPitch = FMath::FRandRange(RecoilPitchMin, RecoilPitchMax);
+        float RecoilYaw = FMath::FRandRange(RecoilYawMin, RecoilYawMax);
 
-            FRotator ControlRotation = PC->GetControlRotation();
-            ControlRotation.Pitch -= RecoilPitch;
-            ControlRotation.Yaw += RecoilYaw;
-
-            PC->SetControlRotation(ControlRotation);
-            ApplyRecoilTranslation();
-        }
+        OwnerCharacter->AddRecoilImpulse(FRotator(-RecoilPitch, RecoilYaw, 0.f)); // Negative pitch = up kick
+        ApplyRecoilTranslation(); // Optional visual recoil
     }
+
     CurrentAmmo--;
     
 }

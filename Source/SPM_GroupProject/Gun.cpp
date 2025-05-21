@@ -8,8 +8,8 @@
 
 AGun::AGun()
 {
-	PrimaryActorTick.bCanEverTick = false;
-
+	//PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
 	WeaponMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
 	SetRootComponent(WeaponMeshComponent);
 

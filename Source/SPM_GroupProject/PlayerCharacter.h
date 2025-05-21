@@ -30,7 +30,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void EnemyHitFalse();
 
-
+	void AddRecoilImpulse(FRotator Impulse);
 	UPROPERTY(EditAnywhere)
 	USceneComponent* Hand;
 
@@ -160,6 +160,13 @@ private:
 
 	FRotator TargetSwayRotation;
 	FRotator CurrentSwayRotation;
+
+	FRotator RecoilOffset;
+	FRotator RecoilVelocity;
+
+	UPROPERTY(EditAnywhere, Category = "Recoil")
+	float RecoilDampening = 20.f; 
+
 	
 	float CachedYawInput = 0.0f;
 	float CachedPitchInput = 0.0f;
