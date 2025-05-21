@@ -568,6 +568,7 @@ void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
 			{
 				if (Row->DialogueSound)
 				{
+					bDialogueIsPlaying = true;
 					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Row->DialogueSound, Player->GetActorLocation());
 					TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
 				}
@@ -607,6 +608,7 @@ void UPlayerGameInstance::PlayNextDialogue()
 	//If dialogue is over, take away the widgets
 	else
 	{
+		bDialogueIsPlaying = false;
 		TArray<UUserWidget*> FoundWidgets;
 		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UUserWidget::StaticClass(), false);
 		if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(StartDialogueRowName, TEXT("")))

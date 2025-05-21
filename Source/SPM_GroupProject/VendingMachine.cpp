@@ -18,6 +18,11 @@ void AVendingMachine::Use_Implementation(APlayerCharacter* Player)
 	UseVendingMachine();
 }
 
+void AVendingMachine::ShowInteractable_Implementation(bool bShow)
+{
+	StaticMeshComponent->SetRenderCustomDepth(bShow);
+}
+
 void AVendingMachine::UseVendingMachine()
 {
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))

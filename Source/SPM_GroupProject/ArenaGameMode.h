@@ -20,6 +20,8 @@ public:
 	void FadeOut(const AActor* PlayingActor);
 	UFUNCTION()
 	void PlayerDeath();
+	UFUNCTION()
+	void GoToEnding();
 	
 	UPROPERTY(BlueprintReadOnly)
 	class ULevelSequencePlayer* SequencePlayer;

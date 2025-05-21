@@ -59,6 +59,13 @@ void ATeleporter::Use_Implementation(APlayerCharacter* Player)
 		}
 }
 
+void ATeleporter::ShowInteractable_Implementation(bool bShow)
+{
+	if (!CachedGameInstance->bIsWave)
+		CubeMeshComponent->SetRenderCustomDepth(bShow);
+}
+
+
 void ATeleporter::BeginPlay()
 {
 	Super::BeginPlay();

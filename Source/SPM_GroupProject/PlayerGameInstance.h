@@ -37,6 +37,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bCanPlayDialogue = false;
+	UPROPERTY(BlueprintReadOnly)
+	bool bDialogueIsPlaying = false;
 	UPROPERTY(BlueprintReadWrite)
 	FName CurrentDialogueRowName;
 	UPROPERTY(BlueprintReadWrite)
