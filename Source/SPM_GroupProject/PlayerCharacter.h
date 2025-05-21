@@ -24,7 +24,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-public:
 	UPROPERTY(BlueprintReadOnly)
 	bool bEnemyHit = false;
 
@@ -71,6 +70,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	UUserWidget* UseWidget;
+	
+	UPROPERTY(BlueprintReadOnly)
+	bool bShowUseWidget = false;
 protected:
 	UPROPERTY(EditAnywhere)
 	class UCameraComponent* PlayerCamera;
@@ -169,5 +171,6 @@ private:
 	TSubclassOf<UUserWidget> UseWidgetClass;
 
 	void CheckforUse();
+	
 	AActor* LastUseTarget;
 };

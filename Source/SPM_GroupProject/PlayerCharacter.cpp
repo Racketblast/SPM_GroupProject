@@ -517,17 +517,17 @@ void APlayerCharacter::CheckforUse()
 				{
 					LastUseTarget = Actor;
 					IPlayerUseInterface::Execute_ShowInteractable(LastUseTarget, true);
-					UseWidget->AddToViewport();
+					bShowUseWidget = true;
 				}
 				return;
 			}
 		}
 	}
 
-	if (UseWidget && UseWidget->IsInViewport())
+	if (bShowUseWidget)
 	{
 		IPlayerUseInterface::Execute_ShowInteractable(LastUseTarget, false);
-		UseWidget->RemoveFromParent();
+		bShowUseWidget = false;
 	}
 
 	LastUseTarget = nullptr;
