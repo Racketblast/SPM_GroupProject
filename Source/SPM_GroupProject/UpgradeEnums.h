@@ -13,6 +13,7 @@ enum class EUpgradeType : uint8
 	Rifle               UMETA(DisplayName = "Rifle"),
 	Shotgun             UMETA(DisplayName = "Shotgun"),
 	RocketLauncher      UMETA(DisplayName = "RocketLauncher"),
+	DoomsdayGun			UMETA(DisplayName = "DoomsdayGun"),
 	Health20            UMETA(DisplayName = "20 Health"),
 	HealthMax           UMETA(DisplayName = "Max Health"),
 	Speed20             UMETA(DisplayName = "Speed 20%"),

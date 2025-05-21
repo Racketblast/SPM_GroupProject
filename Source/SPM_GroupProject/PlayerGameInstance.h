@@ -17,6 +17,9 @@ class SPM_GROUPPROJECT_API UPlayerGameInstance : public UGameInstance
 public:
 	UPlayerGameInstance();
 	virtual void Init() override;
+
+	void OnPostWorldInit(UWorld* World, const UWorld::InitializationValues IVS);
+
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class USwarmedSaveGame> SaveGameObject;
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite)
@@ -37,6 +40,8 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bCanPlayDialogue = false;
+	UPROPERTY(BlueprintReadOnly)
+	bool bDialogueIsPlaying = false;
 	UPROPERTY(BlueprintReadWrite)
 	FName CurrentDialogueRowName;
 	UPROPERTY(BlueprintReadWrite)
@@ -52,6 +57,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Data")
 	UDataTable* EventDialogueInfo;
 
+	//For savegame
 	UFUNCTION(BlueprintCallable)
 	void SaveGame();
 	UFUNCTION(BlueprintCallable)
@@ -60,6 +66,24 @@ public:
 	void RestartGame();
 	UFUNCTION(BlueprintCallable)
 	bool HasGameChanged();
+
+	//Options
+	UPROPERTY(BlueprintReadWrite)
+	float MouseSensitivityScale = 1.0f;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	class USoundMix* SoundMix;
+	UPROPERTY(EditDefaultsOnly)
+	class USoundClass* MasterSoundClass;
+	UPROPERTY(EditDefaultsOnly)
+	class USoundClass* SFXSoundClass;
+	UPROPERTY(EditDefaultsOnly)
+	class USoundClass* MusicSoundClass;
+	UPROPERTY(BlueprintReadWrite)
+	float MasterVolumeScale = 1.0f;
+	UPROPERTY(BlueprintReadWrite)
+	float SFXVolumeScale = 1.0f;
+	UPROPERTY(BlueprintReadWrite)
+	float MusicVolumeScale = 1.0f;
 	
 	
 	UFUNCTION(BlueprintCallable)

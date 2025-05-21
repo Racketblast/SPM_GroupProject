@@ -454,6 +454,12 @@ void UPlayerGameInstance::SaveGame()
 		Save->SavedCurrentWeapon = CurrentWeapon;
 		Save->SavedUnlockedLevels = UnlockedLevels;
 		Save->SavedCurrentGameFlag = CurrentGameFlag;
+		
+		Save->SavedMouseSensitivityScale = MouseSensitivityScale;
+		Save->SavedMasterVolumeScale = MasterVolumeScale;
+		Save->SavedSFXVolumeScale = SFXVolumeScale;
+		Save->SavedMusicVolumeScale = MusicVolumeScale;
+		
 		UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
 	}
 	else
@@ -468,6 +474,12 @@ void UPlayerGameInstance::SaveGame()
 				Save->SavedCurrentWeapon = CurrentWeapon;
 				Save->SavedUnlockedLevels = UnlockedLevels;
 				Save->SavedCurrentGameFlag = CurrentGameFlag;
+				
+				Save->SavedMouseSensitivityScale = MouseSensitivityScale;
+				Save->SavedMasterVolumeScale = MasterVolumeScale;
+				Save->SavedSFXVolumeScale = SFXVolumeScale;
+				Save->SavedMusicVolumeScale = MusicVolumeScale;
+				
 				UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
 			}
 		}
@@ -487,6 +499,11 @@ void UPlayerGameInstance::LoadGame()
 			CurrentWeapon = Save->SavedCurrentWeapon;
 			UnlockedLevels = Save->SavedUnlockedLevels;
 			CurrentGameFlag = Save->SavedCurrentGameFlag;
+			
+			MouseSensitivityScale = Save->SavedMouseSensitivityScale;
+			MasterVolumeScale = Save->SavedMasterVolumeScale;
+			SFXVolumeScale = Save->SavedSFXVolumeScale;
+			MusicVolumeScale = Save->SavedMusicVolumeScale;
 		}
 	}
 }
@@ -526,6 +543,15 @@ bool UPlayerGameInstance::HasGameChanged()
 			if (!UnlockedLevels.Includes(Save->SavedUnlockedLevels) || !Save->SavedUnlockedLevels.Includes(UnlockedLevels))
 				return true;
 			if (CurrentGameFlag != Save->SavedCurrentGameFlag)
+				return true;
+
+			if (MouseSensitivityScale != Save->SavedMouseSensitivityScale)
+				return true;
+			if (MasterVolumeScale != Save->SavedMasterVolumeScale)
+				return true;
+			if (SFXVolumeScale != Save->SavedSFXVolumeScale)
+				return true;
+			if (MusicVolumeScale != Save->SavedMusicVolumeScale)
 				return true;
 		}
 		return false;
@@ -568,6 +594,7 @@ void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
 			{
 				if (Row->DialogueSound)
 				{
+					bDialogueIsPlaying = true;
 					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Row->DialogueSound, Player->GetActorLocation());
 					TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
 				}
@@ -607,6 +634,7 @@ void UPlayerGameInstance::PlayNextDialogue()
 	//If dialogue is over, take away the widgets
 	else
 	{
+		bDialogueIsPlaying = false;
 		TArray<UUserWidget*> FoundWidgets;
 		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UUserWidget::StaticClass(), false);
 		if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(StartDialogueRowName, TEXT("")))

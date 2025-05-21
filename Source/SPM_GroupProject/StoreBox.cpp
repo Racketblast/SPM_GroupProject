@@ -22,6 +22,11 @@ void AStoreBox::Use_Implementation(APlayerCharacter* Player)
 	OpenStoreMenu();
 }
 
+void AStoreBox::ShowInteractable_Implementation(bool bShow)
+{
+	StaticMeshComponent->SetRenderCustomDepth(bShow);
+}
+
 void AStoreBox::OpenStoreMenu()
 {
 	if (BuyBoxWidgetClass)

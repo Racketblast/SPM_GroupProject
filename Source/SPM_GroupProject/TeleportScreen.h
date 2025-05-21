@@ -15,6 +15,8 @@ class SPM_GROUPPROJECT_API ATeleportScreen : public AActor, public IPlayerUseInt
 public:	
 	ATeleportScreen();
 	virtual void Use_Implementation(APlayerCharacter* Player) override;
+	
+	virtual void ShowInteractable_Implementation(bool bShow) override;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

@@ -92,6 +92,15 @@ void AArenaGameMode::BeginPlay()
 	
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
+		//Sound settings
+		if (GI->SoundMix)
+		{
+			UGameplayStatics::SetSoundMixClassOverride(GetWorld(),GI->SoundMix, GI->MasterSoundClass, GI->MasterVolumeScale,1,0, true);
+			UGameplayStatics::SetSoundMixClassOverride(GetWorld(),GI->SoundMix, GI->SFXSoundClass, GI->SFXVolumeScale,1,0, true);
+			UGameplayStatics::SetSoundMixClassOverride(GetWorld(),GI->SoundMix, GI->MusicSoundClass, GI->MusicVolumeScale,1,0, true);
+			UGameplayStatics::PushSoundMixModifier(GetWorld(), GI->SoundMix);
+		}
+		
 		if (UGameplayStatics::GetCurrentLevelName(GetWorld(), true) == "Hub")
 		{
 			if (GI->CurrentGameFlag < 1)
@@ -108,4 +117,15 @@ void AArenaGameMode::ReturnToHub()
 {
 	UE_LOG(LogTemp, Display, TEXT("Return to Hub"));
 	UGameplayStatics::OpenLevel(this, "Hub");
+}
+
+
+
+void AArenaGameMode::GoToEnding()
+{
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		GI->CurrentGameFlag = 9;
+	}
+	UGameplayStatics::OpenLevel(this, "CinematicHub");
 }
