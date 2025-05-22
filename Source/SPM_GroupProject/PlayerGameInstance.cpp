@@ -413,7 +413,7 @@ void UPlayerGameInstance::Init()
 		FName("Hub"),
 		FName("Arena_1"),
 		FName("V1"),
-		FName("V2"),
+		FName("V3"),
 		FName("MetroV3")
 	};
 	
