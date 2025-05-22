@@ -576,10 +576,6 @@ void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
 	{
 		if (CurrentGameFlag < Row->DialogueFlag || Row->DialogueFlag == 0)
 		{
-			if (CurrentGameFlag < Row->DialogueFlag)
-			{
-				CurrentGameFlag++;
-			}
 			NextDialogueRowName = Row->NextDialogue;
 
 			//This is the reason why the dialogue iss broken into two functions, because I don't want to get an infinite amount of widgets

@@ -35,7 +35,8 @@ void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
 
 	if (CurrentAmmo <= 0 &&bCanFire)
 	{
-		if (MagEmptySound  && MagEmptyAudioComponent)
+		Reload();
+		/*if (MagEmptySound  && MagEmptyAudioComponent)
 		{
 			if (MagEmptyAudioComponent->IsPlaying())
 			{
@@ -43,8 +44,8 @@ void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
 			}
 			MagEmptyAudioComponent->SetSound(MagEmptySound);
 			MagEmptyAudioComponent->Play();
-			return;
-		}
+		}*/
+		return;
 	}
 	if (!bCanFire || bIsReloading)
 	{

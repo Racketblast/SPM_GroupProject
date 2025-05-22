@@ -4,6 +4,7 @@
 #include "StoreBox.h"
 
 #include "PlayerCharacter.h"
+#include "PlayerGameInstance.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -29,6 +30,12 @@ void AStoreBox::ShowInteractable_Implementation(bool bShow)
 
 void AStoreBox::OpenStoreMenu()
 {
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (GI->GetCurrentWeaponName() == "DoomsdayGun")
+			return;
+	}
+	
 	if (BuyBoxWidgetClass)
 	{
 		if (UUserWidget* BuyBoxWidget = CreateWidget<UUserWidget>(GetWorld(), BuyBoxWidgetClass))
