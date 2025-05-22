@@ -42,7 +42,7 @@ void AEndGameGunPickup::BeginPlay()
 	
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
-		if (GI->CurrentGameFlag < 1)
+		if (GI->CurrentGameFlag < 4)
 		{
 			Destroy();
 		}

@@ -430,6 +430,19 @@ void AWaveManager::EndWave()
 	
 	bIsGracePeriod = true;
 	GraceSecondsRemaining = FMath::CeilToInt(GracePeriodDuration);
+
+	// Missions
+	if (UGameInstance* GI = GetGameInstance())
+	{
+		UMissionSubsystem* MissionSystem = GI->GetSubsystem<UMissionSubsystem>();
+		if (MissionSystem)
+		{
+			if (MissionSystem->RequiredWaveToComplete == MissionSystem->WavesSurvived)
+			{
+				GraceSecondsRemaining *= 2;
+			}
+		}
+	}
 	
 	GetWorldTimerManager().SetTimer(
 		GracePeriodTimer,

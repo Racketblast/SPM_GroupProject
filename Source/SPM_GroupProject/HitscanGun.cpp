@@ -66,7 +66,8 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
     LastFireTime = CurrentTime;
     if (CurrentAmmo <= 0)
     {
-        if (MagEmptySound  && MagEmptyAudioComponent)
+        Reload();
+        /*if (MagEmptySound  && MagEmptyAudioComponent)
         {
             if (MagEmptyAudioComponent->IsPlaying())
             {
@@ -74,9 +75,10 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
             }
             MagEmptyAudioComponent->SetSound(MagEmptySound);
             MagEmptyAudioComponent->Play();
+        }*/
             return;
-        }
     }
+    
     if (FireSound && FireAudioComponent)
     {
         if (FireAudioComponent->IsPlaying())
