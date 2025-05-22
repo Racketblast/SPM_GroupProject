@@ -11,6 +11,7 @@
 #include "NavigationSystem.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EngineUtils.h"
+#include "NiagaraFunctionLibrary.h"
 
 // Sets default values
 AAI_Main::AAI_Main()
@@ -33,6 +34,15 @@ float AAI_Main::TakeDamage(float DamageAmount, struct FDamageEvent const& Damage
 	{
 		AIHealth -= DamageAmount;
 		UE_LOG(LogTemp, Warning, TEXT("AI Takedamage"));
+
+		if (DamageEffect)
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				DamageEffect,
+				GetActorLocation()
+			);
+		}
 		if (AIHealth <= 0)
 		{
 		UE_LOG(LogTemp, Error, TEXT("AI dead"));
@@ -55,6 +65,15 @@ float AAI_Main::TakeDamage(float DamageAmount, struct FDamageEvent const& Damage
 					WaveManager->OnEnemyKilled();
 					break;
 				}
+			}
+			
+			if (DeathEffect)
+			{
+				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+					GetWorld(),
+					DeathEffect,
+					GetActorLocation()
+				);
 			}
 			
 			Destroy();

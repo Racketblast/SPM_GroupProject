@@ -97,17 +97,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Sound")
 	UAudioComponent* MagEmptyAudioComponent;
 	UPROPERTY(EditAnywhere, Category = "Recoil")
-	float RecoilPitchMin = -3.0f;  // Upward
+	float RecoilPitchMin = -6.0f;  // Upward
 
 	UPROPERTY(EditAnywhere, Category = "Recoil")
-	float RecoilPitchMax = -1.0f;  // Upward
+	float RecoilPitchMax = -2.0f;  // Upward
 
 
 	UPROPERTY(EditAnywhere, Category = "Recoil")
-	float RecoilYawMin = 0.5f;
+	float RecoilYawMin = 1.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Recoil")
-	float RecoilYawMax = -0.5f;
+	float RecoilYawMax = -1.0f;
 
 	FRotator TargetControlRotation;
 	bool bIsRecoiling = false;
@@ -117,6 +117,10 @@ protected:
 	float RecoilAmount = 10.0f;
 	FVector OriginalArmsRootLocation;
 	bool bRecoilApplied = false;
+	FRotator RecoilTargetRotation;
+	bool bApplyingRecoil = false;
+
+
 
 
 };
