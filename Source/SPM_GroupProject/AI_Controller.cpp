@@ -46,7 +46,7 @@ void AAI_Controller::SetupPerceptionSystem()
 	{
 		SetPerceptionComponent(*CreateDefaultSubobject<UAIPerceptionComponent>(
 		TEXT("Perception Component")));
-		SightConfig->SightRadius = 1500.0f;
+		SightConfig->SightRadius = 15000.0f;
 		SightConfig->LoseSightRadius = SightConfig->SightRadius + 25.f;
 		SightConfig->PeripheralVisionAngleDegrees = 90.0f;
 		SightConfig->SetMaxAge(5.f);
