@@ -14,6 +14,9 @@ class SPM_GROUPPROJECT_API AMoneyBox : public ACollectableBox
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
+	class UMaterialInterface* FadeMaterial;
+
 public:		
 	UPROPERTY(EditAnywhere, Category="Money")
 	int32 MoneyAmount = 20;
@@ -29,6 +32,8 @@ private:
 	bool bShouldDestroy = true;
 	
 	FTimerHandle SelfDestructTimer;
+	FTimerHandle FadeTimer;
 	
 	void SelfDestruct();
+	void SetFadeMaterial();
 };

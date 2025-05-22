@@ -15,6 +15,7 @@ void AMoneyBox::BeginPlay()
 	if (bShouldDestroy)
 	{
 		GetWorldTimerManager().SetTimer(SelfDestructTimer, this, &AMoneyBox::SelfDestruct, LifeTime, false);
+		GetWorldTimerManager().SetTimer(FadeTimer, this, &AMoneyBox::SetFadeMaterial, LifeTime/2, false);
 	}
 }
 
@@ -49,4 +50,12 @@ void AMoneyBox::CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedC
 void AMoneyBox::SelfDestruct()
 {
 	Destroy();
+}
+
+void AMoneyBox::SetFadeMaterial()
+{
+	if (FadeMaterial)
+	{
+		CollectableMesh->SetMaterial(0, FadeMaterial);
+	}
 }
