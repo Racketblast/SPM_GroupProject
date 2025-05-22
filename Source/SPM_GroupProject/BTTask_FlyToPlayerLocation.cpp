@@ -183,7 +183,7 @@ void UBTTask_FlyToPlayerLocation::CheckIfStuck(UBehaviorTreeComponent& OwnerComp
 			{
 				// Teleport mode
 				FVector NewLocation;
-				if (UEnemyAIUtils::FindValidTeleportLocation(Pawn, TargetLocation, NewLocation))
+				if (UEnemyAIUtils::FindValidTeleportLocation(Pawn, TargetLocation, NewLocation, Enemy->bAvoidFrontTeleport))
 				{
 					Pawn->SetActorLocation(NewLocation);
 					Enemy->NotifyTeleported();

@@ -51,6 +51,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	AGun* CurrentGun;
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 GrenadeNum = 3;
 
 	UFUNCTION(BlueprintCallable)
 	void SelectWeapon(FName Weapon);
@@ -103,9 +106,6 @@ protected:
 	bool Weapon3Equipped = false;
 	bool Weapon4Equipped = false;
 	bool Weapon5Equipped = false;
-	
-	UPROPERTY(BlueprintReadOnly)
-	int32 GrenadeNum = 5;
 
 private:
 	UPROPERTY(Blueprintable)

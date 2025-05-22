@@ -25,12 +25,26 @@ void UChallengeSubsystem::PreviewNextChallenge()
 	
 	int32 Index = -1;
 
+	bool OnlyHasPistol = true;
+
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (GI->HasBought("Rifle") || GI->HasBought("Shotgun") || GI->HasBought("Rocketlauncher"))
+		{
+			OnlyHasPistol = false;
+		}
+	}
+
 	// Loopar tills vi får en challenge som vi inte hade på waven innan. 
 	do 
 	{
 		Index = UKismetMathLibrary::RandomInteger(PossibleChallenges.Num());
 	} 
-	while (PossibleChallenges[Index].Type == LastChallengeType && PossibleChallenges.Num() > 1); 
+	while (PossibleChallenges.Num() > 1 && (
+		PossibleChallenges[Index].Type == LastChallengeType ||
+		(OnlyHasPistol && PossibleChallenges[Index].Type == EChallengeType::PistolOnly)));
+		
+	//PossibleChallenges[Index].Type == LastChallengeType && PossibleChallenges.Num() > 1 && (!OnlyHasPistol && PossibleChallenges[Index].Type == EChallengeType::PistolOnly)
 	
 	CurrentChallenge = PossibleChallenges[Index];
 	CurrentChallenge.bIsCompleted = false;

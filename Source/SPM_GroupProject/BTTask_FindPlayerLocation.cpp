@@ -18,29 +18,32 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(UBehaviorTreeCompone
 	if (auto* const Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))
 	{
 		auto const PlayerLocation = Player->GetActorLocation();
-		if (SearchRandom)
-		{
-			FNavLocation L;
 
-			if (auto* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld()))
+		FNavLocation ProjectedLocation;
+		if (auto* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld()))
+		{
+			if (SearchRandom)
 			{
-				if (NavSys->GetRandomPointInNavigableRadius(PlayerLocation, SearchRadius, L))
+				if (NavSys->GetRandomPointInNavigableRadius(PlayerLocation, SearchRadius, ProjectedLocation))
 				{
-					OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), L.Location);
-					FinishLatentTask(OwnerComp,EBTNodeResult::Succeeded);
+					OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), ProjectedLocation.Location);
+					FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 					return EBTNodeResult::Succeeded;
 				}
 			}
-			
-		}
-		else
-		{
-			OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), PlayerLocation);
-			FinishLatentTask(OwnerComp,EBTNodeResult::Succeeded);
-			return EBTNodeResult::Succeeded;
+			else
+			{
+				// Project player location to the nearest NavMesh point
+				if (NavSys->ProjectPointToNavigation(PlayerLocation, ProjectedLocation, FVector(100.f, 100.f, 700.f)))
+				{
+					OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), ProjectedLocation.Location);
+					FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+					return EBTNodeResult::Succeeded;
+				}
+			}
 		}
 	}
 
 	return EBTNodeResult::Failed;
-	//return Super::ExecuteTask(OwnerComp, NodeMemory);
 }
+

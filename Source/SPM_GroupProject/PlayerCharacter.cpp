@@ -342,14 +342,11 @@ void APlayerCharacter::Reload()
 
 void APlayerCharacter::SelectWeapon(FName Weapon)
 {
-	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-	{
-		if (Weapon == WeaponName1) SelectWeapon1();
-		else if (Weapon == WeaponName2) SelectWeapon2();
-		else if (Weapon == WeaponName3) SelectWeapon3();
-		else if (Weapon == WeaponName4) SelectWeapon4();
-		else if (Weapon == WeaponName5) SelectWeapon5();
-	}
+	if (Weapon == WeaponName1) SelectWeapon1();
+	else if (Weapon == WeaponName2) SelectWeapon2();
+	else if (Weapon == WeaponName3) SelectWeapon3();
+	else if (Weapon == WeaponName4) SelectWeapon4();
+	else if (Weapon == WeaponName5) SelectWeapon5();
 }
 
 void APlayerCharacter::SelectWeapon1()

@@ -263,8 +263,8 @@ void UPlayerGameInstance::UpgradePlayerStats(const EUpgradeType Upgrade, class A
 		Player->PlayerMaxHealth = 1000000;
 		Player->PlayerHealth = Player->PlayerMaxHealth;
 		break;
-	case EUpgradeType::Speed20:
-		Player->GetCharacterMovement()->MaxWalkSpeed *= 1 + 0.2 * UpgradeInfo->UpgradeOwned;
+	case EUpgradeType::Speed:
+		Player->GetCharacterMovement()->MaxWalkSpeed = Player->BasePlayerMaxHealth + UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];;
 		break;
 	case EUpgradeType::Jump50:
 		Player->GetCharacterMovement()->JumpZVelocity *= 1 + 0.5 * UpgradeInfo->UpgradeOwned;
@@ -382,6 +382,9 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 				Player->GetWeaponInstance("RocketLauncher")->CurrentAmmo = Player->GetWeaponInstance("RocketLauncher")->MaxAmmo;
 				Player->CurrentGun->bIsUpgraded = true;
 			}
+			break;
+		case EUpgradeType::GrenadesAmmoSize:
+			Player->GrenadeNum = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 			break;
 		default:
 			break;
@@ -573,10 +576,6 @@ void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
 	{
 		if (CurrentGameFlag < Row->DialogueFlag || Row->DialogueFlag == 0)
 		{
-			if (CurrentGameFlag < Row->DialogueFlag)
-			{
-				CurrentGameFlag++;
-			}
 			NextDialogueRowName = Row->NextDialogue;
 
 			//This is the reason why the dialogue iss broken into two functions, because I don't want to get an infinite amount of widgets
@@ -610,9 +609,9 @@ void UPlayerGameInstance::PlayNextDialogue()
 {
 	if (!EventDialogueInfo)
 	return;
-	CurrentDialogueRowName = NextDialogueRowName;
 	if (NextDialogueRowName != "")
 	{
+		CurrentDialogueRowName = NextDialogueRowName;
 		if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(NextDialogueRowName, TEXT("")))
 		{
 			NextDialogueRowName = Row->NextDialogue;

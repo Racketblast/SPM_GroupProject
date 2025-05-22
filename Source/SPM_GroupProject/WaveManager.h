@@ -147,7 +147,7 @@ protected:
 
 	int32 FirstGraceSecondsRemaining;
 
-	bool bIsFirstGracePeriod = false;
+	bool bIsFirstGracePeriod = true;
 
 	void UpdateFirstWaveCountdown();
 

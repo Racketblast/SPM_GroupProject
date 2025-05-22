@@ -16,7 +16,7 @@ enum class EUpgradeType : uint8
 	DoomsdayGun			UMETA(DisplayName = "DoomsdayGun"),
 	Health20            UMETA(DisplayName = "20 Health"),
 	HealthMax           UMETA(DisplayName = "Max Health"),
-	Speed20             UMETA(DisplayName = "Speed 20%"),
+	Speed             UMETA(DisplayName = "Speed"),
 	Jump50              UMETA(DisplayName = "50% Jump"),
 	PistolDamage10      UMETA(DisplayName = "10% Pistol Damage"),
 	RifleDamage10       UMETA(DisplayName = "10% Rifle Damage"),
@@ -30,6 +30,7 @@ enum class EUpgradeType : uint8
 	RifleAmmoSize  UMETA(DisplayName = "Rifle Ammo Size"),
 	ShotgunAmmoSize UMETA(DisplayName = "Shotgun Ammo Size"),
 	RocketLauncherAmmoSize UMETA(DisplayName = "RocketLauncher Ammo Size"),
+	GrenadesAmmoSize UMETA(DisplayName = "Grenades Ammo Size"),
 	// Add more as needed
 };
 
