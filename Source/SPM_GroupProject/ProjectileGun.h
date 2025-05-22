@@ -2,6 +2,7 @@
 
 #include "Explosive.h"
 #include "Gun.h"
+#include "Components/PointLightComponent.h"
 #include "ProjectileGun.generated.h"
 
 UCLASS()
@@ -11,6 +12,7 @@ class SPM_GROUPPROJECT_API AProjectileGun : public AGun
 
 public:
 	virtual void Fire(FVector FireLocation, FRotator FireRotation) override;
+	virtual void Tick(float DeltaTime) override;
 	void SetProjectileClass(TSubclassOf<AExplosive> NewClass)
 	{
 		ProjectileClass = NewClass;
@@ -28,5 +30,13 @@ private:
 	// ProjectileGun.h
 
 void ApplyRecoilTranslation();
+	// For interpolation
+	bool bIsRecoveringFromRecoil = false;
+	float RecoilRecoveryElapsed = 0.0f;
+	float RecoilRecoveryDuration = 0.3f;
 
+	FVector RecoilStartLocation;
+	FVector RecoilTargetLocation;
+	UPROPERTY()
+	UPointLightComponent* MuzzleFlashLight;
 };

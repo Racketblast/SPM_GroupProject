@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Gun.h"
+#include "Components/PointLightComponent.h"
 #include "Shotgun.generated.h"
 
 UCLASS()
@@ -23,6 +24,7 @@ public:
 	virtual void BeginPlay() override;
 	void BulletHoleDecal(const FHitResult& Hit);
 	void ApplyBloodDecalTemp(const FHitResult& Hit);
+	virtual void Tick(float DeltaTime) override;
 protected:
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	class UNiagaraSystem* BulletHitEffect;
@@ -46,5 +48,13 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UDamageType> DamageType;
+	bool bIsRecoveringFromRecoil = false;
+	float RecoilRecoveryElapsed = 0.0f;
+	float RecoilRecoveryDuration = 0.2f;
 
+	FVector RecoilStartLocation;
+	FVector RecoilTargetLocation;
+
+	UPROPERTY()
+	UPointLightComponent* MuzzleFlashLight;
 };

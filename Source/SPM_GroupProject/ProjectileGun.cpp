@@ -28,6 +28,46 @@ void AProjectileGun::BeginPlay()
 			MagEmptyAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 		}
 	}
+	if (!MuzzleFlashLight)
+	{
+		MuzzleFlashLight = NewObject<UPointLightComponent>(this, TEXT("MuzzleFlashLight"));
+		if (MuzzleFlashLight)
+		{
+			MuzzleFlashLight->Intensity = 400.0f;
+			MuzzleFlashLight->SetVisibility(false);
+			MuzzleFlashLight->bUseInverseSquaredFalloff = false;
+			MuzzleFlashLight->LightColor = FColor::Orange;
+			MuzzleFlashLight->AttenuationRadius = 300.0f;
+			MuzzleFlashLight->RegisterComponent();
+
+           
+			MuzzleFlashLight->AttachToComponent(WeaponSkeletalMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, FName("MuzzleSocket"));
+		}
+	}
+}
+void AProjectileGun::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	PrimaryActorTick.bCanEverTick = true;
+
+	if (bIsRecoveringFromRecoil)
+	{
+		RecoilRecoveryElapsed += DeltaTime;
+		float Alpha = FMath::Clamp(RecoilRecoveryElapsed / RecoilRecoveryDuration, 0.0f, 1.0f);
+
+		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OwnerCharacter);
+		if (PlayerCharacter && PlayerCharacter->ArmsRoot)
+		{
+			FVector NewLocation = FMath::Lerp(RecoilStartLocation, RecoilTargetLocation, Alpha);
+			PlayerCharacter->ArmsRoot->SetRelativeLocation(NewLocation);
+		}
+
+		if (Alpha >= 1.0f)
+		{
+			bIsRecoveringFromRecoil = false;
+			bRecoilApplied = false;
+		}
+	}
 }
 
 void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
@@ -95,6 +135,20 @@ void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
 				true
 			);
 		}
+		if (MuzzleFlashLight)
+		{
+			MuzzleFlashLight->SetVisibility(true);
+
+			// Automatically hide it shortly after (e.g. 0.05s)
+			FTimerHandle TimerHandle;
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+			{
+				if (MuzzleFlashLight)
+				{
+					MuzzleFlashLight->SetVisibility(false);
+				}
+			}, 0.05f, false);
+		}
 
 		bCanFire = false;
 		float FireCooldown = 1.0f / RoundsPerSecond;
@@ -109,41 +163,25 @@ void AProjectileGun::ResetFire()
 }
 void AProjectileGun::ApplyRecoilTranslation()
 {
-	// Check if we have a valid reference to the player character and the ArmsRoot component
 	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OwnerCharacter);
 	if (PlayerCharacter && PlayerCharacter->ArmsRoot)
 	{
-		// Get the direction the player is facing in world space (backward direction from player)
-		FVector BackwardDirection = -PlayerCharacter->GetActorForwardVector(); // This points backward in world space
+		FVector BackwardDirection = -PlayerCharacter->GetActorForwardVector();
 
-		// Check if recoil has been applied already, to avoid applying it multiple times
 		if (!bRecoilApplied)
 		{
-			// Store the original position of the arms root before applying recoil
+			bRecoilApplied = true;
 			OriginalArmsRootLocation = PlayerCharacter->ArmsRoot->GetRelativeLocation();
 
-			// Apply recoil translation in world space (backward toward the player)
-			FVector RecoilTranslation = BackwardDirection * RecoilAmount; // Recoil backwards in world space
-			PlayerCharacter->ArmsRoot->AddWorldOffset(RecoilTranslation); // Apply the offset in world space
+			// Apply recoil instantly
+			FVector RecoilTranslation = BackwardDirection * RecoilAmount;
+			PlayerCharacter->ArmsRoot->AddWorldOffset(RecoilTranslation);
 
-			// Set the recoil flag to true so we don't apply it again
-			bRecoilApplied = true;
-
-			// Set up a timer to return the arms root to the original position after 0.2 seconds
-			FTimerHandle TimerHandle;
-
-			// Set the timer to move the arms back to the original position after 0.2 seconds
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle, [PlayerCharacter, this]()
-			{
-				// Reset the arms to the original position
-				if (PlayerCharacter && PlayerCharacter->ArmsRoot)
-				{
-					PlayerCharacter->ArmsRoot->SetRelativeLocation(OriginalArmsRootLocation);
-				}
-
-				// After resetting, allow recoil to be applied again
-				bRecoilApplied = false;
-			}, 0.35f, false); // 0.2 seconds delay
+			// Set up interpolation recovery
+			RecoilStartLocation = PlayerCharacter->ArmsRoot->GetRelativeLocation();
+			RecoilTargetLocation = OriginalArmsRootLocation;
+			RecoilRecoveryElapsed = 0.0f;
+			bIsRecoveringFromRecoil = true;
 		}
 	}
 }

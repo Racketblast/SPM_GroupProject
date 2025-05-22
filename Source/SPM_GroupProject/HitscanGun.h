@@ -3,6 +3,7 @@
 #include "PlayerCharacter.h"
 #include "CoreMinimal.h"
 #include "Gun.h"
+#include "Components/PointLightComponent.h"
 #include "HitscanGun.generated.h"
 
 // No bEnemyHit, no EnemyHitFalse!
@@ -40,6 +41,19 @@ protected:
 	UMaterialInterface* BloodDecalMaterial;
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	UMaterialInterface* BulletDecalMaterial;
+	// For interpolation
+	bool bIsRecoveringFromRecoil = false;
+	float RecoilRecoveryElapsed = 0.0f;
+	float RecoilRecoveryDuration = 0.15f;
+
+	FVector RecoilStartLocation;
+	FVector RecoilTargetLocation;
+	// Include at the top
+
+
+
+	UPROPERTY()
+	UPointLightComponent* MuzzleFlashLight;
 
 };
 
