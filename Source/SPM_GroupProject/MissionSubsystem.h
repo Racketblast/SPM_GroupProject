@@ -27,11 +27,12 @@ public:
 	// för widget
 	UFUNCTION(BlueprintCallable, Category = "Mission")
 	FText GetMissionStatusText() const;
-protected:
+	
 	int32 RequiredWaveToComplete = 2;
+	int32 WavesSurvived = 0;
+protected:
 	
 private:
-	int32 WavesSurvived = 0;
 	bool bIsCompleted = false;
 
 	void CompleteMission();

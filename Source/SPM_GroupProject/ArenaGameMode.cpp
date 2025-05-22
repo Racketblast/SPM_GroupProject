@@ -92,6 +92,7 @@ void AArenaGameMode::BeginPlay()
 	
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
+		UE_LOG(LogTemp, Log, TEXT("CurrentGameFlag%i"),GI->CurrentGameFlag);
 		//Sound settings
 		if (GI->SoundMix)
 		{
@@ -109,6 +110,11 @@ void AArenaGameMode::BeginPlay()
 			}
 			UE_LOG(LogTemp, Warning, TEXT("Starting Dialogue %i"),GI->CurrentGameFlag);
 			GI->StartDialogue();
+			
+			if (GI->CurrentGameFlag < 1)
+			{
+				GI->CurrentGameFlag++;
+			}
 		}
 	}
 }
