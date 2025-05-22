@@ -26,8 +26,10 @@ void AWaveManager::BeginPlay()
 	//StartNextWave();
 
 	FirstGraceSecondsRemaining = FirstWaveTimer;
-	bIsFirstGracePeriod = false;
+	bIsFirstGracePeriod = true;
 	//UE_LOG(LogTemp, Warning, TEXT("bIsFirstGracePeriod BeginPlay: %s"), bIsFirstGracePeriod ? TEXT("true") : TEXT("false"));
+
+	PreviewNextWaveEnemyCount();
 	
 	GetWorldTimerManager().SetTimer(
 	FirstWaveGraceTimer,
@@ -60,7 +62,7 @@ void AWaveManager::UpdateFirstWaveCountdown()
 FWaveData AWaveManager::GenerateWaveData(int32 WaveIndex) const
 {
 	FWaveData ResultWave;
-
+	//UE_LOG(LogTemp, Warning, TEXT("GenerateWaveData WaveIndex: %i"), WaveIndex);
 	if (Waves.IsValidIndex(WaveIndex))
 	{
 		ResultWave = Waves[WaveIndex];
@@ -483,8 +485,11 @@ void AWaveManager::PreviewNextWaveEnemyCount()
 		UE_LOG(LogTemp, Warning, TEXT("No valid wave data to preview."));
 		return;
 	}*/
+	
+	//PreviewWaveIndex = CurrentWaveIndex + 1;
+	int32 PreviewWaveIndex = bIsFirstGracePeriod ? 0 : CurrentWaveIndex + 1;
 
-	int32 PreviewWaveIndex = CurrentWaveIndex + 1;
+	//UE_LOG(LogTemp, Warning, TEXT("PreviewNextWaveEnemyCount WaveIndex: %i"), PreviewWaveIndex);
 
 	FWaveData PreviewWave = GenerateWaveData(PreviewWaveIndex);
 
