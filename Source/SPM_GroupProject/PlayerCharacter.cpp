@@ -14,7 +14,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Explosive.h"
 #include "Blueprint/UserWidget.h"
-
+#include "Components/AudioComponent.h"
 APlayerCharacter::APlayerCharacter()
 {
 	// Enable ticking for every frame
@@ -40,7 +40,15 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+	if (!DashAudioComponent)
+	{
+		DashAudioComponent = NewObject<UAudioComponent>(this, TEXT("DashAudioComponent"));
+		if (DashAudioComponent)
+		{
+			DashAudioComponent->RegisterComponent();
+			DashAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		}
+	}
 	BasePlayerMaxHealth = PlayerMaxHealth;
 	
 	Weapon1Instance = GetWorld()->SpawnActor<AGun>(GWeapon1);
@@ -588,6 +596,16 @@ void APlayerCharacter::AirDash()
 
 	GetCharacterMovement()->Velocity = DashVelocity;
 	bHasDashed = true;
+	if (DashSound && DashAudioComponent)
+	{
+		if (DashAudioComponent->IsPlaying())
+		{
+			DashAudioComponent->Stop();
+		}
+		DashAudioComponent->SetSound(DashSound);
+		DashAudioComponent->Play();
+	}
+
 }
 
 void APlayerCharacter::Landed(const FHitResult& Hit)
