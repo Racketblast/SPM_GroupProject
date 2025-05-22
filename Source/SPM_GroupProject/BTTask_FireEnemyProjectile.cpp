@@ -1,51 +1,78 @@
 #include "BTTask_FireEnemyProjectile.h"
+
 #include "AI_Controller.h"
 #include "AI_Main.h"
 #include "Projectile.h"
 #include "PlayerCharacter.h"
+
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
+/* ─────────────────────────────────────────────── */
+
 UBTTask_FireEnemyProjectile::UBTTask_FireEnemyProjectile()
 {
-	NodeName = TEXT("Fire Enemy Projectile");
+	NodeName = TEXT("Fire Enemy Projectile (Turn & Shoot)");
 }
 
-EBTNodeResult::Type UBTTask_FireEnemyProjectile::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+/* ─────────────────────────────────────────────── */
+
+EBTNodeResult::Type UBTTask_FireEnemyProjectile::ExecuteTask(
+	UBehaviorTreeComponent& OwnerComp, uint8* /*NodeMemory*/)
 {
-	if (AAI_Controller* Controller = Cast<AAI_Controller>(OwnerComp.GetAIOwner()))
+	AAI_Controller* Controller = Cast<AAI_Controller>(OwnerComp.GetAIOwner());
+	if (!Controller) return EBTNodeResult::Failed;
+
+	AAI_Main* AICharacter = Cast<AAI_Main>(Controller->GetPawn());
+	if (!AICharacter || !ProjectileClass) return EBTNodeResult::Failed;
+
+	/* ---------------------------------------------
+	 *   1. Get player location and calculate direction
+	 * --------------------------------------------*/
+	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(AICharacter, 0);
+	if (!Player) return EBTNodeResult::Failed;
+
+	const FVector AILoc     = AICharacter->GetActorLocation();
+	const FVector PlayerLoc = Player->GetActorLocation();
+
+	/* Face only in yaw (keep pitch/roll level) */
+	FRotator LookAtYaw = (PlayerLoc - AILoc).Rotation();
+	LookAtYaw.Pitch = 0.f;
+	LookAtYaw.Roll  = 0.f;
+
+	/* rotate pawn and controller */
+	AICharacter->SetActorRotation(LookAtYaw);
+	Controller->SetControlRotation(LookAtYaw);
+
+	/* ---------------------------------------------
+	 *   2. Spawn the projectile
+	 * --------------------------------------------*/
+	const FVector MuzzleLocation =
+	    AILoc + AICharacter->GetActorForwardVector() * MuzzleForwardOffset +
+	    FVector(0.f, 0.f, MuzzleUpOffset);
+
+	const FVector ShotDir   = (PlayerLoc - MuzzleLocation).GetSafeNormal();
+	const FRotator ShotRot  = ShotDir.Rotation();
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner      = AICharacter;
+	SpawnParams.Instigator = AICharacter;
+
+	AProjectile* Proj = AICharacter->GetWorld()->SpawnActor<AProjectile>(
+	    ProjectileClass, MuzzleLocation, ShotRot, SpawnParams);
+
+	if (Proj)
 	{
-		if (AAI_Main* AICharacter = Cast<AAI_Main>(Controller->GetPawn()))
+		/* Pass damage from AI */
+		Proj->ProjectileDamage = AICharacter->AIDamage;
+
+		/* Kick off movement */
+		if (UProjectileMovementComponent* Move = Proj->ProjectileComponent)
 		{
-			ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-			if (!Player || !ProjectileClass) return EBTNodeResult::Failed;
-
-			FVector MuzzleLocation = AICharacter->GetActorLocation() + AICharacter->GetActorForwardVector() * 100.f + FVector(0, 0, 50.f);
-			FVector Direction = (Player->GetActorLocation() - MuzzleLocation).GetSafeNormal();
-			FRotator FireRotation = Direction.Rotation();
-
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.Owner = AICharacter;
-			SpawnParams.Instigator = AICharacter;
-
-			AProjectile* Projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileClass, MuzzleLocation, FireRotation, SpawnParams);
-
-			if (Projectile)
-			{
-				//Applies AIDamage to projectile
-				if (AAI_Main* AI = Cast<AAI_Main>(Controller->GetPawn()))
-				{
-					Projectile->ProjectileDamage = AI->AIDamage;
-				}
-			
-				if (Projectile->ProjectileComponent)
-				{
-					Projectile->ProjectileComponent->Velocity = Direction * Projectile->ProjectileComponent->InitialSpeed;
-				}
-			}
-
-			return EBTNodeResult::Succeeded;
+			Move->Velocity = ShotDir * Move->InitialSpeed;
 		}
+		return EBTNodeResult::Succeeded;
 	}
+
 	return EBTNodeResult::Failed;
 }
