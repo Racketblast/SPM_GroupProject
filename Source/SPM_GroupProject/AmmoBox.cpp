@@ -25,9 +25,9 @@ void AAmmoBox::CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedCo
 					{
 						Weapon->TotalAmmo = Weapon->MaxTotalAmmo;
 					}
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CollectablePickUpSound, GetActorLocation());
 				}
 			}
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), CollectablePickUpSound, GetActorLocation());
 			Destroy();
 		}
 	}
