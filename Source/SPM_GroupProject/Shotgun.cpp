@@ -35,7 +35,7 @@ void AShotgun::BeginPlay()
 			MagEmptyAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
 		}
 	}
-	if (!MuzzleFlashLight)
+	/*if (!MuzzleFlashLight)
 	{
 		MuzzleFlashLight = NewObject<UPointLightComponent>(this, TEXT("MuzzleFlashLight"));
 		if (MuzzleFlashLight)
@@ -50,7 +50,7 @@ void AShotgun::BeginPlay()
            
 			MuzzleFlashLight->AttachToComponent(WeaponSkeletalMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, FName("MuzzleSocket"));
 		}
-	}
+	}*/
 }
 void AShotgun::Tick(float DeltaTime)
 {
@@ -125,7 +125,7 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 			true
 		);
 	}
-	if (MuzzleFlashLight)
+	/*if (MuzzleFlashLight)
 	{
 		MuzzleFlashLight->SetVisibility(true);
 
@@ -138,7 +138,7 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 				MuzzleFlashLight->SetVisibility(false);
 			}
 		}, 0.05f, false);
-	}
+	}*/
 
 	bool bHitEnemyThisShot = false;
 

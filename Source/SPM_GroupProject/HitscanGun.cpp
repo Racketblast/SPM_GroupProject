@@ -38,7 +38,7 @@ void AHitscanGun::BeginPlay()
            MagEmptyAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
         }
     }
-    if (!MuzzleFlashLight)
+    /*if (!MuzzleFlashLight)
     {
         MuzzleFlashLight = NewObject<UPointLightComponent>(this, TEXT("MuzzleFlashLight"));
         if (MuzzleFlashLight)
@@ -53,7 +53,7 @@ void AHitscanGun::BeginPlay()
            
             MuzzleFlashLight->AttachToComponent(WeaponSkeletalMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, FName("MuzzleSocket"));
         }
-    }
+    }*/
 
 }
 void AHitscanGun::Tick(float DeltaTime)
@@ -137,7 +137,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
             true
         );
     }
-    if (MuzzleFlashLight)
+    /*if (MuzzleFlashLight)
     {
         MuzzleFlashLight->SetVisibility(true);
 
@@ -150,7 +150,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
                 MuzzleFlashLight->SetVisibility(false);
             }
         }, 0.05f, false);
-    }
+    }*/
 
     FVector ShotDirection = FireRotation.Vector();
     FVector End = FireLocation + (ShotDirection * Range);
