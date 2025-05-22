@@ -37,6 +37,7 @@ void ADebugCube::DoAllFunctions()
 	GivePlayerMaxHealth();
 	GivePlayerMaxMoney();
 	GiveAllWeapons();
+	GiveLastFlag();
 }
 
 void ADebugCube::EnableAllLevels()

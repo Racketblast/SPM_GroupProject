@@ -53,8 +53,10 @@ public:
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-private:
+	UPROPERTY(BlueprintReadOnly)
 	bool bIsDead = false;
+
+private:
 	
 	FVector LastKnownLocation;
 	float TimeSinceLastMovement = 2.0f;
