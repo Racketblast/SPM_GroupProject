@@ -432,6 +432,7 @@ void AWaveManager::EndWave()
 	
 	bIsGracePeriod = true;
 	GraceSecondsRemaining = FMath::CeilToInt(GracePeriodDuration);
+	//UE_LOG(LogTemp, Warning, TEXT("Grace period seconds 1: %d "), GraceSecondsRemaining);
 
 	// Missions
 	if (UGameInstance* GI = GetGameInstance())
@@ -442,6 +443,7 @@ void AWaveManager::EndWave()
 			if (MissionSystem->RequiredWaveToComplete == MissionSystem->WavesSurvived)
 			{
 				GraceSecondsRemaining *= 2;
+				//UE_LOG(LogTemp, Warning, TEXT("Grace period seconds 2: %d "), GraceSecondsRemaining);
 			}
 		}
 	}
