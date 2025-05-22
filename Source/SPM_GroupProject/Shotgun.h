@@ -21,6 +21,8 @@ public:
 	UFUNCTION()
 	void EnemyHitFalse();
 	virtual void BeginPlay() override;
+	void BulletHoleDecal(const FHitResult& Hit);
+	void ApplyBloodDecalTemp(const FHitResult& Hit);
 protected:
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	class UNiagaraSystem* BulletHitEffect;
@@ -36,5 +38,13 @@ protected:
 	
 
 	float LastFireTime = 0.f;
+	UPROPERTY(EditDefaultsOnly)
+	UMaterialInterface* BloodDecalMaterial;
+
+	UPROPERTY(EditDefaultsOnly)
+	UMaterialInterface* BulletDecalMaterial;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UDamageType> DamageType;
 
 };

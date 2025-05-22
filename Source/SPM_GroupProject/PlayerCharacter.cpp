@@ -3,11 +3,9 @@
 #include "Teleporter.h"
 #include "Gun.h"
 #include "Kismet/GameplayStatics.h"
-#include "LevelSequencePlayer.h"
 #include "ChallengeSubsystem.h"
 #include "ArenaGameMode.h"
 #include "Rifle.h"
-#include "Shotgun.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "Components/CapsuleComponent.h"
@@ -143,6 +141,22 @@ void APlayerCharacter::Tick(float DeltaTime)
 	}
 	
 	CheckforUse();
+	
+	// Apply current recoil offset (before updating)
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+	{
+		FRotator InputRotation = PC->GetControlRotation();
+		PC->SetControlRotation(InputRotation + RecoilOffset);
+	}
+
+	// Update RecoilOffset based on velocity
+	RecoilOffset += RecoilVelocity * DeltaTime;
+
+	// Decay RecoilVelocity over time
+	RecoilVelocity = FMath::RInterpTo(RecoilVelocity, FRotator::ZeroRotator, DeltaTime, RecoilDampening);
+
+	// Decay RecoilOffset back to zero (this prevents drift)
+	RecoilOffset = FMath::RInterpTo(RecoilOffset, FRotator::ZeroRotator, DeltaTime, RecoilDampening);
 }
 
 void APlayerCharacter::UpdateFirstPersonMeshSway(float DeltaTime)
@@ -485,6 +499,10 @@ void APlayerCharacter::SelectWeapon5()
 	}
 }
 
+void APlayerCharacter::AddRecoilImpulse(FRotator Impulse)
+{
+	RecoilVelocity += Impulse;
+}
 
 void APlayerCharacter::Use()
 {
