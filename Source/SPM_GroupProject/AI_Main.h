@@ -15,7 +15,7 @@ class SPM_GROUPPROJECT_API AAI_Main : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
+	// default values for properties
 	AAI_Main();
 
 	UBehaviorTree* GetBehaviorTree() const;
@@ -30,8 +30,8 @@ public:
 	TSubclassOf<class ACollectableBox> AIDrop;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
@@ -47,11 +47,10 @@ protected:
 	class UNiagaraSystem* DamageEffect;
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	UNiagaraSystem* DeathEffect;
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
+public:	
+	virtual void Tick(float DeltaTime) override;
+	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
