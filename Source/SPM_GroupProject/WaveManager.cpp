@@ -440,7 +440,9 @@ void AWaveManager::EndWave()
 		UMissionSubsystem* MissionSystem = GI->GetSubsystem<UMissionSubsystem>();
 		if (MissionSystem)
 		{
-			if (MissionSystem->RequiredWaveToComplete == MissionSystem->WavesSurvived)
+			//UE_LOG(LogTemp, Warning, TEXT("EndWave RequiredWaveToComplete %i"), MissionSystem->RequiredWaveToComplete);
+			//UE_LOG(LogTemp, Warning, TEXT("EndWave WavesSurvived %i"), MissionSystem->WavesSurvived + 1);
+			if (MissionSystem->RequiredWaveToComplete == MissionSystem->WavesSurvived + 1)
 			{
 				GraceSecondsRemaining *= 2;
 				//UE_LOG(LogTemp, Warning, TEXT("Grace period seconds 2: %d "), GraceSecondsRemaining);

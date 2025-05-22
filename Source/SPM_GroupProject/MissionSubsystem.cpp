@@ -36,9 +36,11 @@ void UMissionSubsystem::OnWorldInitialized(UWorld* World, const UWorld::Initiali
 
 void UMissionSubsystem::OnWaveCompleted(int32 WaveIndex)
 {
+	WavesSurvived = WaveIndex + 1;
+	
 	if (bIsCompleted) return; 
 
-	WavesSurvived = WaveIndex + 1;
+	//UE_LOG(LogTemp, Warning, TEXT("RequiredWaveToComplete %i"), RequiredWaveToComplete);
 
 	if (WavesSurvived == 2)
 	{
@@ -56,6 +58,7 @@ void UMissionSubsystem::OnWaveCompleted(int32 WaveIndex)
 	
 	if (WavesSurvived >= RequiredWaveToComplete)
 	{
+		//UE_LOG(LogTemp, Warning, TEXT("RequiredWaveToComplete %i"), RequiredWaveToComplete);
 		CompleteMission();
 
 		//Plays the mission complete dialogue
@@ -133,6 +136,7 @@ void UMissionSubsystem::NewMission()
 void UMissionSubsystem::SetRequiredWavesToComplete(int32 NewRequired)
 {
 	RequiredWaveToComplete = NewRequired;
+	//UE_LOG(LogTemp, Warning, TEXT("SetRequiredWavesToComplete %i"), RequiredWaveToComplete);
 }
 
 
