@@ -70,6 +70,52 @@ void AVendingMachine::UseVendingMachine()
 					}
 				}
 				break;
+			case EVendingMachineSpewOut::AmmoShotgun:
+				if (AGun* Weapon = Player->GetWeaponInstance("Shotgun"))
+				{
+					if (Weapon->TotalAmmo < Weapon->MaxTotalAmmo)
+					{
+						if (IfPlayerHasEnoughMoney(Player,GI))
+						{
+							Weapon->TotalAmmo += Weapon->MaxTotalAmmo/5;
+							if (Weapon->TotalAmmo > Weapon->MaxTotalAmmo)
+							{
+								Weapon->TotalAmmo = Weapon->MaxTotalAmmo;
+							}
+						}
+					}
+					else
+					{
+						if (CantBuySound)
+						{
+							UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantBuySound, GetActorLocation());
+						}
+					}
+				}
+				break;
+			case EVendingMachineSpewOut::AmmoRocketLauncher:
+				if (AGun* Weapon = Player->GetWeaponInstance("RocketLauncher"))
+				{
+					if (Weapon->TotalAmmo < Weapon->MaxTotalAmmo)
+					{
+						if (IfPlayerHasEnoughMoney(Player,GI))
+						{
+							Weapon->TotalAmmo += Weapon->MaxTotalAmmo/5;
+							if (Weapon->TotalAmmo > Weapon->MaxTotalAmmo)
+							{
+								Weapon->TotalAmmo = Weapon->MaxTotalAmmo;
+							}
+						}
+					}
+					else
+					{
+						if (CantBuySound)
+						{
+							UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantBuySound, GetActorLocation());
+						}
+					}
+				}
+				break;
 			default:
 				break;
 			}
