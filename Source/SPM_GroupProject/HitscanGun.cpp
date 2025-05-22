@@ -15,7 +15,7 @@
 #include "AI_Main.h"
 #include "GameFramework/DamageType.h"
 #include "Engine/EngineTypes.h"
-
+#include "Components/DecalComponent.h"
 void AHitscanGun::BeginPlay()
 {
     Super::BeginPlay();
@@ -115,6 +115,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
     {
         //DrawDebugLine(GetWorld(), FireLocation, Hit.ImpactPoint, FColor::Red, false, 1.0f, 0, 1.0f);
 
+        
         if (BulletHitEffect)
         {
             UNiagaraFunctionLibrary::SpawnSystemAtLocation(
@@ -122,10 +123,12 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
                 BulletHitEffect,
                 Hit.Location
             );
+            
         }
+    
         AActor* HitActor = Hit.GetActor();
         LastHitActor = HitActor;
-
+        
         if (HitActor)
         {
             if (HitActor->FindFunction("OnLineTraceHit"))
@@ -150,8 +153,10 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
                             this,
                     DamageType
                 );
-                 
-            }
+                ApplyBloodDecal(Hit); // Replace values as needed
+
+                
+            } else {BulletHoleDecal(Hit);}
 
         }}
     if (OwnerCharacter)
@@ -205,4 +210,63 @@ void AHitscanGun::ApplyRecoilTranslation()
             }, 0.15f, false); // 0.2 seconds delay
         }
     }
+}
+
+void AHitscanGun::ApplyBloodDecal(const FHitResult& Hit)
+{
+    if (!BloodDecalMaterial) return;
+
+    AActor* HitActor = Hit.GetActor();
+    if (!HitActor) return;
+
+    USkeletalMeshComponent* SkeletalMesh = HitActor->FindComponentByClass<USkeletalMeshComponent>();
+    if (!SkeletalMesh) return;
+
+    FVector DecalSize = FVector(20.0f, 20.0f, 20.0f);
+    FRotator DecalRotation = Hit.Normal.Rotation();
+
+    // Get bone name only if valid
+    FName BoneName = Hit.BoneName != NAME_None ? Hit.BoneName : NAME_None;
+
+    // Attach decal to the skeletal mesh, to a bone if available
+    UDecalComponent* BloodDecal = UGameplayStatics::SpawnDecalAttached(
+        BloodDecalMaterial,
+        DecalSize,
+        SkeletalMesh,
+        BoneName,
+        Hit.ImpactPoint,
+        DecalRotation,
+        EAttachLocation::KeepWorldPosition,
+        60.0f // lifespan
+    );
+
+    if (BloodDecal)
+    {
+        BloodDecal->SetFadeScreenSize(0.001f);
+        UE_LOG(LogTemp, Warning, TEXT("Spawned decal on skeletal mesh bone: %s"), *BoneName.ToString());
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Failed to spawn decal"));
+    }
+}
+
+
+
+
+void AHitscanGun::BulletHoleDecal(const FHitResult& Hit)
+{
+    FVector SurfaceNormal = Hit.Normal; // Normal of the hit surface (floor in this case)
+
+    FRotator DecalRotation = SurfaceNormal.Rotation(); // Convert the surface normal to a rotation
+
+    // Spawn the decal at the hit location with the correct rotation and scale
+    UGameplayStatics::SpawnDecalAtLocation(
+        GetWorld(),
+        BulletDecalMaterial,  // The material
+        FVector(10.0f, 10.0f, 10.0f), // Decal size (adjust as needed)
+        Hit.Location,  // Location where the bullet hit
+        DecalRotation,  // Adjusted rotation
+        60.0f  // Decal lifetime (adjust as needed)
+    );
 }

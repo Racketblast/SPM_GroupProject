@@ -1,10 +1,7 @@
 #include "Shotgun.h"
 #include "DrawDebugHelpers.h"
 #include "GameFramework/Character.h"
-#include "EngineUtils.h"
 #include "HitscanGun.h"
-#include "WaveManager.h"
-#include "MoneyBox.h"
 #include "PlayerCharacter.h"
 #include "GameFramework/PlayerController.h"
 #include "UObject/UnrealType.h"
@@ -12,7 +9,8 @@
 #include "Sound/SoundBase.h"
 #include "TimerManager.h"
 #include "NiagaraFunctionLibrary.h"
-#include "NiagaraComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/DecalComponent.h" // Required for UDecalComponent
 
 void AShotgun::BeginPlay()
 {
@@ -42,40 +40,34 @@ void AShotgun::BeginPlay()
 void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 {
 	if (bIsReloading)
-	{
 		return;
-	}
 
 	if (CurrentAmmo <= 0)
 	{
-		if (MagEmptySound  && MagEmptyAudioComponent)
+		if (MagEmptySound && MagEmptyAudioComponent)
 		{
 			if (MagEmptyAudioComponent->IsPlaying())
-			{
 				MagEmptyAudioComponent->Stop();
-			}
+
 			MagEmptyAudioComponent->SetSound(MagEmptySound);
 			MagEmptyAudioComponent->Play();
-			return;
 		}
+		return;
 	}
+
 	const float CurrentTime = GetWorld()->GetTimeSeconds();
 	const float TimeBetweenShots = 1.0f / RoundsPerSecond;
 
 	if (CurrentTime - LastFireTime < TimeBetweenShots)
-	{
 		return;
-	}
 
 	LastFireTime = CurrentTime;
-	
 
 	if (FireSound && FireAudioComponent)
 	{
 		if (FireAudioComponent->IsPlaying())
-		{
 			FireAudioComponent->Stop();
-		}
+
 		FireAudioComponent->SetSound(FireSound);
 		FireAudioComponent->Play();
 	}
@@ -108,9 +100,7 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(this);
 		if (OwnerCharacter)
-		{
 			Params.AddIgnoredActor(OwnerCharacter);
-		}
 
 		if (GetWorld()->LineTraceSingleByChannel(Hit, FireLocation, End, ECC_Visibility, Params))
 		{
@@ -122,82 +112,65 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 					Hit.Location
 				);
 			}
-			//DrawDebugLine(GetWorld(), FireLocation, Hit.ImpactPoint, FColor::Red, false, 1.0f, 0, 0.5f);
+
 			AActor* HitActor = Hit.GetActor();
 			LastHitActor = HitActor;
 
-			if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
-			{
-				bHitEnemyThisShot = true;
-
-				static const FName AIHealthName = TEXT("AIHealth");
-				if (FIntProperty* HealthProp = FindFProperty<FIntProperty>(HitCharacter->GetClass(), AIHealthName))
-				{
-					int32 CurrentHealth = HealthProp->GetPropertyValue_InContainer(HitCharacter);
-					CurrentHealth -= static_cast<int32>(WeaponDamage / NumPellets);
-
-					if (CurrentHealth <= 0)
-					{
-						TSubclassOf<AMoneyBox> MoneyBoxClass = LoadClass<AMoneyBox>(nullptr, TEXT("/Game/Blueprints/BP_MoneyBox.BP_MoneyBox_C"));
-						if (MoneyBoxClass)
-						{
-							FTransform SpawnTransform = HitCharacter->GetTransform();
-							FVector NewLocation = SpawnTransform.GetLocation();
-							NewLocation.Z -= 100.0f;
-							SpawnTransform.SetLocation(NewLocation);
-							GetWorld()->SpawnActor<AMoneyBox>(MoneyBoxClass, SpawnTransform);
-						}
-
-						HitCharacter->Destroy();
-
-						for (TActorIterator<AWaveManager> It(GetWorld()); It; ++It)
-						{
-							if (AWaveManager* WaveManager = *It)
-							{
-								WaveManager->OnEnemyKilled();
-								break;
-							}
-						}
-					}
-					else
-					{
-						HealthProp->SetPropertyValue_InContainer(HitCharacter, CurrentHealth);
-					}
-				}
-			}
-			else if (HitActor)
+			if (HitActor)
 			{
 				if (HitActor->FindFunction("OnLineTraceHit"))
 				{
 					HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
 				}
+
+				if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
+				{
+					if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
+					{
+						Player->bEnemyHit = true;
+						Player->EnemyHitFalse();
+					}
+
+					// Apply point damage per pellet
+					UGameplayStatics::ApplyPointDamage(
+						HitActor,
+						WeaponDamage / NumPellets,
+						ShotDirection,
+						Hit,
+						OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
+						this,
+						DamageType
+					);
+
+					ApplyBloodDecalTemp(Hit);
+					bHitEnemyThisShot = true;
+				}
+				else
+				{
+					BulletHoleDecal(Hit);
+				}
 			}
-		}
-		else
-		{
-			//DrawDebugLine(GetWorld(), FireLocation, End, FColor::Blue, false, 1.0f, 0, 0.5f);
 		}
 	}
 
 	if (bHitEnemyThisShot)
 	{
 		bEnemyHit = true;
-		UE_LOG(LogTemp, Error, TEXT("hit activated"));
 		EnemyHitFalse();
 	}
 
 	CurrentAmmo--;
-	
 
 	if (OwnerCharacter)
 	{
 		float RecoilPitch = FMath::FRandRange(RecoilPitchMin, RecoilPitchMax);
 		float RecoilYaw = FMath::FRandRange(RecoilYawMin, RecoilYawMax);
 
-		OwnerCharacter->AddRecoilImpulse(FRotator(-RecoilPitch, RecoilYaw, 0.f)); // Negative pitch = up kick
-		ApplyRecoilTranslation(); 
+		OwnerCharacter->AddRecoilImpulse(FRotator(-RecoilPitch, RecoilYaw, 0.f));
+		ApplyRecoilTranslation();
 	}
 }
+
 
 void AShotgun::EnemyHitFalse()
 {
@@ -243,4 +216,57 @@ void AShotgun::ApplyRecoilTranslation()
 			}, 0.25f, false); // 0.2 seconds delay
 		}
 	}
+}
+void AShotgun::ApplyBloodDecalTemp(const FHitResult& Hit)
+{
+	if (!BloodDecalMaterial) return;
+
+	AActor* HitActor = Hit.GetActor();
+	if (!HitActor) return;
+
+	USkeletalMeshComponent* SkeletalMesh = HitActor->FindComponentByClass<USkeletalMeshComponent>();
+	if (!SkeletalMesh) return;
+
+	FVector DecalSize = FVector(20.0f, 20.0f, 20.0f);
+	FRotator DecalRotation = Hit.Normal.Rotation();
+
+	// Get bone name only if valid
+	FName BoneName = Hit.BoneName != NAME_None ? Hit.BoneName : NAME_None;
+
+	// Attach decal to the skeletal mesh, to a bone if available
+	UDecalComponent* BloodDecal = UGameplayStatics::SpawnDecalAttached(
+		BloodDecalMaterial,
+		DecalSize,
+		SkeletalMesh,
+		BoneName,
+		Hit.ImpactPoint,
+		DecalRotation,
+		EAttachLocation::KeepWorldPosition,
+		60.0f // lifespan
+	);
+
+	if (BloodDecal)
+	{
+		BloodDecal->SetFadeScreenSize(0.001f);
+		UE_LOG(LogTemp, Warning, TEXT("Spawned decal on skeletal mesh bone: %s"), *BoneName.ToString());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to spawn decal"));
+	}
+}
+
+void AShotgun::BulletHoleDecal(const FHitResult& Hit)
+{
+	FVector SurfaceNormal = Hit.Normal;
+	FRotator DecalRotation = SurfaceNormal.Rotation();
+
+	UGameplayStatics::SpawnDecalAtLocation(
+		GetWorld(),
+		BulletDecalMaterial,
+		FVector(10.0f, 10.0f, 10.0f),
+		Hit.Location,
+		DecalRotation,
+		60.0f
+	);
 }
