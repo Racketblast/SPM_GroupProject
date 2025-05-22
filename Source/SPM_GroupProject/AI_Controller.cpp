@@ -7,6 +7,8 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig.h"
+#include "Navigation/CrowdFollowingComponent.h"
+#include "Navigation/PathFollowingComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 
 
@@ -29,6 +31,11 @@ void AAI_Controller::OnPossess(APawn* InPawn)
 			RunBehaviorTree(BehaviorTree);
 			
 		}
+		if (UCrowdFollowingComponent* Crowd =
+			Cast<UCrowdFollowingComponent>(GetPathFollowingComponent()))
+		{
+			Crowd->SuspendCrowdSteering(false);   // crowd steering ON
+		}
 	}
 }
 
@@ -39,7 +46,7 @@ void AAI_Controller::SetupPerceptionSystem()
 	{
 		SetPerceptionComponent(*CreateDefaultSubobject<UAIPerceptionComponent>(
 		TEXT("Perception Component")));
-		SightConfig->SightRadius = 1500.0f;
+		SightConfig->SightRadius = 15000.0f;
 		SightConfig->LoseSightRadius = SightConfig->SightRadius + 25.f;
 		SightConfig->PeripheralVisionAngleDegrees = 90.0f;
 		SightConfig->SetMaxAge(5.f);

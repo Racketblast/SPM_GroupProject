@@ -40,6 +40,20 @@ void UMissionSubsystem::OnWaveCompleted(int32 WaveIndex)
 
 	WavesSurvived = WaveIndex + 1;
 
+	if (WavesSurvived == 2)
+	{
+		//Plays the mission complete dialogue
+		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+		{
+			if (GI->CurrentGameFlag < 2)
+			{
+				GI->StartDialogueRowName = "MissionComplete";
+				GI->StartDialogue();
+				GI->CurrentGameFlag++;
+			}
+		}
+	}
+	
 	if (WavesSurvived >= RequiredWaveToComplete)
 	{
 		CompleteMission();
@@ -49,7 +63,22 @@ void UMissionSubsystem::OnWaveCompleted(int32 WaveIndex)
 		{
 			GI->StartDialogueRowName = "MissionComplete";
 			GI->StartDialogue();
+
+			if (GI->CurrentGameFlag < 2)
+			{
+				GI->CurrentGameFlag = 3;
+			}
+			if (GI->CurrentGameFlag == 3 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V2"))
+			{
+				GI->CurrentGameFlag++;
+			}
+			
+			if (GI->CurrentGameFlag == 4 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("MetroV3"))
+			{
+				GI->CurrentGameFlag++;
+			}
 		}
+	
 	}
 }
 
@@ -71,6 +100,13 @@ void UMissionSubsystem::TryUnlockLevel() const
 	// Level unlock 
 	UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
 	if (!GI) return;
+
+	//Sets the game flag based on where you are in the "story"
+	if (GI->CurrentGameFlag == 3)
+		GI->CurrentGameFlag++;
+	
+	if (GI->CurrentGameFlag == 2)
+		GI->CurrentGameFlag++;
 	
 	FName CurrentLevel = FName(*UGameplayStatics::GetCurrentLevelName(this, true));
 	GI->LastCompletedLevel = CurrentLevel;

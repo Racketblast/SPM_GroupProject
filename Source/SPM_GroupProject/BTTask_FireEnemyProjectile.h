@@ -6,6 +6,7 @@
 
 class AProjectile;
 
+
 UCLASS()
 class SPM_GROUPPROJECT_API UBTTask_FireEnemyProjectile : public UBTTaskNode
 {
@@ -13,9 +14,18 @@ class SPM_GROUPPROJECT_API UBTTask_FireEnemyProjectile : public UBTTaskNode
 
 public:
 	UBTTask_FireEnemyProjectile();
-
-	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-
+	
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp,
+											uint8*                 NodeMemory) override;
+	
 	UPROPERTY(EditAnywhere, Category = "Projectile")
-	TSubclassOf<AProjectile> ProjectileClass;
+	TSubclassOf<AProjectile> ProjectileClass = nullptr;
+
+	/** horizontal offset */
+	UPROPERTY(EditAnywhere, Category = "Projectile")
+	float MuzzleForwardOffset = 100.f;
+
+	/** Vertical offset */
+	UPROPERTY(EditAnywhere, Category = "Projectile")
+	float MuzzleUpOffset = 50.f;
 };
