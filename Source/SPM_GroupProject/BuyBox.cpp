@@ -19,3 +19,8 @@ void ABuyBox::Use_Implementation(APlayerCharacter* Player)
 		GI->BuyUpgrade(TargetUpgradeName, BuySound, CantBuySound);
 	}
 }
+
+void ABuyBox::ShowInteractable_Implementation(bool bShow)
+{
+	CubeMeshComponent->SetRenderCustomDepth(bShow);
+}

@@ -42,6 +42,19 @@ struct FWaveData
 	int32 MaxExtraCount = 0;
 };
 
+USTRUCT()
+struct FPendingEnemySpawnData
+{
+	GENERATED_BODY()
+
+	TSubclassOf<AActor> EnemyClass;
+	FVector SpawnLocation;
+
+	FPendingEnemySpawnData() {}
+	FPendingEnemySpawnData(TSubclassOf<AActor> InClass, FVector InLocation)
+		: EnemyClass(InClass), SpawnLocation(InLocation) {}
+};
+
 // Det finns viss data som måste fyllas i för att wave managern ska fungera. Detta kan du göra i unreal egine, där du behöver lägga till spawn points för fienderna att spawna på, samt se till att enemy class är i fylld med klassen som ska spawnas in.
 // Default waven behöver också fyllas i. 
 UCLASS()
@@ -70,6 +83,11 @@ protected:
 
 	UFUNCTION()
 	FWaveData GenerateWaveData(int32 WaveIndex) const;
+
+	UPROPERTY()
+	TMap<UNiagaraComponent*, FPendingEnemySpawnData> PendingSpawns;
+	
+	TMap<UNiagaraComponent*, TSubclassOf<AActor>> PendingSpawnQueue;
 
 	//Widget
 	UFUNCTION(BlueprintCallable)
@@ -100,6 +118,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Wave Config")
 	int32 DefaultWaveDifficultyMultiplier = 2;
 
+	UPROPERTY(EditAnywhere, Category = "Spawning") 
+	int32 EnemiesPerSpawnBatch = 2;
+
+	/*UPROPERTY(EditAnywhere, Category = "Spawning")
+	int32 MaxConcurrentSpawnVFX = 2;*/
+
 	int32 CurrentWaveIndex;
 	
 	TMap<TSubclassOf<AActor>, int32> SpawnedCountPerType;
@@ -114,11 +138,31 @@ protected:
 	UPROPERTY()
 	TArray<TSubclassOf<AActor>> SpawnQueue;
 
+
+	// Grace perioden för innan den första waven börjar.  
+	FTimerHandle FirstWaveGraceTimer;
+
+	UPROPERTY(EditAnywhere, Category = "Wave Config")
+	float FirstWaveTimer = 5.0f;
+
+	int32 FirstGraceSecondsRemaining;
+
+	bool bIsFirstGracePeriod = false;
+
+	void UpdateFirstWaveCountdown();
+
+	UFUNCTION(BlueprintCallable, Category = "Wave")
+	float GetFirstGraceSecondsRemaining() const { return FirstGraceSecondsRemaining; }
+
+	UFUNCTION(BlueprintCallable, Category = "Wave")
+	bool IsFirstGracePeriod() const { return bIsFirstGracePeriod; }
+
 	// Settingsen för Grace period 
 	UPROPERTY(EditAnywhere, Category = "Wave Config")
 	float GracePeriodDuration = 60.0f; // i sekunder
 
 	FTimerHandle GracePeriodTimer;
+	
 	int32 GraceSecondsRemaining;
 
 	bool bIsGracePeriod = false;
@@ -134,10 +178,8 @@ protected:
 	int32 UpcomingEnemyCount = 0;
 
 	//För vfx
-	UPROPERTY(EditDefaultsOnly, Category="Spawning")
+	UPROPERTY(EditAnywhere, Category="Spawning")
 	UNiagaraSystem* SpawnEffect;
-	
-	TMap<UNiagaraComponent*, TSubclassOf<AActor>> PendingSpawns;
 
 	void PlaySpawnVFXAndThenSpawnEnemy(TSubclassOf<AActor> EnemyClass, const FVector& SpawnLocation);
 
@@ -145,4 +187,15 @@ protected:
 	void OnSpawnVFXFinished(UNiagaraComponent* PSystem);
 
 	void SpawnEnemyAtLocation(TSubclassOf<AActor> EnemyClass, const FVector& SpawnLocation);
+
+	int32 PendingVFXSpawns = 0;
+
+	TQueue<FPendingEnemySpawnData> SpawnVFXQueue;
+
+	int32 ActiveVFXCount = 0;
+	
+	bool bIsSpawningEnemy = false; 	// Håller kåll på om en VFX spelas upp just nu. 
+
+	void HandleNextSpawnInQueue();
+
 };

@@ -14,7 +14,8 @@ class SPM_GROUPPROJECT_API AHitscanGun : public AGun
 
 protected:
 	virtual void BeginPlay() override;
-
+	void ApplyBloodDecal(const FHitResult& Hit);
+	void BulletHoleDecal(const FHitResult& Hit);
 public:
 	virtual void Fire(FVector FireLocation, FRotator FireRotation) override;
 
@@ -35,8 +36,10 @@ protected:
 
 
 	float LastFireTime = 0.f;
-	// Variable to store the original location of the ArmsRoot before recoil
-	// Flag to ensure recoil is only applied once per shot
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	UMaterialInterface* BloodDecalMaterial;
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	UMaterialInterface* BulletDecalMaterial;
 
 };
 

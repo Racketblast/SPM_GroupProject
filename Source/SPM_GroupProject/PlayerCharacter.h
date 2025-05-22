@@ -24,14 +24,13 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-public:
 	UPROPERTY(BlueprintReadOnly)
 	bool bEnemyHit = false;
 
 	UFUNCTION(BlueprintCallable)
 	void EnemyHitFalse();
 
-
+	void AddRecoilImpulse(FRotator Impulse);
 	UPROPERTY(EditAnywhere)
 	USceneComponent* Hand;
 
@@ -52,6 +51,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	AGun* CurrentGun;
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 GrenadeNum = 3;
 
 	UFUNCTION(BlueprintCallable)
 	void SelectWeapon(FName Weapon);
@@ -65,6 +67,15 @@ public:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	UPROPERTY(VisibleAnywhere, Category = "Sway")
 	USceneComponent* ArmsRoot;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bCanSwitchWeapons = true;
+
+	UPROPERTY(BlueprintReadOnly)
+	UUserWidget* UseWidget;
+	
+	UPROPERTY(BlueprintReadOnly)
+	bool bShowUseWidget = false;
 protected:
 	UPROPERTY(EditAnywhere)
 	class UCameraComponent* PlayerCamera;
@@ -81,6 +92,7 @@ protected:
 	void SelectWeapon2();
 	void SelectWeapon3();
 	void SelectWeapon4();
+	void SelectWeapon5();
 	void StartShooting();
 	void StopShooting();
 	virtual void Jump() override;
@@ -93,9 +105,7 @@ protected:
 	bool Weapon2Equipped = false;
 	bool Weapon3Equipped = false;
 	bool Weapon4Equipped = false;
-	
-	UPROPERTY(BlueprintReadOnly)
-	int32 GrenadeNum = 5;
+	bool Weapon5Equipped = false;
 
 private:
 	UPROPERTY(Blueprintable)
@@ -105,6 +115,7 @@ private:
 	FName WeaponName2 = "Rifle";
 	FName WeaponName3 = "Shotgun";
 	FName WeaponName4 = "Rocketlauncher";
+	FName WeaponName5 = "DoomsdayGun";
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AGun> GWeapon1;
@@ -114,6 +125,8 @@ private:
 	TSubclassOf<AGun> GWeapon3;
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AGun> GWeapon4;
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AGun> GWeapon5;
 
 	UPROPERTY()
 	AGun* Weapon1Instance;
@@ -123,6 +136,8 @@ private:
 	AGun* Weapon3Instance;
 	UPROPERTY()
 	AGun* Weapon4Instance;
+	UPROPERTY()
+	AGun* Weapon5Instance;
 
 	bool bIsShooting = false;
 	bool bHasDashed = false;
@@ -145,11 +160,24 @@ private:
 
 	FRotator TargetSwayRotation;
 	FRotator CurrentSwayRotation;
+
+	FRotator RecoilOffset;
+	FRotator RecoilVelocity;
+
+	UPROPERTY(EditAnywhere, Category = "Recoil")
+	float RecoilDampening = 20.f; 
+
 	
 	float CachedYawInput = 0.0f;
 	float CachedPitchInput = 0.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Audio")
 	USoundBase* DamageSound;
+	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> UseWidgetClass;
 
+	void CheckforUse();
+	
+	AActor* LastUseTarget;
 };

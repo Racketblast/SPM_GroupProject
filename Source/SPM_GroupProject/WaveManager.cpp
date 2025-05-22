@@ -23,7 +23,38 @@ void AWaveManager::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	StartNextWave();
+	//StartNextWave();
+
+	FirstGraceSecondsRemaining = FirstWaveTimer;
+	bIsFirstGracePeriod = false;
+	//UE_LOG(LogTemp, Warning, TEXT("bIsFirstGracePeriod BeginPlay: %s"), bIsFirstGracePeriod ? TEXT("true") : TEXT("false"));
+	
+	GetWorldTimerManager().SetTimer(
+	FirstWaveGraceTimer,
+	this,
+	&AWaveManager::UpdateFirstWaveCountdown,
+	 1.0f, 
+	true
+	);
+}
+
+void AWaveManager::UpdateFirstWaveCountdown()
+{
+	bIsFirstGracePeriod = true;
+
+	//FirstGraceSecondsRemaining -= 1.0f;
+
+	UE_LOG(LogTemp, Warning, TEXT("Time until game starts: %i"), FirstGraceSecondsRemaining);
+	//UE_LOG(LogTemp, Warning, TEXT("bIsFirstGracePeriod: %s"), bIsFirstGracePeriod ? TEXT("true") : TEXT("false"));
+
+	if (FirstGraceSecondsRemaining <= 0.0f)
+	{
+		GetWorldTimerManager().ClearTimer(FirstWaveGraceTimer);
+		bIsFirstGracePeriod = false;
+		StartNextWave();
+	}
+
+	FirstGraceSecondsRemaining -= 1.0f;
 }
 
 FWaveData AWaveManager::GenerateWaveData(int32 WaveIndex) const
@@ -69,7 +100,7 @@ void AWaveManager::StartNextWave()
 	{
 		ChallengeSub->ResetChallengeStatus();
 	}*/
-	
+	//UE_LOG(LogTemp, Warning, TEXT("bIsFirstGracePeriod StartNextWave: %s"), bIsFirstGracePeriod ? TEXT("true") : TEXT("false"));
 	SpawnQueue.Empty();
 	
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
@@ -164,19 +195,21 @@ void AWaveManager::StartNextWave()
 // Denna funktion är den som faktisk spawnar in enemies 
 void AWaveManager::SpawnEnemy()
 {
-	if (!SpawnQueue.IsValidIndex(EnemiesSpawnedInCurrentWave))
+	if (EnemiesSpawnedInCurrentWave >= SpawnQueue.Num())
 	{
 		GetWorldTimerManager().ClearTimer(EnemySpawnTimer);
 		return;
 	}
 
-	TSubclassOf<AActor> SelectedClass = SpawnQueue[EnemiesSpawnedInCurrentWave];
+	// Räknar ut hur många fiender som ska spawna i denna batch
+	int32 RemainingEnemies = SpawnQueue.Num() - EnemiesSpawnedInCurrentWave;
+	int32 BatchSize = FMath::Min(EnemiesPerSpawnBatch, RemainingEnemies);
 
 	// Filtrerar giltiga spawn points
 	TArray<AEnemySpawnPoint*> ValidSpawnPoints;
 	for (AEnemySpawnPoint* Point : SpawnPoints)
 	{
-		if (Point && Point->CanSpawn(SelectedClass))
+		if (Point)
 		{
 			ValidSpawnPoints.Add(Point);
 		}
@@ -185,102 +218,86 @@ void AWaveManager::SpawnEnemy()
 	// Försöker igen ifall inga fungerande spawnpoints hittades 
 	if (ValidSpawnPoints.Num() == 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No valid spawn points for %s"), *SelectedClass->GetName());
+		UE_LOG(LogTemp, Warning, TEXT("No valid spawn points available."));
 		GetWorldTimerManager().SetTimerForNextTick(this, &AWaveManager::SpawnEnemy);
 		return;
 	}
 
-	int32 RandomSpawnIndex = FMath::RandRange(0, ValidSpawnPoints.Num() - 1);
-	FVector SpawnLocation = ValidSpawnPoints[RandomSpawnIndex]->GetActorLocation();
-
-	SpawnedCountPerType.FindOrAdd(SelectedClass)++;
-	EnemiesSpawnedInCurrentWave++;
-
-	PlaySpawnVFXAndThenSpawnEnemy(SelectedClass, SpawnLocation);
-	
-	/*if (EnemiesSpawnedInCurrentWave >= TotalEnemiesToSpawn)
+	for (int32 i = 0; i < BatchSize; ++i)
 	{
-		GetWorldTimerManager().ClearTimer(EnemySpawnTimer);
-		return;
-	}
-
-	const TArray<FEnemyTypeData>& EnemyTypes = ActiveWaveData.EnemyTypes; // is currently Waves[CurrentWaveIndex]. maybe should change to ActiveWaveData
-
-	TSubclassOf<AActor> SelectedClass = nullptr;
-
-	// Ser till att de minimum av alla fiender typer spawnas först. 
-	for (const FEnemyTypeData& Type : EnemyTypes)
-	{
-		int32 Spawned = SpawnedCountPerType.FindRef(Type.EnemyClass);
-		if (Spawned < Type.MinCount)
-		{
-			SelectedClass = Type.EnemyClass;
+		if (!SpawnQueue.IsValidIndex(EnemiesSpawnedInCurrentWave))
 			break;
-		}
-	}
 
-	// Ifall minimumet av alla fiender typer är spawnad, så slumpar den resten. 
-	if (!SelectedClass)
-	{
-		int32 RandomIndex = FMath::RandRange(0, EnemyTypes.Num() - 1);
-		SelectedClass = EnemyTypes[RandomIndex].EnemyClass;
-	}
-	
-	
-	// Här används EnemySpawnPoint klassen
-	TArray<AEnemySpawnPoint*> ValidSpawnPoints;
-	for (AEnemySpawnPoint* Point : SpawnPoints)
-	{
-		if (Point && Point->CanSpawn(SelectedClass))
+		TSubclassOf<AActor> SelectedClass = SpawnQueue[EnemiesSpawnedInCurrentWave];
+
+		// Hitta giltiga spawn points
+		TArray<AEnemySpawnPoint*> FilteredPoints;
+		for (AEnemySpawnPoint* Point : ValidSpawnPoints)
 		{
-			ValidSpawnPoints.Add(Point);
-		}
-	}
-
-	// Har gjort så att koden körs om och försöker spawna en fiende igen, ifall den misslyckas med att spawna en fiende. 
-	if (ValidSpawnPoints.Num() == 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No valid spawn points for %s"), *SelectedClass->GetName());
-		GetWorldTimerManager().SetTimerForNextTick(this, &AWaveManager::SpawnEnemy);
-		return;
-	}
-
-	int32 RandomSpawnIndex = FMath::RandRange(0, ValidSpawnPoints.Num() - 1);
-	FVector SpawnLocation = ValidSpawnPoints[RandomSpawnIndex]->GetActorLocation();
-
-	
-
-	SpawnedCountPerType.FindOrAdd(SelectedClass)++;
-	EnemiesSpawnedInCurrentWave++;
-
-	PlaySpawnVFXAndThenSpawnEnemy(SelectedClass, SpawnLocation);*/
-		
-		
-		/*FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-		AActor* SpawnedEnemy = GetWorld()->SpawnActor<AActor>(SelectedClass, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
-
-		if (SpawnedEnemy)
-		{
-			bSpawned = true;
-			SpawnedCountPerType.FindOrAdd(SelectedClass)++;
-			EnemiesSpawnedInCurrentWave++;
-
-			// för flying enemy 
-			if (AFlyingEnemyAI* FlyingEnemy = Cast<AFlyingEnemyAI>(SpawnedEnemy))
+			if (Point->CanSpawn(SelectedClass))
 			{
-				FlyingEnemy->SetMaxAltitude(MaxAltitude);
-				FlyingEnemy->SetMinAltitude(MinAltitude);
-				//UE_LOG(LogTemp, Warning, TEXT("FlyingEnemy MaxAltitude: %f"), MaxAltitude);
-				//UE_LOG(LogTemp, Warning, TEXT("FlyingEnemy MinAltitude: %f"), MinAltitude);
+				FilteredPoints.Add(Point);
 			}
-			
-			UE_LOG(LogTemp, Warning, TEXT("Spawned enemy: %i"), EnemiesSpawnedInCurrentWave);
-			break;
-		}*/
+		}
+
+		if (FilteredPoints.Num() == 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("No valid spawn points for %s"), *SelectedClass->GetName());
+			continue;
+		}
+
+		int32 RandomSpawnIndex = FMath::RandRange(0, FilteredPoints.Num() - 1);
+		FVector SpawnLocation = FilteredPoints[RandomSpawnIndex]->GetActorLocation();
+
+		ValidSpawnPoints.Remove(FilteredPoints[RandomSpawnIndex]);
+
+		SpawnedCountPerType.FindOrAdd(SelectedClass)++;
+		EnemiesSpawnedInCurrentWave++;
+
+		// Queue 
+		SpawnVFXQueue.Enqueue(FPendingEnemySpawnData(SelectedClass, SpawnLocation));
+	}
+
+	// Börjar spawna ifall det inte redan gör det
+	if (!bIsSpawningEnemy)
+	{
+		HandleNextSpawnInQueue();
+	}
 }
 
+void AWaveManager::HandleNextSpawnInQueue()
+{
+	while (ActiveVFXCount < EnemiesPerSpawnBatch && !SpawnVFXQueue.IsEmpty())
+	{
+		FPendingEnemySpawnData SpawnData;
+		if (SpawnVFXQueue.Dequeue(SpawnData))
+		{
+			ActiveVFXCount++;
+			PlaySpawnVFXAndThenSpawnEnemy(SpawnData.EnemyClass, SpawnData.SpawnLocation);
+		}
+	}
+	
+	//Ifall queuen är tom och det inte finns några vfx som är aktiva, så börjar nästa batch. 
+	if (ActiveVFXCount == 0 && SpawnVFXQueue.IsEmpty())
+	{
+		bIsSpawningEnemy = false;
+
+		if (EnemiesSpawnedInCurrentWave < SpawnQueue.Num())
+		{
+			GetWorldTimerManager().SetTimer(
+				EnemySpawnTimer,
+				this,
+				&AWaveManager::SpawnEnemy,
+				ActiveWaveData.TimeBetweenSpawns,
+				false
+			);
+		}
+		else
+		{
+			GetWorldTimerManager().ClearTimer(EnemySpawnTimer);
+		}
+	}
+}
 
 void AWaveManager::PlaySpawnVFXAndThenSpawnEnemy(TSubclassOf<AActor> EnemyType, const FVector& SpawnLocation)
 {
@@ -290,46 +307,44 @@ void AWaveManager::PlaySpawnVFXAndThenSpawnEnemy(TSubclassOf<AActor> EnemyType, 
 		return;
 	}
 
-	UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+	UNiagaraComponent* NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 		GetWorld(),
 		SpawnEffect,
 		SpawnLocation,
 		FRotator::ZeroRotator,
-		FVector(1.f),
+		FVector(1.0f),
 		true,
 		true,
-		ENCPoolMethod::AutoRelease,
-		true
+		ENCPoolMethod::AutoRelease
 	);
-
-	if (NiagaraComp)
+	
+	if (!NiagaraComponent)
 	{
-		if (!NiagaraComp->OnSystemFinished.IsAlreadyBound(this, &AWaveManager::OnSpawnVFXFinished))
-		{
-			NiagaraComp->OnSystemFinished.AddDynamic(this, &AWaveManager::OnSpawnVFXFinished);
-		}
-		
-		// Sparar stan, så man vet vilken fiende som ska bli spawnad efter att vfx är klar
-		PendingSpawns.Add(NiagaraComp, EnemyType);
+		// Ifall vfx inte fungerar, så spawnar fiender ändå
+		SpawnEnemyAtLocation(EnemyType, SpawnLocation);
+		return;
 	}
+
+	// Gör så att OnSpawnVFXFinished körs efter vfx är klar
+	NiagaraComponent->OnSystemFinished.AddUniqueDynamic(this, &AWaveManager::OnSpawnVFXFinished);
+
+	PendingSpawnQueue.Add(NiagaraComponent, EnemyType);
 }
 
 void AWaveManager::OnSpawnVFXFinished(UNiagaraComponent* PSystem)
 {
-	if (!PSystem) return;
+	if (!PendingSpawnQueue.Contains(PSystem)) return;
 
-	if (PendingSpawns.Contains(PSystem))
-	{
-		TSubclassOf<AActor> EnemyType = PendingSpawns[PSystem];
-		FVector SpawnLocation = PSystem->GetComponentLocation();
-		PendingSpawns.Remove(PSystem);
+	TSubclassOf<AActor> EnemyType = PendingSpawnQueue[PSystem];
+	FVector SpawnLocation = PSystem->GetComponentLocation();
 
-		SpawnEnemyAtLocation(EnemyType, SpawnLocation);
+	PendingSpawnQueue.Remove(PSystem);
+	ActiveVFXCount--; 
 
-		// Spawnar nästa fiende efter en kort delay
-		FTimerHandle TempHandle;
-		GetWorldTimerManager().SetTimer(TempHandle, this, &AWaveManager::SpawnEnemy, ActiveWaveData.TimeBetweenSpawns, false);
-	}
+	SpawnEnemyAtLocation(EnemyType, SpawnLocation);
+	
+	//Försöker att spawna nästa vfx i queuen
+	HandleNextSpawnInQueue();
 }
 
 void AWaveManager::SpawnEnemyAtLocation(TSubclassOf<AActor> EnemyType, const FVector& SpawnLocation)
@@ -337,12 +352,10 @@ void AWaveManager::SpawnEnemyAtLocation(TSubclassOf<AActor> EnemyType, const FVe
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-	AActor* SpawnedEnemy = GetWorld()->SpawnActor<AActor>(EnemyType, SpawnLocation, FRotator::ZeroRotator, SpawnParams);
+	AActor* SpawnedEnemy = GetWorld()->SpawnActor<AActor>(EnemyType, SpawnLocation, FRotator::ZeroRotator, SpawnParams); // Det som faktiskt spawnar fienden
+	
 	if (SpawnedEnemy)
 	{
-		//SpawnedCountPerType.FindOrAdd(EnemyType)++;
-		//EnemiesSpawnedInCurrentWave++;
-
 		if (AFlyingEnemyAI* FlyingEnemy = Cast<AFlyingEnemyAI>(SpawnedEnemy))
 		{
 			FlyingEnemy->SetMaxAltitude(MaxAltitude);
@@ -396,7 +409,7 @@ void AWaveManager::TickGracePeriod()
 		return;
 	}
 
-	// Skriv ut GraceSecondsRemaining direkt till skärmen. Använder nu en Widget istället, dock är den 1 sekund fel, men tror det är ok
+	// Skriv ut GraceSecondsRemaining direkt till skärmen. Använder nu en Widget istället
 	/*GEngine->AddOnScreenDebugMessage(
 		-1,
 		1.1f,

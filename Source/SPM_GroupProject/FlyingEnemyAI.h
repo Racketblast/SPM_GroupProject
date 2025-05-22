@@ -51,6 +51,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
 	float MaxTimeToReachDestination = 10.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Teleport")
+	bool bAvoidFrontTeleport  = true;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float PostTeleportFireDelay = 2.0f;
 

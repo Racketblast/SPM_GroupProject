@@ -52,3 +52,8 @@ void ATeleportScreen::Use_Implementation(APlayerCharacter* Player)
 }
 }
 
+void ATeleportScreen::ShowInteractable_Implementation(bool bShow)
+{
+	StaticMeshComponent->SetRenderCustomDepth(bShow);
+}
+

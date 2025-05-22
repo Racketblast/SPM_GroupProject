@@ -22,6 +22,11 @@ void ADebugCube::Use_Implementation(APlayerCharacter* Player)
 	DoAllFunctions();
 }
 
+void ADebugCube::ShowInteractable_Implementation(bool bShow)
+{
+	StaticMeshComponent->SetRenderCustomDepth(bShow);
+}
+
 void ADebugCube::DoAllFunctions()
 {
 	if (UseSound)

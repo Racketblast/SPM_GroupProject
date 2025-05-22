@@ -29,3 +29,8 @@ void ACrazyBox::Use_Implementation(APlayerCharacter* Player)
 	}
 }
 
+void ACrazyBox::ShowInteractable_Implementation(bool bShow)
+{
+	CubeMeshComponent->SetRenderCustomDepth(bShow);
+}
+
