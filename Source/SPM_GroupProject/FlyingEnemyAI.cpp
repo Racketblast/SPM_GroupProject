@@ -113,7 +113,7 @@ void AFlyingEnemyAI::TeleportToValidLocationNearPlayer()
 	FVector TargetLocation = GetCurrentTargetLocation();
 	FVector NewTeleportLocation;
 	
-	if (UEnemyAIUtils::FindValidTeleportLocation(this, TargetLocation, NewTeleportLocation) && bTeleportAfterTimer)
+	if (UEnemyAIUtils::FindValidTeleportLocation(this, TargetLocation, NewTeleportLocation, bAvoidFrontTeleport) && bTeleportAfterTimer)
 	{
 		SetActorLocation(NewTeleportLocation);
 		NotifyTeleported();
