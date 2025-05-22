@@ -18,7 +18,7 @@ UBTTask_FireEnemyProjectile::UBTTask_FireEnemyProjectile()
 
 /* ─────────────────────────────────────────────── */
 EBTNodeResult::Type UBTTask_FireEnemyProjectile::ExecuteTask(
-	UBehaviorTreeComponent& OwnerComp, uint8* /*NodeMemory*/)
+	UBehaviorTreeComponent& OwnerComp, uint8* )
 {
 	AAI_Controller* Controller = Cast<AAI_Controller>(OwnerComp.GetAIOwner());
 	if (!Controller) return EBTNodeResult::Failed;
@@ -51,8 +51,7 @@ EBTNodeResult::Type UBTTask_FireEnemyProjectile::ExecuteTask(
 	YawOnly.Roll  = 0.f;
 	AI->SetActorRotation(YawOnly);
 	Controller->SetControlRotation(YawOnly);
-
-	/*  Spawn projectile */
+	
 	const FVector MuzzleLoc =
 	    AILoc + AI->GetActorForwardVector() * MuzzleForwardOffset +
 	    FVector(0.f, 0.f, MuzzleUpOffset);
