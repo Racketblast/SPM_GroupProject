@@ -14,6 +14,7 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "EngineUtils.h"
+#include "Components/CapsuleComponent.h"
 
 /* ─────────────────────────────────────────────── */
 /*                   CONSTRUCTOR                   */
@@ -30,49 +31,86 @@ UBehaviorTree* AAI_Main::GetBehaviorTree() const { return BehaviorTree; }
 /* ─────────────────────────────────────────────── */
 /*                    DAMAGE                       */
 /* ─────────────────────────────────────────────── */
-float AAI_Main::TakeDamage(float                      DamageAmount,
-                           FDamageEvent const&        DamageEvent,
-                           AController*               EventInstigator,
-                           AActor*                    DamageCauser)
+float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
+                           AController* EventInstigator, AActor* DamageCauser)
 {
-	if (!bIsDead)
-	{
-		AIHealth -= DamageAmount;
-		UE_LOG(LogTemp, Warning, TEXT("AI TakeDamage %.1f"), DamageAmount);
+    if (!bIsDead)
+    {
+        AIHealth -= DamageAmount;
+        UE_LOG(LogTemp, Warning, TEXT("AI TakeDamage %.1f"), DamageAmount);
 
-		if (DamageEffect)
-		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			    GetWorld(), DamageEffect, GetActorLocation());
-		}
+        if (DamageEffect)
+        {
+            UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), DamageEffect, GetActorLocation());
+        }
 
-		if (AIHealth <= 0)
-		{
-			AIHealth = 0;
-			bIsDead  = true;
+        if (AIHealth <= 0)
+        {
+            AIHealth = 0;
+            bIsDead = true;
 
-			if (AIDrop)
-			{
-				FTransform T = GetTransform();
-				T.SetRotation({0, 0, 0, 0});
-				GetWorld()->SpawnActor<ACollectableBox>(AIDrop, T);
-			}
+            // Notify wave manager
+            for (TActorIterator<AWaveManager> It(GetWorld()); It; ++It)
+            {
+                (*It)->OnEnemyKilled();
+                break;
+            }
 
-			for (TActorIterator<AWaveManager> It(GetWorld()); It; ++It)
-			{
-				(*It)->OnEnemyKilled();
-				break;
-			}
+            // Play Niagara death effect
+            if (DeathEffect)
+            {
+                UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), DeathEffect, GetActorLocation());
+            }
 
-			if (DeathEffect)
-			{
-				UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				    GetWorld(), DeathEffect, GetActorLocation());
-			}
-			Destroy();
-		}
-	}
-	return DamageAmount;
+            // Drop item
+            if (AIDrop)
+            {
+                FTransform T = GetTransform();
+                GetWorld()->SpawnActor<ACollectableBox>(AIDrop, T);
+            }
+
+            // Disable character movement
+            GetCharacterMovement()->DisableMovement();
+            GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+            // Stop AI logic
+            if (AAIController* AICont = Cast<AAIController>(GetController()))
+            {
+                AICont->StopMovement();
+                AICont->UnPossess();
+            }
+
+            // Enable ragdoll physics
+        	if (USkeletalMeshComponent* MeshComp = GetMesh())
+        	{
+        		MeshComp->SetCollisionProfileName(TEXT("Ragdoll"));
+        		MeshComp->SetSimulatePhysics(true);
+        		MeshComp->SetAllBodiesSimulatePhysics(true);
+        		MeshComp->WakeAllRigidBodies();
+        		MeshComp->bBlendPhysics = true;
+
+        		// Calculate impulse direction (from the hit location)
+        		FVector ImpulseDirection = GetActorLocation() - DamageCauser->GetActorLocation();
+        		ImpulseDirection.Normalize();
+
+        		float ImpulseStrength = 20000.f; // Adjust based on how dramatic you want the effect
+        		FVector Impulse = ImpulseDirection * ImpulseStrength;
+        		AIDamage = 0;
+
+        		FVector HitLocation = GetActorLocation(); // You can improve this if you have a real hit point
+
+        		MeshComp->AddImpulseAtLocation(Impulse, HitLocation);
+
+        		// Optional: Destroy after delay
+        		SetLifeSpan(10.f);
+        	}
+
+            // Optional: Destroy after some delay
+            SetLifeSpan(10.0f); // Character will be auto-destroyed after 10 seconds
+        }
+    }
+
+    return DamageAmount;
 }
 
 /* ─────────────────────────────────────────────── */
