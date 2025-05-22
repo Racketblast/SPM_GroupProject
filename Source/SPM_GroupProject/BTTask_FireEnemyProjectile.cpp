@@ -5,71 +5,74 @@
 #include "Projectile.h"
 #include "PlayerCharacter.h"
 
+#include "BehaviorTree/BlackboardComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "TimerManager.h"   
 
 /* ─────────────────────────────────────────────── */
-
 UBTTask_FireEnemyProjectile::UBTTask_FireEnemyProjectile()
 {
 	NodeName = TEXT("Fire Enemy Projectile (Turn & Shoot)");
 }
 
 /* ─────────────────────────────────────────────── */
-
 EBTNodeResult::Type UBTTask_FireEnemyProjectile::ExecuteTask(
 	UBehaviorTreeComponent& OwnerComp, uint8* /*NodeMemory*/)
 {
 	AAI_Controller* Controller = Cast<AAI_Controller>(OwnerComp.GetAIOwner());
 	if (!Controller) return EBTNodeResult::Failed;
 
-	AAI_Main* AICharacter = Cast<AAI_Main>(Controller->GetPawn());
-	if (!AICharacter || !ProjectileClass) return EBTNodeResult::Failed;
+	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+	AAI_Main*             AI = Cast<AAI_Main>(Controller->GetPawn());
+	if (!AI || !ProjectileClass || !BB) return EBTNodeResult::Failed;
 
-	/* ---------------------------------------------
-	 *   1. Get player location and calculate direction
-	 * --------------------------------------------*/
-	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(AICharacter, 0);
+	/*  “IsFiring” true for given duration second */
+	BB->SetValueAsBool(FName("IsFiring"), true);
+
+	FTimerHandle TmpHandle;
+	AI->GetWorldTimerManager().SetTimer(
+	    TmpHandle,
+	    FTimerDelegate::CreateLambda([BB]()
+	    {
+		    if (BB) BB->SetValueAsBool(FName("IsFiring"), false);
+	    }),
+	    5.0f, false);      // duration
+
+	/*  Rotate toward player */
+	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(AI, 0);
 	if (!Player) return EBTNodeResult::Failed;
 
-	const FVector AILoc     = AICharacter->GetActorLocation();
+	const FVector AILoc     = AI->GetActorLocation();
 	const FVector PlayerLoc = Player->GetActorLocation();
 
-	/* Face only in yaw (keep pitch/roll level) */
-	FRotator LookAtYaw = (PlayerLoc - AILoc).Rotation();
-	LookAtYaw.Pitch = 0.f;
-	LookAtYaw.Roll  = 0.f;
+	FRotator YawOnly = (PlayerLoc - AILoc).Rotation();
+	YawOnly.Pitch = 0.f;
+	YawOnly.Roll  = 0.f;
+	AI->SetActorRotation(YawOnly);
+	Controller->SetControlRotation(YawOnly);
 
-	/* rotate pawn and controller */
-	AICharacter->SetActorRotation(LookAtYaw);
-	Controller->SetControlRotation(LookAtYaw);
-
-	/* ---------------------------------------------
-	 *   2. Spawn the projectile
-	 * --------------------------------------------*/
-	const FVector MuzzleLocation =
-	    AILoc + AICharacter->GetActorForwardVector() * MuzzleForwardOffset +
+	/*  Spawn projectile */
+	const FVector MuzzleLoc =
+	    AILoc + AI->GetActorForwardVector() * MuzzleForwardOffset +
 	    FVector(0.f, 0.f, MuzzleUpOffset);
 
-	const FVector ShotDir   = (PlayerLoc - MuzzleLocation).GetSafeNormal();
-	const FRotator ShotRot  = ShotDir.Rotation();
+	const FVector Dir = (PlayerLoc - MuzzleLoc).GetSafeNormal();
+	const FRotator ShotRot = Dir.Rotation();
 
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner      = AICharacter;
-	SpawnParams.Instigator = AICharacter;
+	FActorSpawnParameters Params;
+	Params.Owner      = AI;
+	Params.Instigator = AI;
 
-	AProjectile* Proj = AICharacter->GetWorld()->SpawnActor<AProjectile>(
-	    ProjectileClass, MuzzleLocation, ShotRot, SpawnParams);
+	AProjectile* Proj = AI->GetWorld()->SpawnActor<AProjectile>(
+	    ProjectileClass, MuzzleLoc, ShotRot, Params);
 
 	if (Proj)
 	{
-		/* Pass damage from AI */
-		Proj->ProjectileDamage = AICharacter->AIDamage;
-
-		/* Kick off movement */
+		Proj->ProjectileDamage = AI->AIDamage;
 		if (UProjectileMovementComponent* Move = Proj->ProjectileComponent)
 		{
-			Move->Velocity = ShotDir * Move->InitialSpeed;
+			Move->Velocity = Dir * Move->InitialSpeed;
 		}
 		return EBTNodeResult::Succeeded;
 	}

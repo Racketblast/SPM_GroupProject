@@ -7,6 +7,8 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig.h"
+#include "Navigation/CrowdFollowingComponent.h"
+#include "Navigation/PathFollowingComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 
 
@@ -28,6 +30,11 @@ void AAI_Controller::OnPossess(APawn* InPawn)
 			Blackboard = b;
 			RunBehaviorTree(BehaviorTree);
 			
+		}
+		if (UCrowdFollowingComponent* Crowd =
+			Cast<UCrowdFollowingComponent>(GetPathFollowingComponent()))
+		{
+			Crowd->SuspendCrowdSteering(false);   // crowd steering ON
 		}
 	}
 }
