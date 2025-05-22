@@ -180,4 +180,9 @@ private:
 	void CheckforUse();
 	
 	AActor* LastUseTarget;
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase*DashSound;
+
+	UPROPERTY(VisibleAnywhere, Category = "Sound")
+	UAudioComponent* DashAudioComponent;
 };
