@@ -3,6 +3,7 @@
 
 #include "EnemyAIUtils.h"
 #include "DrawDebugHelpers.h"
+#include "FlyingEnemyAI.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "NavigationSystem.h"
@@ -10,7 +11,7 @@
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 
-bool UEnemyAIUtils::FindValidTeleportLocation(APawn* Pawn, const FVector& TargetLocation, FVector& OutLocation)
+bool UEnemyAIUtils::FindValidTeleportLocation(APawn* Pawn, const FVector& TargetLocation, FVector& OutLocation, bool bAvoidFrontTeleport)
 {
 	AActor* Player = UGameplayStatics::GetPlayerPawn(Pawn->GetWorld(), 0);
 	if (!Player) return false;
@@ -45,15 +46,15 @@ bool UEnemyAIUtils::FindValidTeleportLocation(APawn* Pawn, const FVector& Target
 		}
 		return false;
 	};
-
+	
 	// Första försöket, undvik att teleportera framför spelaren, så att den ser teleporteringen
 	if (TryFindLocation(true))
 	{
 		return true;
 	}
 
-	// Om det första försöket misslyckas, så körs ett annat där fienden får teleportera til spelarens field of view så att dem ser teleporteringen
-	return TryFindLocation(false);
+	// Om det första försöket misslyckas, så körs ett annat där fienden får teleportera till spelarens field of view så att dem ser teleporteringen. Dock om bAvoidFrontTeleport är satt till true, så kommer den aldrig att teleportera till en position framför spelaren.
+	return !bAvoidFrontTeleport && TryFindLocation(false);
 }
 
 bool UEnemyAIUtils::IsFlyableLocation(APawn* Pawn, UWorld* World, const FVector& Location, float ClearanceRadius)
