@@ -115,3 +115,14 @@ void ADebugCube::GiveAllWeapons()
 	}
 	
 }
+
+void ADebugCube::GiveLastFlag()
+{
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (bUnlockLastFlag)
+		{
+			GI->CurrentGameFlag = 9;
+		}
+	}
+}
