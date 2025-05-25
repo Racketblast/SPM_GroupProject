@@ -44,9 +44,10 @@ void AWaveManager::UpdateFirstWaveCountdown()
 {
 	bIsFirstGracePeriod = true;
 
-	//FirstGraceSecondsRemaining -= 1.0f;
-
 	UE_LOG(LogTemp, Warning, TEXT("Time until game starts: %i"), FirstGraceSecondsRemaining);
+
+	FirstGraceSecondsRemaining -= 1.0f;
+	
 	//UE_LOG(LogTemp, Warning, TEXT("bIsFirstGracePeriod: %s"), bIsFirstGracePeriod ? TEXT("true") : TEXT("false"));
 
 	if (FirstGraceSecondsRemaining <= 0.0f)
@@ -56,7 +57,7 @@ void AWaveManager::UpdateFirstWaveCountdown()
 		StartNextWave();
 	}
 
-	FirstGraceSecondsRemaining -= 1.0f;
+	//FirstGraceSecondsRemaining -= 1.0f;
 }
 
 FWaveData AWaveManager::GenerateWaveData(int32 WaveIndex) const
@@ -536,5 +537,8 @@ bool AWaveManager::IsInGracePeriod() const
 	return GraceSecondsRemaining > 0.0f;
 }
 
-
+float AWaveManager::GetFirstGraceSecondsRemaining() const
+{
+	return FirstGraceSecondsRemaining;
+}
 

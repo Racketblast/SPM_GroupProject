@@ -152,7 +152,7 @@ protected:
 	void UpdateFirstWaveCountdown();
 
 	UFUNCTION(BlueprintCallable, Category = "Wave")
-	float GetFirstGraceSecondsRemaining() const { return FirstGraceSecondsRemaining; }
+	float GetFirstGraceSecondsRemaining() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Wave")
 	bool IsFirstGracePeriod() const { return bIsFirstGracePeriod; }
