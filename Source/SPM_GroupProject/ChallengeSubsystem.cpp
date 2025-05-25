@@ -89,6 +89,9 @@ void UChallengeSubsystem::CompleteCurrentChallenge()
 		HandleChallengeSuccess();
 	}
 
+	// Sparar den nuvarande challengen innan den blir överskriven och byts till en ny challenge
+	LastCompletedChallenge = CurrentChallenge;
+
 	CurrentChallenge.bIsCompleted = true;
 	bIsChallengeActive = false;
 }
@@ -200,6 +203,20 @@ int32 UChallengeSubsystem::GetCurrentChallengeRewardAmount() const
 		//UE_LOG(LogTemp, Warning, TEXT("No custom reward found for challenge %s. Using default."), *UEnum::GetValueAsString(CurrentChallenge.Type));
 	}
 	
+	//UE_LOG(LogTemp, Warning, TEXT("Reward found for challenge %s. Reward amount is %d."), *UEnum::GetValueAsString(CurrentChallenge.Type), FoundReward ? *FoundReward : RewardMoneyAmount);
+	return FoundReward ? *FoundReward : RewardMoneyAmount;
+}
+
+// Används för UI
+int32 UChallengeSubsystem::GetLastCompletedChallengeRewardAmount() const
+{
+	const int32* FoundReward = ChallengeRewardMap.Find(LastCompletedChallenge.Type);
+
+	if (!FoundReward)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("No custom reward found for challenge %s. Using default."), *UEnum::GetValueAsString(CurrentChallenge.Type));
+	}
+
 	//UE_LOG(LogTemp, Warning, TEXT("Reward found for challenge %s. Reward amount is %d."), *UEnum::GetValueAsString(CurrentChallenge.Type), FoundReward ? *FoundReward : RewardMoneyAmount);
 	return FoundReward ? *FoundReward : RewardMoneyAmount;
 }

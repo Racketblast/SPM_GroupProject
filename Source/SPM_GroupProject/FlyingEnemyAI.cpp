@@ -27,9 +27,7 @@ void AFlyingEnemyAI::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-/*#if WITH_EDITOR
-	DrawFlyableZRange();
-#endif*/
+	//DrawFlyableZRange();
 
 	if (!CurrentTargetLocation.IsNearlyZero())
 	{
