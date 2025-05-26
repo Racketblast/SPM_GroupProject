@@ -662,6 +662,11 @@ void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
 
 	if (!bCanPlayDialogue)
 		return;
+
+	
+	if (StartDialogueRowName == "")
+		return;
+	
 	CurrentDialogueRowName = StartDialogueRowName;
 	
 	if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(StartDialogueRowName, TEXT("")))
