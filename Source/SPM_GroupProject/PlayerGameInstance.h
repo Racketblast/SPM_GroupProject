@@ -37,6 +37,10 @@ public:
 	EUpgradeType CurrentWeapon;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<EUpgradeType,FUpgradeInfo> UpgradeMap;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> CurrentWeaponSkins = {0,0,0,0};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bSwapMaterials = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bCanPlayDialogue = false;
@@ -120,8 +124,8 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void ApplyAllUpgradeFunctions(class APlayerCharacter* Player);
-
 	
+	UFUNCTION(BlueprintCallable)
 	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradePlayerStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradeGunStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
