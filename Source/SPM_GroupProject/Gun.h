@@ -37,7 +37,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float RealoadSpeed = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	UMaterialInterface* CurrentSkinMat;
+	TArray<UMaterialInterface*> DifferentSkinMat;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USceneComponent* MuzzlePoint;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
