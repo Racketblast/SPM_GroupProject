@@ -616,6 +616,7 @@ void APlayerCharacter::Landed(const FHitResult& Hit)
 
 float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	if (bIsDead) return 0;
 
 	PlayerHealth -= DamageAmount;
