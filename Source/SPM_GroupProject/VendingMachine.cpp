@@ -132,14 +132,14 @@ bool AVendingMachine::IfPlayerHasEnoughMoney(APlayerCharacter* Player, UPlayerGa
 		{
 			if (Player->PickedUpMoney + GI->Money >= SpewOutCost)
 			{
-				if (Player->PickedUpMoney >= SpewOutAmount)
+				if (Player->PickedUpMoney >= SpewOutCost)
 				{
-					Player->PickedUpMoney -= SpewOutAmount;
+					Player->PickedUpMoney -= SpewOutCost;
 				}
 				else
 				{
-					SpewOutAmount -= Player->PickedUpMoney;
-					GI->Money -= SpewOutAmount;
+					SpewOutCost -= Player->PickedUpMoney;
+					GI->Money -= SpewOutCost;
 				}
 				
 				if (CanBuySound)

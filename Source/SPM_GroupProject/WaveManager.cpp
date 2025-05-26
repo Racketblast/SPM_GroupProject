@@ -44,9 +44,10 @@ void AWaveManager::UpdateFirstWaveCountdown()
 {
 	bIsFirstGracePeriod = true;
 
-	//FirstGraceSecondsRemaining -= 1.0f;
-
 	UE_LOG(LogTemp, Warning, TEXT("Time until game starts: %i"), FirstGraceSecondsRemaining);
+
+	FirstGraceSecondsRemaining -= 1.0f;
+	
 	//UE_LOG(LogTemp, Warning, TEXT("bIsFirstGracePeriod: %s"), bIsFirstGracePeriod ? TEXT("true") : TEXT("false"));
 
 	if (FirstGraceSecondsRemaining <= 0.0f)
@@ -56,7 +57,7 @@ void AWaveManager::UpdateFirstWaveCountdown()
 		StartNextWave();
 	}
 
-	FirstGraceSecondsRemaining -= 1.0f;
+	//FirstGraceSecondsRemaining -= 1.0f;
 }
 
 FWaveData AWaveManager::GenerateWaveData(int32 WaveIndex) const
@@ -269,9 +270,12 @@ void AWaveManager::SpawnEnemy()
 
 void AWaveManager::HandleNextSpawnInQueue()
 {
+	// Kontrollerar hur många fiender som får spawna samtidigt, med en vfx som spelas upp innan varje spawn. 
 	while (ActiveVFXCount < EnemiesPerSpawnBatch && !SpawnVFXQueue.IsEmpty())
 	{
 		FPendingEnemySpawnData SpawnData;
+
+		// Försöker ta fram nästa fiendes klass och spawn location från queuen och om den lyckas så försöker man spawna en vfx och sedan fienden
 		if (SpawnVFXQueue.Dequeue(SpawnData))
 		{
 			ActiveVFXCount++;
@@ -279,7 +283,7 @@ void AWaveManager::HandleNextSpawnInQueue()
 		}
 	}
 	
-	//Ifall queuen är tom och det inte finns några vfx som är aktiva, så börjar nästa batch. 
+	//Ifall queuen är tom och det inte finns några vfx som är aktiva, så börjar nästa batch. Annars slutar den, då alla fiender för waven har blivit spawnade.
 	if (ActiveVFXCount == 0 && SpawnVFXQueue.IsEmpty())
 	{
 		bIsSpawningEnemy = false;
@@ -305,7 +309,7 @@ void AWaveManager::PlaySpawnVFXAndThenSpawnEnemy(TSubclassOf<AActor> EnemyType, 
 {
 	if (!SpawnEffect) 
 	{
-		SpawnEnemyAtLocation(EnemyType, SpawnLocation); // ifall ingen vfx har blivit satt, så kallar den bara på spawn funktionen ändå
+		SpawnEnemyAtLocation(EnemyType, SpawnLocation); // ifall ingen vfx har blivit satt i unreal editorn, så kallar den bara på spawn funktionen ändå
 		return;
 	}
 
@@ -330,6 +334,7 @@ void AWaveManager::PlaySpawnVFXAndThenSpawnEnemy(TSubclassOf<AActor> EnemyType, 
 	// Gör så att OnSpawnVFXFinished körs efter vfx är klar
 	NiagaraComponent->OnSystemFinished.AddUniqueDynamic(this, &AWaveManager::OnSpawnVFXFinished);
 
+	// Parar ihop en vfx med en fiende genom att lägga de i en Map
 	PendingSpawnQueue.Add(NiagaraComponent, EnemyType);
 }
 
@@ -532,5 +537,8 @@ bool AWaveManager::IsInGracePeriod() const
 	return GraceSecondsRemaining > 0.0f;
 }
 
-
+float AWaveManager::GetFirstGraceSecondsRemaining() const
+{
+	return FirstGraceSecondsRemaining;
+}
 
