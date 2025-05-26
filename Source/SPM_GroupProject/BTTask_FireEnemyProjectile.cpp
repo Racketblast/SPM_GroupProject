@@ -31,13 +31,18 @@ EBTNodeResult::Type UBTTask_FireEnemyProjectile::ExecuteTask(
 	BB->SetValueAsBool(FName("IsFiring"), true);
 
 	FTimerHandle TmpHandle;
+	TWeakObjectPtr<UBlackboardComponent> WeakBB = BB;
+
 	AI->GetWorldTimerManager().SetTimer(
-	    TmpHandle,
-	    FTimerDelegate::CreateLambda([BB]()
-	    {
-		    if (BB) BB->SetValueAsBool(FName("IsFiring"), false);
-	    }),
-	    5.0f, false);      // duration
+		TmpHandle,
+		FTimerDelegate::CreateLambda([WeakBB]()
+		{
+			if (WeakBB.IsValid())
+			{
+				WeakBB->SetValueAsBool(FName("IsFiring"), false);
+			}
+		}),
+		5.0f, false);
 
 	/*  Rotate toward player */
 	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(AI, 0);

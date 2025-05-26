@@ -345,7 +345,6 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 		case EUpgradeType::PistolAmmoSize:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
 			{
-				UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->GetWeaponInstance("Pistol")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->GetWeaponInstance("Pistol")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->GetWeaponInstance("Pistol")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
@@ -385,6 +384,99 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 			break;
 		case EUpgradeType::GrenadesAmmoSize:
 			Player->GrenadeNum = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+			break;
+
+			//Skins
+			case EUpgradeType::PistolSkin:
+			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
+			{
+				if (bSwapMaterials)
+				{
+					if (CurrentWeaponSkins[0] == 0)
+					{
+						CurrentWeaponSkins[0] = 1;
+					}
+					else if (CurrentWeaponSkins[0] == 1)
+					{
+						CurrentWeaponSkins[0] = 0;
+					}
+					bSwapMaterials = false;
+				}
+				
+				if (Player->GetWeaponInstance("Pistol")->DifferentSkinMat.IsValidIndex(CurrentWeaponSkins[0]))
+				{
+					Player->GetWeaponInstance("Pistol")->WeaponSkeletalMesh->SetMaterial(0,Player->GetWeaponInstance("Pistol")->DifferentSkinMat[CurrentWeaponSkins[0]]);
+				}
+				Player->CurrentGun->bIsUpgraded = true;
+			}
+			break;
+		case EUpgradeType::RifleSkin:
+			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
+			{
+				if (bSwapMaterials)
+				{
+					if (CurrentWeaponSkins[1] == 0)
+					{
+						CurrentWeaponSkins[1] = 1;
+					}
+					else if (CurrentWeaponSkins[1] == 1)
+					{
+						CurrentWeaponSkins[1] = 0;
+					}
+					bSwapMaterials = false;
+				}
+				
+				if (Player->GetWeaponInstance("Rifle")->DifferentSkinMat.IsValidIndex(CurrentWeaponSkins[1]))
+				{
+					Player->GetWeaponInstance("Rifle")->WeaponSkeletalMesh->SetMaterial(0,Player->GetWeaponInstance("Rifle")->DifferentSkinMat[CurrentWeaponSkins[1]]);
+				}
+				Player->CurrentGun->bIsUpgraded = true;
+			}
+			break;
+		case EUpgradeType::ShotgunSkin:
+			if (Player-> CurrentGun == Player->GetWeaponInstance("Shotgun"))
+			{
+				if (bSwapMaterials)
+				{
+					if (CurrentWeaponSkins[2] == 0)
+					{
+						CurrentWeaponSkins[2] = 1;
+					}
+					else if (CurrentWeaponSkins[2] == 1)
+					{
+						CurrentWeaponSkins[2] = 0;
+					}
+					bSwapMaterials = false;
+				}
+				
+				if (Player->GetWeaponInstance("Shotgun")->DifferentSkinMat.IsValidIndex(CurrentWeaponSkins[2]))
+				{
+					Player->GetWeaponInstance("Shotgun")->WeaponSkeletalMesh->SetMaterial(0,Player->GetWeaponInstance("Shotgun")->DifferentSkinMat[CurrentWeaponSkins[2]]);
+				}
+				Player->CurrentGun->bIsUpgraded = true;
+			}
+			break;
+		case EUpgradeType::RocketLauncherSkin:
+			if (Player-> CurrentGun == Player->GetWeaponInstance("RocketLauncher"))
+			{
+				if (bSwapMaterials)
+				{
+					if (CurrentWeaponSkins[3] == 0)
+					{
+						CurrentWeaponSkins[3] = 1;
+					}
+					else if (CurrentWeaponSkins[3] == 1)
+					{
+						CurrentWeaponSkins[3] = 0;
+					}
+					bSwapMaterials = false;
+				}
+				if (Player->GetWeaponInstance("RocketLauncher")->DifferentSkinMat.IsValidIndex(CurrentWeaponSkins[3]))
+				{
+					Player->GetWeaponInstance("RocketLauncher")->WeaponSkeletalMesh->SetMaterial(0,Player->GetWeaponInstance("RocketLauncher")->DifferentSkinMat[CurrentWeaponSkins[3]]);
+				}
+				Player->CurrentGun->bIsUpgraded = true;
+			}
 			break;
 		default:
 			break;

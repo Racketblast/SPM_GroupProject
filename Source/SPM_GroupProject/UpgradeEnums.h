@@ -31,6 +31,10 @@ enum class EUpgradeType : uint8
 	ShotgunAmmoSize UMETA(DisplayName = "Shotgun Ammo Size"),
 	RocketLauncherAmmoSize UMETA(DisplayName = "RocketLauncher Ammo Size"),
 	GrenadesAmmoSize UMETA(DisplayName = "Grenades Ammo Size"),
+	PistolSkin UMETA(DisplayName = "Pistol Skin"),
+	RifleSkin  UMETA(DisplayName = "Rifle Skin"),
+	ShotgunSkin UMETA(DisplayName = "Shotgun Skin"),
+	RocketLauncherSkin UMETA(DisplayName = "RocketLauncher Skin"),
 	// Add more as needed
 };
 

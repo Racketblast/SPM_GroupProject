@@ -34,6 +34,7 @@ UBehaviorTree* AAI_Main::GetBehaviorTree() const { return BehaviorTree; }
 float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
                            AController* EventInstigator, AActor* DamageCauser)
 {
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
     if (!bIsDead)
     {
         AIHealth -= DamageAmount;
