@@ -60,7 +60,7 @@ public:
 	bool CanShoot() const; 
 	void NotifyTeleported();
 
-	void SetNewMoveTarget(const FVector& NewTarget);
+	//void SetNewMoveTarget(const FVector& NewTarget);
 
 	UFUNCTION()
 	void TeleportToValidLocationNearPlayer();
@@ -70,6 +70,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float FireCooldown = 2.0f; // Sekunder mellan skot som fienden skjuter
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float PlayerInRange = 1000.f; // Distansen innan spelaren är "in range"
 
 	void IsMoving();
 

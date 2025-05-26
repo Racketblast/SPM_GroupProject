@@ -46,8 +46,6 @@ EBTNodeResult::Type UBTTask_FlyToPlayerLocation::ExecuteTask(UBehaviorTreeCompon
 	
 	OwnerComp.GetBlackboardComponent()->SetValueAsVector(MoveToLocationKey.SelectedKeyName, SmartTarget);
 
-	
-
 	LastLocation = Pawn->GetActorLocation();
 	TimeSinceLastMove = 0.f;
 	bBackingOff = false;

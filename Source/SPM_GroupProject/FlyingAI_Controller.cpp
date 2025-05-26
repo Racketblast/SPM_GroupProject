@@ -7,10 +7,6 @@
 #include "GameFramework/Character.h"
 #include "FlyingEnemyAI.h"
 
-/*AFlyingAI_Controller::AFlyingAI_Controller()
-{
-	PrimaryActorTick.bCanEverTick = true;
-}*/
 
 void AFlyingAI_Controller::Tick(float DeltaSeconds)
 {
@@ -79,4 +75,10 @@ bool AFlyingAI_Controller::HasLineOfSightToPlayer() const
 
 	// Kållar om den träffar spelaren, alltså om den ser spelaren
 	return HitResult.GetActor() == Player;
+}
+
+void AFlyingAI_Controller::SetPlayerInRange(float PlayerInRange)
+{
+	PlayerRangeThreshold = PlayerInRange;
+	UE_LOG(LogTemp, Warning, TEXT("PlayerRangeThreshold %f"), PlayerRangeThreshold);
 }

@@ -21,6 +21,12 @@ void AFlyingEnemyAI::BeginPlay()
 	Super::BeginPlay();
 
 	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Flying);
+	
+	if (AFlyingAI_Controller* AIController = Cast<AFlyingAI_Controller>(GetController()))
+	{
+		AIController->SetPlayerInRange(PlayerInRange);
+		UE_LOG(LogTemp, Warning, TEXT("PlayerInRange %f"), PlayerInRange);
+	}
 }
 
 void AFlyingEnemyAI::Tick(float DeltaTime)
@@ -74,7 +80,7 @@ void AFlyingEnemyAI::Tick(float DeltaTime)
 			if (Player)
 			{
 				float DistanceToPlayer = FVector::Dist(GetActorLocation(), Player->GetActorLocation());
-				bInRange = DistanceToPlayer <= AIController->PlayerRangeThreshold;
+				bInRange = DistanceToPlayer <= PlayerInRange;
 
 				if (DistanceToPlayer <= TeleportProximityThreshold)
 				{
@@ -199,7 +205,7 @@ bool AFlyingEnemyAI::CanShoot() const
 }
 
 // denna används aldrig
-void AFlyingEnemyAI::SetNewMoveTarget(const FVector& NewTarget)
+/*void AFlyingEnemyAI::SetNewMoveTarget(const FVector& NewTarget)
 {
 	CurrentTargetLocation = NewTarget;
 	DestinationStartTime = GetWorld()->GetTimeSeconds();
@@ -207,7 +213,7 @@ void AFlyingEnemyAI::SetNewMoveTarget(const FVector& NewTarget)
 
 	FVector Direction = (NewTarget - GetActorLocation()).GetSafeNormal();
 	AddMovementInput(Direction, FlySpeed);
-}
+}*/
 
 bool AFlyingEnemyAI::IsFireCooldownElapsed() const
 {
