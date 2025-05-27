@@ -9,6 +9,8 @@
 #include "AI_Main.generated.h"
 
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAIDeathEvent);
+
 UCLASS()
 class SPM_GROUPPROJECT_API AAI_Main : public ACharacter
 {
@@ -40,7 +42,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsAttacking = false;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sound")
 	class UAudioComponent* AudioComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
@@ -48,6 +50,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	UNiagaraSystem* DeathEffect;
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAIDeathEvent, AAI_Main*, DeadEnemy);
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FAIDeathEvent OnEnemyDied;
 public:	
 	virtual void Tick(float DeltaTime) override;
 	

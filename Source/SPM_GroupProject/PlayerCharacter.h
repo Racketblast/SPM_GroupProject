@@ -36,6 +36,18 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	int32 UseDistance = 300;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
+	int32 MeleeDistance = 150;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
+	float MeleeDamage = 40;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
+	float MeleeHitsPerSecond = 0.8;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Melee")
+	bool bUsingMelee = false;
 
 	UPROPERTY(BlueprintReadWrite)
 	int32 PlayerHealth;
@@ -70,9 +82,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bCanSwitchWeapons = true;
-
+	
 	UPROPERTY(BlueprintReadOnly)
-	UUserWidget* UseWidget;
+	bool bCanShoot = true;
 	
 	UPROPERTY(BlueprintReadOnly)
 	bool bShowUseWidget = false;
@@ -88,6 +100,7 @@ protected:
 	void ThrowGrenade();
 	void Use();
 	void Reload();
+	void Melee();
 	void SelectWeapon1();
 	void SelectWeapon2();
 	void SelectWeapon3();
@@ -173,9 +186,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Audio")
 	USoundBase* DamageSound;
-	
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UUserWidget> UseWidgetClass;
 
 	void CheckforUse();
 	
@@ -185,4 +195,11 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Sound")
 	UAudioComponent* DashAudioComponent;
+
+	//Melee handlers for delay
+	FTimerHandle MeleeTimerHandle;
+	UFUNCTION(Category = "Melee")
+	void PerformMelee();
+	UFUNCTION(Category = "Melee")
+	void EndMelee();
 };
