@@ -202,4 +202,9 @@ private:
 	void PerformMelee();
 	UFUNCTION(Category = "Melee")
 	void EndMelee();
+	void NextWeapon();
+	void PreviousWeapon();
+	UFUNCTION()
+	void HandleMouseWheel(float Value);
+
 };
