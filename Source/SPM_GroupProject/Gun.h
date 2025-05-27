@@ -63,14 +63,14 @@ public:
 	bool bIsUpgraded = false;
 	void CheckForUpgrades();
 
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsReloading = false;
 protected:
 	virtual void BeginPlay() override;
 	
 	UPROPERTY()
 	APlayerCharacter* OwnerCharacter;
 
-	UPROPERTY(BlueprintReadOnly)
-	bool bIsReloading = false;
 
 	FTimerHandle ReloadTimerHandle;
 

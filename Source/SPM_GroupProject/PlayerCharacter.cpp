@@ -13,8 +13,10 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Explosive.h"
-#include "Blueprint/UserWidget.h"
+#include "MeleeDamageType.h"
 #include "Components/AudioComponent.h"
+#include "Engine/DamageEvents.h"
+
 APlayerCharacter::APlayerCharacter()
 {
 	// Enable ticking for every frame
@@ -104,12 +106,6 @@ void APlayerCharacter::BeginPlay()
 	{
 		GameMode->FadeIn(this);
 	}
-
-	//For creating the UseWidget
-	if (UseWidgetClass)
-	{
-		UseWidget = CreateWidget<UUserWidget>(GetWorld(), UseWidgetClass);
-	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -122,6 +118,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &APlayerCharacter::ThrowGrenade);
 	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &APlayerCharacter::Use);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &APlayerCharacter::Reload);
+	PlayerInputComponent->BindAction("Melee", IE_Pressed, this, &APlayerCharacter::Melee);
 
 	PlayerInputComponent->BindAction("SelectWeapon1", IE_Pressed, this, &APlayerCharacter::SelectWeapon1);
 	PlayerInputComponent->BindAction("SelectWeapon2", IE_Pressed, this, &APlayerCharacter::SelectWeapon2);
@@ -318,6 +315,8 @@ void APlayerCharacter::Shoot()
 {
 	if (!CurrentGun) return;
 
+	if (!bCanShoot) return;
+
 	USceneComponent* Muzzle = CurrentGun->GetMuzzlePoint();
 	if (!Muzzle) return;
 
@@ -344,8 +343,66 @@ void APlayerCharacter::Reload()
 {
 	if (CurrentGun)
 	{
-		CurrentGun->Reload();
+		if (bCanShoot)
+		{
+			CurrentGun->Reload();
+		}
 	}
+}
+
+void APlayerCharacter::Melee()
+{
+	if (bUsingMelee)
+	return;
+	
+	if (CurrentGun->bIsReloading)
+	return;
+	
+	bUsingMelee = true;
+	bCanSwitchWeapons = false;
+	bCanShoot = false;
+	
+	float StartDelay = MeleeHitsPerSecond * 0.1;
+	GetWorld()->GetTimerManager().SetTimer(MeleeTimerHandle, this, &APlayerCharacter::PerformMelee, StartDelay, false);
+}
+
+void APlayerCharacter::PerformMelee()
+{
+	FVector Start = PlayerCamera->GetComponentLocation();
+	FVector End = Start + PlayerCamera->GetForwardVector() * UseDistance;
+
+	TArray<FHitResult> HitResults;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	
+	TSubclassOf<UDamageType> DamageTypeClass = UMeleeDamageType::StaticClass();
+	FDamageEvent DamageEvent(DamageTypeClass);
+	
+	float SweepRadius = 25.f;
+	FCollisionShape CollisionShape = FCollisionShape::MakeSphere(SweepRadius);
+
+	if (GetWorld()->SweepMultiByChannel(HitResults, Start, End, FQuat::Identity, ECC_Visibility, CollisionShape, Params))
+	{
+		for (const FHitResult& HitResult : HitResults)
+		{
+			if (ACharacter* Char = Cast<ACharacter>(HitResult.GetActor()))
+			{
+				Char->TakeDamage(MeleeDamage, DamageEvent,nullptr,this);
+			}
+			DrawDebugCylinder(GetWorld(), Start, HitResult.ImpactPoint, SweepRadius, 10,FColor::Orange, false, 2.0f);
+			DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, SweepRadius, 16, FColor::Red, false, 2.0f);
+		}
+	}
+	
+	float EndDelay = MeleeHitsPerSecond * 0.9;
+	GetWorld()->GetTimerManager().SetTimer(MeleeTimerHandle, this, &APlayerCharacter::EndMelee, EndDelay, false);
+}
+
+void APlayerCharacter::EndMelee()
+{
+	bUsingMelee = false;
+	bCanSwitchWeapons = true;
+	bCanShoot = true;
 }
 
 void APlayerCharacter::SelectWeapon(FName Weapon)
