@@ -52,11 +52,11 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 			
         	if (DamageEvent.DamageTypeClass == UMeleeDamageType::StaticClass())
         	{
-        		UE_LOG(LogTemp, Error, TEXT("Melee kill"));
+        		UE_LOG(LogTemp, Display, TEXT("Melee kill"));
         	}
 	        else
 	        {
-		        UE_LOG(LogTemp, Error, TEXT("Anything else kill"));
+		        UE_LOG(LogTemp, Display, TEXT("Anything else kill"));
 	        }
         	
             AIHealth = 0;
