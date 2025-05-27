@@ -36,9 +36,12 @@ FUpgradeInfo UPlayerGameInstance::SetDefaultUpgradeInfo(const EUpgradeType Upgra
 	return {};
 	
 	FName RowName(*ConvertUpgradeTypeToString(Upgrade));
-	if (FUpgradeInfo* Row = UpgradeDataTable->FindRow<FUpgradeInfo>(RowName, TEXT("")))
+	if (RowName != "")
 	{
-		return *Row;
+		if (FUpgradeInfo* Row = UpgradeDataTable->FindRow<FUpgradeInfo>(RowName, TEXT("")))
+		{
+			return *Row;
+		}
 	}
 	
 	return {};
