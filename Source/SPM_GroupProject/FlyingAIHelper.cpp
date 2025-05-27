@@ -4,6 +4,7 @@
 #include "FlyingAIHelper.h"
 #include "FlyingEnemyAI.h"
 #include "DrawDebugHelpers.h"
+#include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
 
 FVector FlyingAIHelper::ComputeSmartTargetLocation(
@@ -80,11 +81,12 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 	}
 
 	// Kållar efter hinder
-	bool bValidLocation = IsLocationClear(World, TargetLocation, FlyingEnemy, ObstacleCheckDistance, ObstacleClearance);
+	bool bValidLocation = IsLocationClear(World, TargetLocation, FlyingEnemy, ObstacleCheckDistance, ObstacleClearance) &&
+	IsPathClear(World, FromLocation, TargetLocation, FlyingEnemy);
 
 	if (!bValidLocation && bAddRandomOffset)
 	{
-		FVector RetryLocation = PlayerLocation + FVector(
+		FVector InitialRetryLocation = PlayerLocation + FVector(
 			FMath::FRandRange(-RandomRadius, RandomRadius),
 			FMath::FRandRange(-RandomRadius, RandomRadius),
 			ZOffset
@@ -92,14 +94,62 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 
 		if (FlyingEnemy)
 		{
-			RetryLocation.Z = FMath::Clamp(RetryLocation.Z, FlyingEnemy->GetMinAltitude(), FlyingEnemy->GetMaxAltitude());
+			InitialRetryLocation.Z = FMath::Clamp(InitialRetryLocation.Z, FlyingEnemy->GetMinAltitude(), FlyingEnemy->GetMaxAltitude());
 		}
 
-		if (IsLocationClear(World, RetryLocation, FlyingEnemy, ObstacleCheckDistance, ObstacleClearance))
+		if (IsLocationClear(World, InitialRetryLocation, FlyingEnemy, ObstacleCheckDistance, ObstacleClearance) &&
+		IsPathClear(World, FromLocation, InitialRetryLocation, FlyingEnemy))
 		{
-			TargetLocation = RetryLocation;
+			TargetLocation = InitialRetryLocation;
 		}
 		else
+		{
+			const float RetryDistance = 50.f;
+			bool bFoundValidPath = false;
+
+			// List of deliberate directions to try in order
+			TArray<FVector> ProbeDirections = {
+				FVector::ForwardVector,
+				FVector::RightVector,
+				-FVector::RightVector,
+				(FVector::ForwardVector + FVector::RightVector).GetSafeNormal(),
+				(FVector::ForwardVector - FVector::RightVector).GetSafeNormal(),
+				-FVector::ForwardVector 
+			};
+
+			for (const FVector& Dir : ProbeDirections)
+			{
+				FVector RetryLocation = FromLocation + Dir * RetryDistance;
+				RetryLocation.Z = TargetLocation.Z;
+
+				if (FlyingEnemy)
+				{
+					RetryLocation.Z = FMath::Clamp(RetryLocation.Z, FlyingEnemy->GetMinAltitude(), FlyingEnemy->GetMaxAltitude());
+				}
+
+				if (IsLocationClear(World, RetryLocation, FlyingEnemy, ObstacleCheckDistance, ObstacleClearance) &&
+					IsPathClear(World, FromLocation, RetryLocation, FlyingEnemy))
+				{
+					TargetLocation = RetryLocation;
+					bFoundValidPath = true;
+					break;
+				}
+			}
+
+			// Final fallback if all retries failed
+			if (!bFoundValidPath)
+			{
+				FVector Direction = (PlayerLocation - FromLocation).GetSafeNormal();
+				TargetLocation = FromLocation + Direction * 500.f;
+				TargetLocation.Z += ZOffset;
+
+				if (FlyingEnemy)
+				{
+					TargetLocation.Z = FMath::Clamp(TargetLocation.Z, FlyingEnemy->GetMinAltitude(), FlyingEnemy->GetMaxAltitude());
+				}
+			}
+		}
+		/*else
 		{
 			// Fallback 
 			FVector Direction = (PlayerLocation - FromLocation).GetSafeNormal();
@@ -110,7 +160,7 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 			{
 				TargetLocation.Z = FMath::Clamp(TargetLocation.Z, FlyingEnemy->GetMinAltitude(), FlyingEnemy->GetMaxAltitude());
 			}
-		}
+		}*/
 	}
 	
 	// DrawDebugSphere(World, TargetLocation, 30.f, 12, FColor::Green, false, 2.f);
@@ -153,3 +203,54 @@ bool FlyingAIHelper::IsLocationClear(
 	return true;
 }
 
+bool FlyingAIHelper::IsPathClear(
+	UWorld* World,
+	const FVector& FromLocation,
+	const FVector& ToLocation,
+	AFlyingEnemyAI* FlyingEnemy)
+{
+	if (!World || !FlyingEnemy) return false;
+
+	UCapsuleComponent* Capsule = FlyingEnemy->GetCapsuleComponent();
+	if (!Capsule) return false;
+
+	float Radius = Capsule->GetScaledCapsuleRadius();
+	float HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(FlyingEnemy);
+	Params.bTraceComplex = false;
+
+	TArray<AActor*> AllFlyingEnemies;
+	UGameplayStatics::GetAllActorsOfClass(World, AFlyingEnemyAI::StaticClass(), AllFlyingEnemies);
+
+	for (AActor* Enemy : AllFlyingEnemies)
+	{
+		Params.AddIgnoredActor(Enemy);
+	}
+
+	// Define the capsule shape
+	FCollisionShape CollisionShape = FCollisionShape::MakeCapsule(Radius, HalfHeight);
+
+	FHitResult Hit;
+	bool bHit = World->SweepSingleByChannel(
+		Hit,
+		FromLocation,
+		ToLocation,
+		FQuat::Identity,
+		ECC_Visibility,
+		CollisionShape,
+		Params
+	);
+
+
+	// Optional: draw the sweep
+	/*
+	DrawDebugCapsule(World, FromLocation, HalfHeight, Radius, FQuat::Identity, FColor::Blue, false, 1.f);
+	DrawDebugCapsule(World, ToLocation, HalfHeight, Radius, FQuat::Identity, FColor::Red, false, 1.f);
+	DrawDebugLine(World, FromLocation, ToLocation, bHit ? FColor::Red : FColor::Green, false, 1.f, 0, 2.f);
+	*/
+
+
+	return !bHit;
+}

@@ -29,4 +29,9 @@ public:
 		float Distance,
 		float Clearance
 	);
+
+	static bool IsPathClear(UWorld* World,
+	const FVector& FromLocation,
+	const FVector& ToLocation,
+	AFlyingEnemyAI* FlyingEnemy); 
 };
