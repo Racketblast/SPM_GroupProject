@@ -389,8 +389,8 @@ void APlayerCharacter::PerformMelee()
 			{
 				Char->TakeDamage(MeleeDamage, DamageEvent,nullptr,this);
 			}
-			DrawDebugCylinder(GetWorld(), Start, HitResult.ImpactPoint, SweepRadius, 10,FColor::Orange, false, 2.0f);
-			DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, SweepRadius, 16, FColor::Red, false, 2.0f);
+			//DrawDebugCylinder(GetWorld(), Start, HitResult.ImpactPoint, SweepRadius, 10,FColor::Orange, false, 2.0f);
+			//DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, SweepRadius, 16, FColor::Red, false, 2.0f);
 		}
 	}
 	
