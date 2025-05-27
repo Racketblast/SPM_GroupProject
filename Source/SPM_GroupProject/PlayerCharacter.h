@@ -106,11 +106,11 @@ protected:
 	bool Weapon3Equipped = false;
 	bool Weapon4Equipped = false;
 	bool Weapon5Equipped = false;
-
-private:
-	UPROPERTY(Blueprintable)
+	
+	UPROPERTY(BlueprintReadOnly)
 	bool bIsDead = false;
 
+private:
 	FName WeaponName1 = "Pistol";
 	FName WeaponName2 = "Rifle";
 	FName WeaponName3 = "Shotgun";

@@ -15,7 +15,6 @@
 AStoreBox::AStoreBox()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
-	StaticMeshComponent->SetupAttachment(GetRootComponent());
 }
 
 void AStoreBox::Use_Implementation(APlayerCharacter* Player)
