@@ -358,9 +358,9 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 		case EUpgradeType::RifleAmmoSize:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
 			{
-				Player->GetWeaponInstance("Rifle")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->GetWeaponInstance("Rifle")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->GetWeaponInstance("Rifle")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]/5;
+				Player->GetWeaponInstance("Rifle")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
+				Player->GetWeaponInstance("Rifle")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
+				Player->GetWeaponInstance("Rifle")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->GetWeaponInstance("Rifle")->CurrentAmmo = Player->GetWeaponInstance("Rifle")->MaxAmmo;
 				Player->CurrentGun->bIsUpgraded = true;
 			}
@@ -368,9 +368,9 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 		case EUpgradeType::ShotgunAmmoSize:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("Shotgun"))
 			{
-				Player->GetWeaponInstance("Shotgun")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->GetWeaponInstance("Shotgun")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->GetWeaponInstance("Shotgun")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]/5;
+				Player->GetWeaponInstance("Shotgun")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
+				Player->GetWeaponInstance("Shotgun")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
+				Player->GetWeaponInstance("Shotgun")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->GetWeaponInstance("Shotgun")->CurrentAmmo = Player->GetWeaponInstance("Shotgun")->MaxAmmo;
 				Player->CurrentGun->bIsUpgraded = true;
 			}
@@ -378,9 +378,9 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 		case EUpgradeType::RocketLauncherAmmoSize:
 			if (Player-> CurrentGun == Player->GetWeaponInstance("RocketLauncher"))
 			{
-				Player->GetWeaponInstance("RocketLauncher")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->GetWeaponInstance("RocketLauncher")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->GetWeaponInstance("RocketLauncher")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]/5;
+				Player->GetWeaponInstance("RocketLauncher")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
+				Player->GetWeaponInstance("RocketLauncher")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
+				Player->GetWeaponInstance("RocketLauncher")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->GetWeaponInstance("RocketLauncher")->CurrentAmmo = Player->GetWeaponInstance("RocketLauncher")->MaxAmmo;
 				Player->CurrentGun->bIsUpgraded = true;
 			}
