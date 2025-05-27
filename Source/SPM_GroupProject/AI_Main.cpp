@@ -61,7 +61,8 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
         	
             AIHealth = 0;
             bIsDead = true;
-
+        	OnEnemyDied.Broadcast(this);
+        	
             // Notify wave manager
             for (TActorIterator<AWaveManager> It(GetWorld()); It; ++It)
             {
