@@ -11,7 +11,6 @@
 AVendingMachine::AVendingMachine()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
-	StaticMeshComponent->SetupAttachment(GetRootComponent());
 }
 void AVendingMachine::Use_Implementation(APlayerCharacter* Player)
 {
