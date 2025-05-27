@@ -14,7 +14,9 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "EngineUtils.h"
+#include "MeleeDamageType.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/DamageEvents.h"
 
 /* ─────────────────────────────────────────────── */
 /*                   CONSTRUCTOR                   */
@@ -47,6 +49,16 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 
         if (AIHealth <= 0)
         {
+			
+        	if (DamageEvent.DamageTypeClass == UMeleeDamageType::StaticClass())
+        	{
+        		UE_LOG(LogTemp, Error, TEXT("Melee kill"));
+        	}
+	        else
+	        {
+		        UE_LOG(LogTemp, Error, TEXT("Anything else kill"));
+	        }
+        	
             AIHealth = 0;
             bIsDead = true;
 
