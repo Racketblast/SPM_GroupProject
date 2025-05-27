@@ -11,7 +11,6 @@
 ATeleportScreen::ATeleportScreen()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
-	StaticMeshComponent->SetupAttachment(GetRootComponent());
 }
 
 void ATeleportScreen::Use_Implementation(APlayerCharacter* Player)

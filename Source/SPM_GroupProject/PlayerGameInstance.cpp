@@ -36,9 +36,12 @@ FUpgradeInfo UPlayerGameInstance::SetDefaultUpgradeInfo(const EUpgradeType Upgra
 	return {};
 	
 	FName RowName(*ConvertUpgradeTypeToString(Upgrade));
-	if (FUpgradeInfo* Row = UpgradeDataTable->FindRow<FUpgradeInfo>(RowName, TEXT("")))
+	if (RowName != "")
 	{
-		return *Row;
+		if (FUpgradeInfo* Row = UpgradeDataTable->FindRow<FUpgradeInfo>(RowName, TEXT("")))
+		{
+			return *Row;
+		}
 	}
 	
 	return {};
@@ -662,6 +665,11 @@ void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
 
 	if (!bCanPlayDialogue)
 		return;
+
+	
+	if (StartDialogueRowName == "")
+		return;
+	
 	CurrentDialogueRowName = StartDialogueRowName;
 	
 	if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(StartDialogueRowName, TEXT("")))

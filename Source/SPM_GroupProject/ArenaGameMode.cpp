@@ -108,7 +108,6 @@ void AArenaGameMode::BeginPlay()
 			{
 				GI->StartDialogueRowName = "Intro";
 			}
-			UE_LOG(LogTemp, Warning, TEXT("Starting Dialogue %i"),GI->CurrentGameFlag);
 			GI->StartDialogue();
 			
 			if (GI->CurrentGameFlag < 1)
@@ -131,7 +130,10 @@ void AArenaGameMode::GoToEnding()
 {
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
-		GI->CurrentGameFlag = 9;
+		if (GI->CurrentGameFlag < 9)
+		{
+			GI->CurrentGameFlag = 9;
+		}
 	}
 	UGameplayStatics::OpenLevel(this, "CinematicHub");
 }

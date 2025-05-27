@@ -17,7 +17,6 @@ ATeleporter::ATeleporter()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	CubeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CubeMeshComponent"));
-	CubeMeshComponent->SetupAttachment(GetRootComponent());
 
 	TeleportSkyBeam = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TeleportSkyBeam"));
 	TeleportSkyBeam->SetupAttachment(CubeMeshComponent);
