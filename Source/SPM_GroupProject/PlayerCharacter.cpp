@@ -698,6 +698,25 @@ void APlayerCharacter::HealPlayer(int32 HealAmount)
 	}
 }
 
+AGun* APlayerCharacter::GetWeaponInstance(const EUpgradeType Weapon) const
+{
+	switch (Weapon)
+	{
+	case EUpgradeType::Pistol:
+		return Weapon1Instance;
+	case EUpgradeType::Rifle:
+		return Weapon2Instance;
+	case EUpgradeType::Shotgun:
+		return Weapon3Instance;
+	case EUpgradeType::RocketLauncher:
+		return Weapon4Instance;
+	case EUpgradeType::DoomsdayGun:
+		return Weapon5Instance;
+	default:
+		return nullptr;
+	}
+}
+
 AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
 {
 	if (WeaponName == WeaponName1) return Weapon1Instance;
@@ -705,7 +724,6 @@ AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
 	if (WeaponName == WeaponName3) return Weapon3Instance;
 	if (WeaponName == WeaponName4) return Weapon4Instance;
 	if (WeaponName == WeaponName5) return Weapon5Instance;
-
 	return nullptr;
 }
 

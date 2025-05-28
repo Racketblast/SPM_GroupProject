@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "Explosive.h"
 #include "Gun.h"
+#include "UpgradeEnums.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
@@ -75,6 +76,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	AGun* GetWeaponInstance(const FName WeaponName) const;
+	AGun* GetWeaponInstance(const EUpgradeType Weapon) const;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	UPROPERTY(VisibleAnywhere, Category = "Sway")

@@ -4,11 +4,10 @@
 #include "PlayerGameInstance.h"
 
 #include "DialogueInfo.h"
+#include "Pistol.h"
 #include "PlayerCharacter.h"
 #include "ProjectileGun.h"
 #include "SwarmedSaveGame.h"
-#include "Blueprint/UserWidget.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Containers/Map.h"
@@ -52,6 +51,9 @@ FUpgradeInfo UPlayerGameInstance::SetDefaultUpgradeInfo(const EUpgradeType Upgra
 
 void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* CanBuySound, USoundBase* CantBuySound)
 {
+	//Caches the player
+	APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+	
 	// Gets the info from the object in the map if you have it, if not then it will use the default values
 	FUpgradeInfo* UpgradeInfo = UpgradeMap.Find(Upgrade);
 	FUpgradeInfo TempInfo;
@@ -69,13 +71,8 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 		{
 			if (UpgradeInfo->UpgradeCosts[UpgradeInfo->UpgradeOwned] <= Money)
 			{
-				if (CanBuySound)
-				{
-					if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
-					{
-						UGameplayStatics::PlaySoundAtLocation(GetWorld(), CanBuySound, Player->GetActorLocation());
-					}
-				}
+				PlayBuySound(CanBuySound, Player);
+				
 				Money -= UpgradeInfo->UpgradeCosts[UpgradeInfo->UpgradeOwned];
 				UpgradeInfo->UpgradeOwned++;
 				//Adds the upgrade to the map if it is not in there 
@@ -84,7 +81,7 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 					UpgradeMap.Add(Upgrade, *UpgradeInfo);
 				}
 			
-				if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+				if (Player)
 				{
 					if (UpgradeInfo->UpgradeCategory == EUpgradeCategory::Weapon)
 					{
@@ -103,13 +100,7 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 		// If you can't buy the product
 		else
 		{
-			if (CantBuySound)
-			{
-				if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
-				{
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantBuySound, Player->GetActorLocation());
-				}
-			}
+			PlayBuySound(CantBuySound, Player);
 		}
 		
 	}
@@ -119,12 +110,9 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 		//Switch weapons
 		if (UpgradeInfo->UpgradeCategory == EUpgradeCategory::Weapon)
 		{
-			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+			if (Player)
 			{
-				if (CanBuySound)
-				{
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CanBuySound, Player->GetActorLocation());
-				}
+				PlayBuySound(CanBuySound, Player);
 					
 				SetCurrentWeapon(Upgrade);
 				Player->SelectWeapon(*ConvertUpgradeTypeToString(Upgrade));
@@ -133,13 +121,18 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 		//Can't switch weapons
 		else
 		{
-			if (CantBuySound)
-			{
-				if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
-				{
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantBuySound, Player->GetActorLocation());
-				}
-			}
+			PlayBuySound(CantBuySound, Player);
+		}
+	}
+}
+
+void UPlayerGameInstance::PlayBuySound(USoundBase* Sound, const APlayerCharacter* Player) const
+{
+	if (Sound)
+	{
+		if (Player)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), Sound, Player->GetActorLocation());
 		}
 	}
 }
@@ -206,14 +199,9 @@ void UPlayerGameInstance::SetCurrentWeapon(const FName Weapon)
 
 FUpgradeInfo UPlayerGameInstance::GetUpgradeInfo(const EUpgradeType Upgrade) const
 {
-	for (const TPair<EUpgradeType, FUpgradeInfo>& UpgradeType: UpgradeMap)
-	{
-		if (UpgradeType.Key == Upgrade)
-		{
-			return UpgradeType.Value;
-		}
-	}
-	return {EUpgradeCategory::None,{0},0,0,{0}};
+	if (const FUpgradeInfo* Info = UpgradeMap.Find(Upgrade))
+		return *Info;
+	return {};
 }
 
 void UPlayerGameInstance::ApplyAllUpgradeFunctions(APlayerCharacter* Player)
@@ -226,7 +214,6 @@ void UPlayerGameInstance::ApplyAllUpgradeFunctions(APlayerCharacter* Player)
 		UseUpgradeFunction(Upgrade.Key, Player);
 	}
 }
-
 
 void UPlayerGameInstance::UseUpgradeFunction(const EUpgradeType Upgrade, APlayerCharacter* Player)
 {
@@ -267,7 +254,7 @@ void UPlayerGameInstance::UpgradePlayerStats(const EUpgradeType Upgrade, class A
 		Player->PlayerHealth = Player->PlayerMaxHealth;
 		break;
 	case EUpgradeType::Speed:
-		Player->GetCharacterMovement()->MaxWalkSpeed = Player->BasePlayerMaxHealth + UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];;
+		Player->GetCharacterMovement()->MaxWalkSpeed = Player->BasePlayerMaxHealth + UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 		break;
 	case EUpgradeType::Jump50:
 		Player->GetCharacterMovement()->JumpZVelocity *= 1 + 0.5 * UpgradeInfo->UpgradeOwned;
@@ -280,110 +267,56 @@ void UPlayerGameInstance::UpgradePlayerStats(const EUpgradeType Upgrade, class A
 void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APlayerCharacter* Player)
 {
 	FUpgradeInfo* UpgradeInfo = UpgradeMap.Find(Upgrade);
+
+	AGun* Pistol = Player->GetWeaponInstance(EUpgradeType::Pistol);
+	AGun* Rifle = Player->GetWeaponInstance(EUpgradeType::Rifle);
+	AGun* Shotgun = Player->GetWeaponInstance(EUpgradeType::Shotgun);
+	AGun* RocketLauncher = Player->GetWeaponInstance(EUpgradeType::RocketLauncher);
+	
 	if (Player->CurrentGun)
 	{
 		switch (Upgrade)
 		{
 			//Damage
 		case EUpgradeType::PistolDamage10:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
-			{
-				Player->GetWeaponInstance("Pistol")->WeaponDamage = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunStatValue(Player, Pistol, Pistol->WeaponDamage, UpgradeInfo);
 			break;
 		case EUpgradeType::RifleDamage10:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
-			{
-				Player->GetWeaponInstance("Rifle")->WeaponDamage = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunStatValue(Player, Rifle, Rifle->WeaponDamage, UpgradeInfo);
 			break;
 		case EUpgradeType::ShotgunDamage10:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("Shotgun"))
-			{
-				Player->GetWeaponInstance("Shotgun")->WeaponDamage = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunStatValue(Player, Shotgun, Shotgun->WeaponDamage, UpgradeInfo);
 			break;
 		case EUpgradeType::RocketLauncherDamage10:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("RocketLauncher"))
-			{
-				Player->GetWeaponInstance("RocketLauncher")->WeaponDamage = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunStatValue(Player, RocketLauncher, RocketLauncher->WeaponDamage, UpgradeInfo);
 			break;	
 
 			//Firing speed
 		case EUpgradeType::PistolFiringSpeed10:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
-			{
-				Player->GetWeaponInstance("Pistol")->RoundsPerSecond = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunStatValue(Player, Pistol, Pistol->RoundsPerSecond, UpgradeInfo);
 			break;
 		case EUpgradeType::RifleFiringSpeed10:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
-			{
-				Player->GetWeaponInstance("Rifle")->RoundsPerSecond = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunStatValue(Player, Rifle, Rifle->RoundsPerSecond, UpgradeInfo);
 			break;
 		case EUpgradeType::ShotgunFiringSpeed10:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("Shotgun"))
-			{
-				Player->GetWeaponInstance("Shotgun")->RoundsPerSecond = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunStatValue(Player,Shotgun, Shotgun->RoundsPerSecond, UpgradeInfo);
 			break;
 		case EUpgradeType::RocketLauncherFiringSpeed10:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("RocketLauncher"))
-			{
-				Player->GetWeaponInstance("RocketLauncher")->RoundsPerSecond = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunStatValue(Player, RocketLauncher, RocketLauncher->RoundsPerSecond, UpgradeInfo);
 			break;
 			
 			//Ammo Size
 		case EUpgradeType::PistolAmmoSize:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
-			{
-				Player->GetWeaponInstance("Pistol")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->GetWeaponInstance("Pistol")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->GetWeaponInstance("Pistol")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->GetWeaponInstance("Pistol")->CurrentAmmo = Player->GetWeaponInstance("Pistol")->MaxAmmo;
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunStatAmmo(Player, Pistol, UpgradeInfo);
 			break;
 		case EUpgradeType::RifleAmmoSize:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
-			{
-				Player->GetWeaponInstance("Rifle")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
-				Player->GetWeaponInstance("Rifle")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
-				Player->GetWeaponInstance("Rifle")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->GetWeaponInstance("Rifle")->CurrentAmmo = Player->GetWeaponInstance("Rifle")->MaxAmmo;
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunStatAmmo(Player, Rifle, UpgradeInfo);
 			break;
 		case EUpgradeType::ShotgunAmmoSize:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("Shotgun"))
-			{
-				Player->GetWeaponInstance("Shotgun")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
-				Player->GetWeaponInstance("Shotgun")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
-				Player->GetWeaponInstance("Shotgun")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->GetWeaponInstance("Shotgun")->CurrentAmmo = Player->GetWeaponInstance("Shotgun")->MaxAmmo;
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunStatAmmo(Player, Shotgun, UpgradeInfo);
 			break;
 		case EUpgradeType::RocketLauncherAmmoSize:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("RocketLauncher"))
-			{
-				Player->GetWeaponInstance("RocketLauncher")->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
-				Player->GetWeaponInstance("RocketLauncher")->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
-				Player->GetWeaponInstance("RocketLauncher")->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-				Player->GetWeaponInstance("RocketLauncher")->CurrentAmmo = Player->GetWeaponInstance("RocketLauncher")->MaxAmmo;
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunStatAmmo(Player, RocketLauncher, UpgradeInfo);
 			break;
 		case EUpgradeType::GrenadesAmmoSize:
 			Player->GrenadeNum = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
@@ -391,99 +324,68 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 
 			//Skins
 			case EUpgradeType::PistolSkin:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
-			{
-				if (bSwapMaterials)
-				{
-					if (CurrentWeaponSkins[0] == 0)
-					{
-						CurrentWeaponSkins[0] = 1;
-					}
-					else if (CurrentWeaponSkins[0] == 1)
-					{
-						CurrentWeaponSkins[0] = 0;
-					}
-					bSwapMaterials = false;
-				}
-				
-				if (Player->GetWeaponInstance("Pistol")->DifferentSkinMat.IsValidIndex(CurrentWeaponSkins[0]))
-				{
-					Player->GetWeaponInstance("Pistol")->WeaponSkeletalMesh->SetMaterial(0,Player->GetWeaponInstance("Pistol")->DifferentSkinMat[CurrentWeaponSkins[0]]);
-				}
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunSkin(Player, Pistol, 0);
 			break;
 		case EUpgradeType::RifleSkin:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("Rifle"))
-			{
-				if (bSwapMaterials)
-				{
-					if (CurrentWeaponSkins[1] == 0)
-					{
-						CurrentWeaponSkins[1] = 1;
-					}
-					else if (CurrentWeaponSkins[1] == 1)
-					{
-						CurrentWeaponSkins[1] = 0;
-					}
-					bSwapMaterials = false;
-				}
-				
-				if (Player->GetWeaponInstance("Rifle")->DifferentSkinMat.IsValidIndex(CurrentWeaponSkins[1]))
-				{
-					Player->GetWeaponInstance("Rifle")->WeaponSkeletalMesh->SetMaterial(0,Player->GetWeaponInstance("Rifle")->DifferentSkinMat[CurrentWeaponSkins[1]]);
-				}
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunSkin(Player, Rifle, 1);
 			break;
 		case EUpgradeType::ShotgunSkin:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("Shotgun"))
-			{
-				if (bSwapMaterials)
-				{
-					if (CurrentWeaponSkins[2] == 0)
-					{
-						CurrentWeaponSkins[2] = 1;
-					}
-					else if (CurrentWeaponSkins[2] == 1)
-					{
-						CurrentWeaponSkins[2] = 0;
-					}
-					bSwapMaterials = false;
-				}
-				
-				if (Player->GetWeaponInstance("Shotgun")->DifferentSkinMat.IsValidIndex(CurrentWeaponSkins[2]))
-				{
-					Player->GetWeaponInstance("Shotgun")->WeaponSkeletalMesh->SetMaterial(0,Player->GetWeaponInstance("Shotgun")->DifferentSkinMat[CurrentWeaponSkins[2]]);
-				}
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunSkin(Player, Shotgun, 2);
 			break;
 		case EUpgradeType::RocketLauncherSkin:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("RocketLauncher"))
-			{
-				if (bSwapMaterials)
-				{
-					if (CurrentWeaponSkins[3] == 0)
-					{
-						CurrentWeaponSkins[3] = 1;
-					}
-					else if (CurrentWeaponSkins[3] == 1)
-					{
-						CurrentWeaponSkins[3] = 0;
-					}
-					bSwapMaterials = false;
-				}
-				if (Player->GetWeaponInstance("RocketLauncher")->DifferentSkinMat.IsValidIndex(CurrentWeaponSkins[3]))
-				{
-					Player->GetWeaponInstance("RocketLauncher")->WeaponSkeletalMesh->SetMaterial(0,Player->GetWeaponInstance("RocketLauncher")->DifferentSkinMat[CurrentWeaponSkins[3]]);
-				}
-				Player->CurrentGun->bIsUpgraded = true;
-			}
+			UpgradeGunSkin(Player, RocketLauncher, 3);
 			break;
 		default:
 			break;
 		}
+	}
+}
+
+void UPlayerGameInstance::UpgradeGunStatValue(APlayerCharacter* Player, AGun* Weapon, float& ValueToChange, FUpgradeInfo* UpgradeInfo)
+{
+	if (Player->CurrentGun == Weapon)
+	{
+		Player->CurrentGun->bIsUpgraded = true;
+		ValueToChange = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+	}
+}
+
+void UPlayerGameInstance::UpgradeGunStatAmmo(APlayerCharacter* Player, AGun* Weapon, FUpgradeInfo* UpgradeInfo)
+{
+	if (Player->CurrentGun == Weapon)
+	{
+		if (Cast<APistol>(Weapon))
+		{
+			Weapon->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+			Weapon->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+		}
+		else
+		{
+			Weapon->TotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
+			Weapon->MaxTotalAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1]*5;
+		}
+		
+		Weapon->MaxAmmo = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+		Weapon->CurrentAmmo = Weapon->MaxAmmo;
+		Player->CurrentGun->bIsUpgraded = true;
+	}
+}
+
+void UPlayerGameInstance::UpgradeGunSkin(APlayerCharacter* Player, AGun* Weapon, int32 WeaponSkinIndex)
+{
+	
+	if (Player->CurrentGun == Weapon)
+	{
+		if (bSwapMaterials)
+		{
+			CurrentWeaponSkins[WeaponSkinIndex] = 1 - CurrentWeaponSkins[WeaponSkinIndex];
+			bSwapMaterials = false;
+		}
+		if (Weapon->DifferentSkinMat.IsValidIndex(CurrentWeaponSkins[WeaponSkinIndex]))
+		{
+			Weapon->WeaponSkeletalMesh->SetMaterial(0,Weapon->DifferentSkinMat[CurrentWeaponSkins[WeaponSkinIndex]]);
+		}
+		Player->CurrentGun->bIsUpgraded = true;
 	}
 }
 
@@ -492,11 +394,6 @@ FString UPlayerGameInstance::ConvertUpgradeTypeToString(const EUpgradeType Type)
 	FString EnumString = StaticEnum<EUpgradeType>()->GetNameStringByValue(static_cast<int64>(Type));
 	EnumString.RemoveFromStart(TEXT("EUpgradeType::"));
 	return EnumString;
-}
-
-
-UPlayerGameInstance::UPlayerGameInstance()
-{
 }
 
 void UPlayerGameInstance::Init()
@@ -523,65 +420,40 @@ void UPlayerGameInstance::Init()
 	
 	//Loads the saved game
 	LoadGame();
-	
-	//Creates a new saved game if nothing exists
-	/*else
-	{
-		if (SaveGameObject)
-		{
-			Save = Cast<USwarmedSaveGame>(UGameplayStatics::CreateSaveGameObject(SaveGameObject));
-			if (Save)
-			{
-				Save->SavedMoney = Money;
-				Save->SavedUpgradeMap = UpgradeMap;
-				Save->SavedCurrentWeapon = CurrentWeapon;
-				Save->SavedUnlockedLevels = UnlockedLevels;
-				Save->SavedCurrentGameFlag = CurrentGameFlag;
-				UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
-			}
-		}
-	}*/
 }
 
 void UPlayerGameInstance::SaveGame()
 {
 	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
 	{
-		Save->SavedMoney = Money;
-		Save->SavedUpgradeMap = UpgradeMap;
-		Save->SavedCurrentWeapon = CurrentWeapon;
-		Save->SavedUnlockedLevels = UnlockedLevels;
-		Save->SavedCurrentGameFlag = CurrentGameFlag;
-		
-		Save->SavedMouseSensitivityScale = MouseSensitivityScale;
-		Save->SavedMasterVolumeScale = MasterVolumeScale;
-		Save->SavedSFXVolumeScale = SFXVolumeScale;
-		Save->SavedMusicVolumeScale = MusicVolumeScale;
-		
+		FillSaveGame();
 		UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
 	}
-	else
+	else if (SaveGameObject)
 	{
-		if (SaveGameObject)
+		Save = Cast<USwarmedSaveGame>(UGameplayStatics::CreateSaveGameObject(SaveGameObject));
+		if (Save)
 		{
-			Save = Cast<USwarmedSaveGame>(UGameplayStatics::CreateSaveGameObject(SaveGameObject));
-			if (Save)
-			{
-				Save->SavedMoney = Money;
-				Save->SavedUpgradeMap = UpgradeMap;
-				Save->SavedCurrentWeapon = CurrentWeapon;
-				Save->SavedUnlockedLevels = UnlockedLevels;
-				Save->SavedCurrentGameFlag = CurrentGameFlag;
-				
-				Save->SavedMouseSensitivityScale = MouseSensitivityScale;
-				Save->SavedMasterVolumeScale = MasterVolumeScale;
-				Save->SavedSFXVolumeScale = SFXVolumeScale;
-				Save->SavedMusicVolumeScale = MusicVolumeScale;
-				
-				UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
-			}
+			FillSaveGame();
+			UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
 		}
 	}
+}
+
+void UPlayerGameInstance::FillSaveGame()
+{
+	//Saved stats
+	Save->SavedMoney = Money;
+	Save->SavedUpgradeMap = UpgradeMap;
+	Save->SavedCurrentWeapon = CurrentWeapon;
+	Save->SavedUnlockedLevels = UnlockedLevels;
+	Save->SavedCurrentGameFlag = CurrentGameFlag;
+
+	//Saved options
+	Save->SavedMouseSensitivityScale = MouseSensitivityScale;
+	Save->SavedMasterVolumeScale = MasterVolumeScale;
+	Save->SavedSFXVolumeScale = SFXVolumeScale;
+	Save->SavedMusicVolumeScale = MusicVolumeScale;
 }
 
 void UPlayerGameInstance::LoadGame()
@@ -678,15 +550,6 @@ void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
 		{
 			NextDialogueRowName = Row->NextDialogue;
 
-			//This is the reason why the dialogue iss broken into two functions, because I don't want to get an infinite amount of widgets
-			if (Row->DialogueWidgetClass)
-			{
-				if (UUserWidget* DialogueWidget = CreateWidget<UUserWidget>(GetWorld(), Row->DialogueWidgetClass))
-				{
-					DialogueWidget->AddToViewport();
-				}
-			}
-
 			//Plays the dialogue for the amount of time the sound plays
 			float TimeUntilNextDialogue = 0.0f;
 			if ( APawn* Player = Cast<APawn>(UGameplayStatics::GetPlayerPawn(this, 0)))
@@ -700,7 +563,8 @@ void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
 			}
 		
 			//Goes to next dialogue
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UPlayerGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
+			//This is the reason why the dialogue is broken into two functions, because it needs a delay between each dialog
+			GetWorld()->GetTimerManager().SetTimer(DialogueTimerHandle, this, &UPlayerGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
 		}
 	}
 }
@@ -727,24 +591,12 @@ void UPlayerGameInstance::PlayNextDialogue()
 			}
 			
 			//Goes to next dialogue
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UPlayerGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
+			GetWorld()->GetTimerManager().SetTimer(DialogueTimerHandle, this, &UPlayerGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
 		}
 	}
 	//If dialogue is over, take away the widgets
 	else
 	{
 		bDialogueIsPlaying = false;
-		TArray<UUserWidget*> FoundWidgets;
-		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UUserWidget::StaticClass(), false);
-		if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(StartDialogueRowName, TEXT("")))
-		{
-			for (UUserWidget* Widget : FoundWidgets)
-			{
-				if (Widget && Widget->IsInViewport() && Widget->GetClass() == Row->DialogueWidgetClass)
-				{
-					Widget->RemoveFromParent();
-				}
-			}
-		}
 	}
 }
