@@ -6,14 +6,47 @@
 #include "EndGameExplosive.h"
 #include "NiagaraFunctionLibrary.h"
 #include "PlayerCharacter.h"
+#include "PlayerGameInstance.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Sound/SoundBase.h"
 
 void AEndGameGun::Fire(FVector FireLocation, FRotator FireRotation)
 {
     if (UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == "Hub")
+    {
+        if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+        {
+            if (GI->bDialogueIsPlaying)
+                return;
+            FName RandomDialogue;
+            switch (UKismetMathLibrary::RandomIntegerInRange(0,4))
+            {
+                case 0:
+                    RandomDialogue = "DontShootThat";
+                    break;
+                case 1:
+                    RandomDialogue = "Stop";
+                    break;
+                case 2:
+                    RandomDialogue = "Stooop";
+                    break;
+                case 3:
+                    RandomDialogue = "StopIt";
+                    break;
+                case 4:
+                    RandomDialogue = "StopThat";
+                    break;
+                default:
+                    break;
+            }
+            
+            GI->StartDialogueRowName = RandomDialogue;
+            GI->StartDialogue();
+        }
         return;
+    }
         
     if (bIsReloading)
         return;
