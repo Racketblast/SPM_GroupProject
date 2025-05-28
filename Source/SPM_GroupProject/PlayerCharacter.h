@@ -122,6 +122,16 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsDead = false;
+	
+
+	bool bCanScrollWeapon = true; 
+	FTimerHandle MouseWheelCooldownHandle;
+
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Switching")
+	float MouseWheelCooldownTime = 0.3f;
+
+	void ResetMouseWheelScroll();
 
 private:
 	FName WeaponName1 = "Pistol";
@@ -208,3 +218,5 @@ private:
 	void HandleMouseWheel(float Value);
 
 };
+
+

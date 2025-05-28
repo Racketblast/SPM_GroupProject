@@ -245,7 +245,7 @@ void APlayerCharacter::ThrowGrenade()
 }
 void APlayerCharacter::HandleMouseWheel(float Value)
 {
-	if (FMath::Abs(Value) < KINDA_SMALL_NUMBER) return;
+	if (!bCanScrollWeapon || FMath::Abs(Value) < KINDA_SMALL_NUMBER) return;
 
 	if (Value > 0)
 	{
@@ -255,7 +255,16 @@ void APlayerCharacter::HandleMouseWheel(float Value)
 	{
 		PreviousWeapon();
 	}
+
+	// Start cooldown
+	bCanScrollWeapon = false;
+	GetWorld()->GetTimerManager().SetTimer(MouseWheelCooldownHandle, this, &APlayerCharacter::ResetMouseWheelScroll, MouseWheelCooldownTime, false);
 }
+void APlayerCharacter::ResetMouseWheelScroll()
+{
+	bCanScrollWeapon = true;
+}
+
 
 
 void APlayerCharacter::MoveForward(float Value)
