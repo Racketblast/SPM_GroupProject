@@ -15,10 +15,7 @@ class SPM_GROUPPROJECT_API UPlayerGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 public:
-	UPlayerGameInstance();
 	virtual void Init() override;
-
-	void OnPostWorldInit(UWorld* World, const UWorld::InitializationValues IVS);
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class USwarmedSaveGame> SaveGameObject;
@@ -129,13 +126,14 @@ public:
 	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradePlayerStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradeGunStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
+	void UpgradeGunStatValue(APlayerCharacter* Player, FName Weapon, float& ValueToChange, FUpgradeInfo* UpgradeInfo);
 	
 	UFUNCTION(BlueprintCallable)
 	void StartDialogue(UAudioComponent* AudioComponent = nullptr);
 	UFUNCTION()
 	void PlayNextDialogue();
 private:
-	FTimerHandle TimerHandle;
+	FTimerHandle DialogueTimerHandle;
 	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);
 
 	void BuyWeapon(EUpgradeType Weapon);

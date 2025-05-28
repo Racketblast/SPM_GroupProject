@@ -7,8 +7,6 @@
 #include "PlayerCharacter.h"
 #include "ProjectileGun.h"
 #include "SwarmedSaveGame.h"
-#include "Blueprint/UserWidget.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Containers/Map.h"
@@ -52,6 +50,9 @@ FUpgradeInfo UPlayerGameInstance::SetDefaultUpgradeInfo(const EUpgradeType Upgra
 
 void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* CanBuySound, USoundBase* CantBuySound)
 {
+	//Caches the player
+	APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+	
 	// Gets the info from the object in the map if you have it, if not then it will use the default values
 	FUpgradeInfo* UpgradeInfo = UpgradeMap.Find(Upgrade);
 	FUpgradeInfo TempInfo;
@@ -71,7 +72,7 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 			{
 				if (CanBuySound)
 				{
-					if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+					if (Player)
 					{
 						UGameplayStatics::PlaySoundAtLocation(GetWorld(), CanBuySound, Player->GetActorLocation());
 					}
@@ -84,7 +85,7 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 					UpgradeMap.Add(Upgrade, *UpgradeInfo);
 				}
 			
-				if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+				if (Player)
 				{
 					if (UpgradeInfo->UpgradeCategory == EUpgradeCategory::Weapon)
 					{
@@ -105,7 +106,7 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 		{
 			if (CantBuySound)
 			{
-				if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+				if (Player)
 				{
 					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantBuySound, Player->GetActorLocation());
 				}
@@ -119,7 +120,7 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 		//Switch weapons
 		if (UpgradeInfo->UpgradeCategory == EUpgradeCategory::Weapon)
 		{
-			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+			if (Player)
 			{
 				if (CanBuySound)
 				{
@@ -135,7 +136,7 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 		{
 			if (CantBuySound)
 			{
-				if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+				if (Player)
 				{
 					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantBuySound, Player->GetActorLocation());
 				}
@@ -227,7 +228,6 @@ void UPlayerGameInstance::ApplyAllUpgradeFunctions(APlayerCharacter* Player)
 	}
 }
 
-
 void UPlayerGameInstance::UseUpgradeFunction(const EUpgradeType Upgrade, APlayerCharacter* Player)
 {
 	if (Player != nullptr)
@@ -286,7 +286,7 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 		{
 			//Damage
 		case EUpgradeType::PistolDamage10:
-			if (Player-> CurrentGun == Player->GetWeaponInstance("Pistol"))
+			if (Player->CurrentGun == Player->GetWeaponInstance("Pistol"))
 			{
 				Player->GetWeaponInstance("Pistol")->WeaponDamage = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 				Player->CurrentGun->bIsUpgraded = true;
@@ -487,16 +487,20 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 	}
 }
 
+void UPlayerGameInstance::UpgradeGunStatValue(APlayerCharacter* Player, FName Weapon, float& ValueToChange, FUpgradeInfo* UpgradeInfo)
+{
+	if (Player->CurrentGun == Player->GetWeaponInstance(Weapon))
+	{
+		Player->CurrentGun->bIsUpgraded = true;
+		ValueToChange = UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
+	}
+}
+
 FString UPlayerGameInstance::ConvertUpgradeTypeToString(const EUpgradeType Type)
 {
 	FString EnumString = StaticEnum<EUpgradeType>()->GetNameStringByValue(static_cast<int64>(Type));
 	EnumString.RemoveFromStart(TEXT("EUpgradeType::"));
 	return EnumString;
-}
-
-
-UPlayerGameInstance::UPlayerGameInstance()
-{
 }
 
 void UPlayerGameInstance::Init()
@@ -523,24 +527,6 @@ void UPlayerGameInstance::Init()
 	
 	//Loads the saved game
 	LoadGame();
-	
-	//Creates a new saved game if nothing exists
-	/*else
-	{
-		if (SaveGameObject)
-		{
-			Save = Cast<USwarmedSaveGame>(UGameplayStatics::CreateSaveGameObject(SaveGameObject));
-			if (Save)
-			{
-				Save->SavedMoney = Money;
-				Save->SavedUpgradeMap = UpgradeMap;
-				Save->SavedCurrentWeapon = CurrentWeapon;
-				Save->SavedUnlockedLevels = UnlockedLevels;
-				Save->SavedCurrentGameFlag = CurrentGameFlag;
-				UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
-			}
-		}
-	}*/
 }
 
 void UPlayerGameInstance::SaveGame()
@@ -678,15 +664,6 @@ void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
 		{
 			NextDialogueRowName = Row->NextDialogue;
 
-			//This is the reason why the dialogue iss broken into two functions, because I don't want to get an infinite amount of widgets
-			if (Row->DialogueWidgetClass)
-			{
-				if (UUserWidget* DialogueWidget = CreateWidget<UUserWidget>(GetWorld(), Row->DialogueWidgetClass))
-				{
-					DialogueWidget->AddToViewport();
-				}
-			}
-
 			//Plays the dialogue for the amount of time the sound plays
 			float TimeUntilNextDialogue = 0.0f;
 			if ( APawn* Player = Cast<APawn>(UGameplayStatics::GetPlayerPawn(this, 0)))
@@ -700,7 +677,8 @@ void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
 			}
 		
 			//Goes to next dialogue
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UPlayerGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
+			//This is the reason why the dialogue is broken into two functions, because it needs a delay between each dialog
+			GetWorld()->GetTimerManager().SetTimer(DialogueTimerHandle, this, &UPlayerGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
 		}
 	}
 }
@@ -727,24 +705,12 @@ void UPlayerGameInstance::PlayNextDialogue()
 			}
 			
 			//Goes to next dialogue
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &UPlayerGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
+			GetWorld()->GetTimerManager().SetTimer(DialogueTimerHandle, this, &UPlayerGameInstance::PlayNextDialogue, TimeUntilNextDialogue, false);
 		}
 	}
 	//If dialogue is over, take away the widgets
 	else
 	{
 		bDialogueIsPlaying = false;
-		TArray<UUserWidget*> FoundWidgets;
-		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UUserWidget::StaticClass(), false);
-		if (FDialogueInfo* Row = EventDialogueInfo->FindRow<FDialogueInfo>(StartDialogueRowName, TEXT("")))
-		{
-			for (UUserWidget* Widget : FoundWidgets)
-			{
-				if (Widget && Widget->IsInViewport() && Widget->GetClass() == Row->DialogueWidgetClass)
-				{
-					Widget->RemoveFromParent();
-				}
-			}
-		}
 	}
 }
