@@ -16,71 +16,8 @@
 #include "GameFramework/DamageType.h"
 #include "Engine/EngineTypes.h"
 #include "Components/DecalComponent.h"
-void AHitscanGun::BeginPlay()
-{
-    Super::BeginPlay();
 
-    if (!FireAudioComponent)
-    {
-        FireAudioComponent = NewObject<UAudioComponent>(this, TEXT("FireAudioComponent"));
-        if (FireAudioComponent)
-        {
-            FireAudioComponent->RegisterComponent();
-            FireAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-        }
-    }
-    if (!MagEmptyAudioComponent)
-    {
-        MagEmptyAudioComponent = NewObject<UAudioComponent>(this, TEXT("MagEmptyAudioComponent"));
-        if (MagEmptyAudioComponent)
-        {
-            MagEmptyAudioComponent->RegisterComponent();
-           MagEmptyAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-        }
-    }
-    /*if (!MuzzleFlashLight)
-    {
-        MuzzleFlashLight = NewObject<UPointLightComponent>(this, TEXT("MuzzleFlashLight"));
-        if (MuzzleFlashLight)
-        {
-            MuzzleFlashLight->Intensity = 200.0f;
-            MuzzleFlashLight->SetVisibility(false);
-            MuzzleFlashLight->bUseInverseSquaredFalloff = false;
-            MuzzleFlashLight->LightColor = FColor::Orange;
-            MuzzleFlashLight->AttenuationRadius = 150.0f;
-            MuzzleFlashLight->RegisterComponent();
 
-           
-            MuzzleFlashLight->AttachToComponent(WeaponSkeletalMesh, FAttachmentTransformRules::SnapToTargetIncludingScale, FName("MuzzleSocket"));
-        }
-    }*/
-
-}
-void AHitscanGun::Tick(float DeltaTime)
-{
-    Super::Tick(DeltaTime);
-    PrimaryActorTick.bCanEverTick = true;
-
-    if (bIsRecoveringFromRecoil)
-    {
-        RecoilRecoveryElapsed += DeltaTime;
-        float Alpha = FMath::Clamp(RecoilRecoveryElapsed / RecoilRecoveryDuration, 0.0f, 1.0f);
-
-        APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OwnerCharacter);
-        if (PlayerCharacter && PlayerCharacter->ArmsRoot)
-        {
-            FVector NewLocation = FMath::Lerp(RecoilStartLocation, RecoilTargetLocation, Alpha);
-            PlayerCharacter->ArmsRoot->SetRelativeLocation(NewLocation);
-        }
-
-        if (Alpha >= 1.0f)
-        {
-            bIsRecoveringFromRecoil = false;
-            bRecoilApplied = false;
-        }
-    }
-  
-}
 
 
 void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
@@ -137,20 +74,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
             true
         );
     }
-    /*if (MuzzleFlashLight)
-    {
-        MuzzleFlashLight->SetVisibility(true);
 
-        
-        FTimerHandle TimerHandle;
-        GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
-        {
-            if (MuzzleFlashLight)
-            {
-                MuzzleFlashLight->SetVisibility(false);
-            }
-        }, 0.05f, false);
-    }*/
 
     FVector ShotDirection = FireRotation.Vector();
     FVector End = FireLocation + (ShotDirection * Range);
@@ -222,88 +146,4 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 
     CurrentAmmo--;
     
-}
-void AHitscanGun::ApplyRecoilTranslation()
-{
-    APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OwnerCharacter);
-    if (PlayerCharacter && PlayerCharacter->ArmsRoot)
-    {
-        FVector BackwardDirection = -PlayerCharacter->GetActorForwardVector();
-
-        if (!bRecoilApplied)
-        {
-            bRecoilApplied = true;
-            OriginalArmsRootLocation = PlayerCharacter->ArmsRoot->GetRelativeLocation();
-
-            // Apply recoil instantly
-            FVector RecoilTranslation = BackwardDirection * RecoilAmount;
-            PlayerCharacter->ArmsRoot->AddWorldOffset(RecoilTranslation);
-
-            // Set up interpolation recovery
-            RecoilStartLocation = PlayerCharacter->ArmsRoot->GetRelativeLocation();
-            RecoilTargetLocation = OriginalArmsRootLocation;
-            RecoilRecoveryElapsed = 0.0f;
-            bIsRecoveringFromRecoil = true;
-        }
-    }
-}
-
-
-void AHitscanGun::ApplyBloodDecal(const FHitResult& Hit)
-{
-    if (!BloodDecalMaterial) return;
-
-    AActor* HitActor = Hit.GetActor();
-    if (!HitActor) return;
-
-    USkeletalMeshComponent* SkeletalMesh = HitActor->FindComponentByClass<USkeletalMeshComponent>();
-    if (!SkeletalMesh) return;
-
-    FVector DecalSize = FVector(20.0f, 20.0f, 20.0f);
-    FRotator DecalRotation = Hit.Normal.Rotation();
-
-    // Get bone name only if valid
-    FName BoneName = Hit.BoneName != NAME_None ? Hit.BoneName : NAME_None;
-
-    // Attach decal to the skeletal mesh, to a bone if available
-    UDecalComponent* BloodDecal = UGameplayStatics::SpawnDecalAttached(
-        BloodDecalMaterial,
-        DecalSize,
-        SkeletalMesh,
-        BoneName,
-        Hit.ImpactPoint,
-        DecalRotation,
-        EAttachLocation::KeepWorldPosition,
-        60.0f // lifespan
-    );
-
-    if (BloodDecal)
-    {
-        BloodDecal->SetFadeScreenSize(0.001f);
-        UE_LOG(LogTemp, Warning, TEXT("Spawned decal on skeletal mesh bone: %s"), *BoneName.ToString());
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Failed to spawn decal"));
-    }
-}
-
-
-
-
-void AHitscanGun::BulletHoleDecal(const FHitResult& Hit)
-{
-    FVector SurfaceNormal = Hit.Normal; // Normal of the hit surface (floor in this case)
-
-    FRotator DecalRotation = SurfaceNormal.Rotation(); // Convert the surface normal to a rotation
-
-    // Spawn the decal at the hit location with the correct rotation and scale
-    UGameplayStatics::SpawnDecalAtLocation(
-        GetWorld(),
-        BulletDecalMaterial,  // The material
-        FVector(10.0f, 10.0f, 10.0f), // Decal size (adjust as needed)
-        Hit.Location,  // Location where the bullet hit
-        DecalRotation,  // Adjusted rotation
-        60.0f  // Decal lifetime (adjust as needed)
-    );
 }
