@@ -7,18 +7,6 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-// Called when the game starts or when spawned
-void AMoneyBox::BeginPlay()
-{
-	Super::BeginPlay();
-	
-	if (bShouldDestroy)
-	{
-		GetWorldTimerManager().SetTimer(SelfDestructTimer, this, &AMoneyBox::SelfDestruct, LifeTime, false);
-		GetWorldTimerManager().SetTimer(FadeTimer, this, &AMoneyBox::SetFadeMaterial, LifeTime/2, false);
-	}
-}
-
 void AMoneyBox::CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -47,15 +35,3 @@ void AMoneyBox::CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedC
 	}
 }
 
-void AMoneyBox::SelfDestruct()
-{
-	Destroy();
-}
-
-void AMoneyBox::SetFadeMaterial()
-{
-	if (FadeMaterial)
-	{
-		CollectableMesh->SetMaterial(0, FadeMaterial);
-	}
-}
