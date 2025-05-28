@@ -25,6 +25,7 @@ AAI_Main::AAI_Main()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AISoundComponent"));
+	AudioComponent->SetupAttachment(RootComponent); 
 }
 
 /* ─────────────────────────────────────────────── */
