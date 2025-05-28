@@ -49,17 +49,7 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 
         if (AIHealth <= 0)
         {
-			
-        	if (DamageEvent.DamageTypeClass == UMeleeDamageType::StaticClass())
-        	{
-        		UE_LOG(LogTemp, Display, TEXT("Melee kill"));
-        	}
-	        else
-	        {
-		        UE_LOG(LogTemp, Display, TEXT("Anything else kill"));
-	        }
-        	
-            AIHealth = 0;
+			AIHealth = 0;
             bIsDead = true;
         	OnEnemyDied.Broadcast(this);
         	
@@ -77,11 +67,27 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
             }
 
             // Drop item
-        	if (AIDrop)
+        	if (AIDrop[0] && AIDrop.Num() > 0)
         	{
         		FTransform T = GetTransform();
         		T.SetRotation({0, 0, 0, 0});
-        		GetWorld()->SpawnActor<ACollectableBox>(AIDrop, T);
+        		if (DamageEvent.DamageTypeClass == UMeleeDamageType::StaticClass())
+        		{
+        			UE_LOG(LogTemp, Display, TEXT("Melee kill"));
+			        if (AIDrop[1])
+			        {
+			        	if (AIDrop.Num() > 0)
+			        	{
+			        		int32 RandomIndex = FMath::RandRange(1, AIDrop.Num() - 1);
+        					GetWorld()->SpawnActor<ACollectableBox>(AIDrop[RandomIndex], T);
+			        	}
+			        }
+        		}
+        		else
+        		{
+        			UE_LOG(LogTemp, Display, TEXT("Anything else kill"));
+        			GetWorld()->SpawnActor<ACollectableBox>(AIDrop[0], T);
+        		}
         	}
 
             // Disable character movement
