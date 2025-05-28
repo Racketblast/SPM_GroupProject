@@ -41,6 +41,12 @@ void ACollectableBox::BeginPlay()
 	FVector HelpVector = GetActorLocation();
 	HelpVector.Z += 10;
 	SetActorLocation(HelpVector);
+	
+	if (bShouldDestroy)
+	{
+		GetWorldTimerManager().SetTimer(SelfDestructTimer, this, &ACollectableBox::SelfDestruct, LifeTime, false);
+		GetWorldTimerManager().SetTimer(FadeTimer, this, &ACollectableBox::SetFadeMaterial, LifeTime/2, false);
+	}
 }
 
 // Called every frame
@@ -104,3 +110,25 @@ void ACollectableBox::CollectableBoxTriggeredFunction(UPrimitiveComponent* Overl
 		}
 	}
 }
+
+void ACollectableBox::SelfDestruct()
+{
+	Destroy();
+}
+
+void ACollectableBox::SetFadeMaterial()
+{
+	if (FadeMaterials.Num() <= 0)
+	return;
+
+	int32 Index = 0;
+	for (UMaterialInterface* FadeMaterial : FadeMaterials)
+	{
+		if (FadeMaterial)
+		{
+			CollectableMesh->SetMaterial(Index, FadeMaterial);
+		}
+		Index++;
+	}
+}
+
