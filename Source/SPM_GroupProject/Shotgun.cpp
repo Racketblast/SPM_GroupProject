@@ -100,10 +100,17 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 						Player->EnemyHitFalse();
 					}
 
-					// Apply point damage per pellet
+					//  Headshot check
+					float FinalDamage = WeaponDamage / NumPellets;
+					if (Hit.BoneName == FName("head"))
+					{
+						FinalDamage *= 2.0f;
+						UE_LOG(LogTemp, Warning, TEXT("Headshot! Double damage applied."));
+					}
+
 					UGameplayStatics::ApplyPointDamage(
 						HitActor,
-						WeaponDamage / NumPellets,
+						FinalDamage,
 						ShotDirection,
 						Hit,
 						OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
@@ -139,13 +146,8 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 		ApplyRecoilTranslation();
 	}
 }
-
-
 void AShotgun::EnemyHitFalse()
 {
 	bEnemyHit = false;
 	UE_LOG(LogTemp, Error, TEXT("hit false"));
 }
-
-
-

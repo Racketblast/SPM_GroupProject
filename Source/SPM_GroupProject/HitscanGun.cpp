@@ -118,23 +118,33 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
                     Player->bEnemyHit = true;
                     UE_LOG(LogTemp, Error, TEXT("hit activated (from gun)"));
                     Player->EnemyHitFalse();
-                }
-                        // Apply damage if no custom function is found
-                        UGameplayStatics::ApplyPointDamage(
-                            HitActor,
-                            WeaponDamage,
-                            ShotDirection,
-                            Hit,
-                            OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
-                            this,
-                    DamageType
-                );
-                ApplyBloodDecal(Hit); // Replace values as needed
+                    // Apply damage if no custom function is found
+                    float ActualDamage = WeaponDamage;
+                    if (Hit.BoneName != NAME_None && Hit.BoneName.ToString().ToLower().Contains(TEXT("head")))
+                    {
+                        ActualDamage *= 2.0f;
+                        UE_LOG(LogTemp, Warning, TEXT(" HEADSHOT! Applying double damage: %f"), ActualDamage);
+                    }
+                  
+
+                    UGameplayStatics::ApplyPointDamage(
+                        HitActor,
+                        ActualDamage,
+                        ShotDirection,
+                        Hit,
+                        OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
+                        this,
+                        DamageType
+                    );
+                    ApplyBloodDecal(Hit); // Replace values as needed
 
                 
-            } else {BulletHoleDecal(Hit);}
+                } else {BulletHoleDecal(Hit);}
 
-        }}
+            }
+                }
+                
+              }
     if (OwnerCharacter)
     {
         float RecoilPitch = FMath::FRandRange(RecoilPitchMin, RecoilPitchMax);
