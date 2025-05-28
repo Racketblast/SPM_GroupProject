@@ -235,7 +235,7 @@ void AGun::BulletHoleDecal(const FHitResult& Hit)
 	// Spawn the decal at the hit location with the correct rotation and scale
 	UGameplayStatics::SpawnDecalAtLocation(
 		GetWorld(),
-		BulletDecalMaterial,  // The material
+		BulletDecalMaterial,  // The material 
 		FVector(bdecalSize, bdecalSize, bdecalSize), 
 		Hit.Location, 
 		DecalRotation,  
