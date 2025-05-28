@@ -12,12 +12,10 @@ class SPM_GROUPPROJECT_API AProjectileGun : public AGun
 
 public:
 	virtual void Fire(FVector FireLocation, FRotator FireRotation) override;
-	virtual void Tick(float DeltaTime) override;
 	void SetProjectileClass(TSubclassOf<AExplosive> NewClass)
 	{
 		ProjectileClass = NewClass;
 	}
-void BeginPlay();
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class AExplosive> ProjectileClass;
@@ -27,16 +25,7 @@ private:
 	FTimerHandle FireRateTimerHandle;
 
 	void ResetFire();
-	// ProjectileGun.h
-
-void ApplyRecoilTranslation();
-	// For interpolation
-	bool bIsRecoveringFromRecoil = false;
-	float RecoilRecoveryElapsed = 0.0f;
-	float RecoilRecoveryDuration = 0.3f;
-
-	FVector RecoilStartLocation;
-	FVector RecoilTargetLocation;
+	
 	UPROPERTY()
 	UPointLightComponent* MuzzleFlashLight;
 };
