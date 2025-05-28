@@ -254,7 +254,7 @@ void UPlayerGameInstance::UpgradePlayerStats(const EUpgradeType Upgrade, class A
 		Player->PlayerHealth = Player->PlayerMaxHealth;
 		break;
 	case EUpgradeType::Speed:
-		Player->GetCharacterMovement()->MaxWalkSpeed = Player->BasePlayerMaxHealth + UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];;
+		Player->GetCharacterMovement()->MaxWalkSpeed = Player->BasePlayerMaxHealth + UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 		break;
 	case EUpgradeType::Jump50:
 		Player->GetCharacterMovement()->JumpZVelocity *= 1 + 0.5 * UpgradeInfo->UpgradeOwned;

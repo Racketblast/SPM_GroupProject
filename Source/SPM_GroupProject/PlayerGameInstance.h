@@ -19,7 +19,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class USwarmedSaveGame> SaveGameObject;
-	UPROPERTY(VisibleAnywhere,BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	USwarmedSaveGame* Save;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bGameStarted = false;
@@ -34,6 +34,7 @@ public:
 	EUpgradeType CurrentWeapon;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<EUpgradeType,FUpgradeInfo> UpgradeMap;
+	//{0,0,0,0} means the original value
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<int32> CurrentWeaponSkins = {0,0,0,0};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
