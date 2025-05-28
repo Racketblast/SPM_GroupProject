@@ -448,6 +448,7 @@ void UPlayerGameInstance::FillSaveGame()
 	Save->SavedCurrentWeapon = CurrentWeapon;
 	Save->SavedUnlockedLevels = UnlockedLevels;
 	Save->SavedCurrentGameFlag = CurrentGameFlag;
+	Save->SavedCurrentSkins = CurrentWeaponSkins;
 
 	//Saved options
 	Save->SavedMouseSensitivityScale = MouseSensitivityScale;
@@ -469,6 +470,7 @@ void UPlayerGameInstance::LoadGame()
 			CurrentWeapon = Save->SavedCurrentWeapon;
 			UnlockedLevels = Save->SavedUnlockedLevels;
 			CurrentGameFlag = Save->SavedCurrentGameFlag;
+			CurrentWeaponSkins = Save->SavedCurrentSkins;
 			
 			MouseSensitivityScale = Save->SavedMouseSensitivityScale;
 			MasterVolumeScale = Save->SavedMasterVolumeScale;
@@ -513,6 +515,8 @@ bool UPlayerGameInstance::HasGameChanged()
 			if (!UnlockedLevels.Includes(Save->SavedUnlockedLevels) || !Save->SavedUnlockedLevels.Includes(UnlockedLevels))
 				return true;
 			if (CurrentGameFlag != Save->SavedCurrentGameFlag)
+				return true;
+			if (CurrentWeaponSkins != Save->SavedCurrentSkins)
 				return true;
 
 			if (MouseSensitivityScale != Save->SavedMouseSensitivityScale)
