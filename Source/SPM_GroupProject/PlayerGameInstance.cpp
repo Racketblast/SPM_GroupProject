@@ -71,13 +71,8 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 		{
 			if (UpgradeInfo->UpgradeCosts[UpgradeInfo->UpgradeOwned] <= Money)
 			{
-				if (CanBuySound)
-				{
-					if (Player)
-					{
-						UGameplayStatics::PlaySoundAtLocation(GetWorld(), CanBuySound, Player->GetActorLocation());
-					}
-				}
+				PlayBuySound(CanBuySound, Player);
+				
 				Money -= UpgradeInfo->UpgradeCosts[UpgradeInfo->UpgradeOwned];
 				UpgradeInfo->UpgradeOwned++;
 				//Adds the upgrade to the map if it is not in there 
@@ -105,13 +100,7 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 		// If you can't buy the product
 		else
 		{
-			if (CantBuySound)
-			{
-				if (Player)
-				{
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantBuySound, Player->GetActorLocation());
-				}
-			}
+			PlayBuySound(CantBuySound, Player);
 		}
 		
 	}
@@ -123,10 +112,7 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 		{
 			if (Player)
 			{
-				if (CanBuySound)
-				{
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CanBuySound, Player->GetActorLocation());
-				}
+				PlayBuySound(CanBuySound, Player);
 					
 				SetCurrentWeapon(Upgrade);
 				Player->SelectWeapon(*ConvertUpgradeTypeToString(Upgrade));
@@ -135,13 +121,18 @@ void UPlayerGameInstance::BuyUpgrade(const EUpgradeType Upgrade, USoundBase* Can
 		//Can't switch weapons
 		else
 		{
-			if (CantBuySound)
-			{
-				if (Player)
-				{
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantBuySound, Player->GetActorLocation());
-				}
-			}
+			PlayBuySound(CantBuySound, Player);
+		}
+	}
+}
+
+void UPlayerGameInstance::PlayBuySound(USoundBase* Sound, const APlayerCharacter* Player) const
+{
+	if (Sound)
+	{
+		if (Player)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), Sound, Player->GetActorLocation());
 		}
 	}
 }
@@ -387,14 +378,7 @@ void UPlayerGameInstance::UpgradeGunSkin(APlayerCharacter* Player, AGun* Weapon,
 	{
 		if (bSwapMaterials)
 		{
-			if (CurrentWeaponSkins[WeaponSkinIndex] == 0)
-			{
-				CurrentWeaponSkins[WeaponSkinIndex] = 1;
-			}
-			else if (CurrentWeaponSkins[WeaponSkinIndex] == 1)
-			{
-				CurrentWeaponSkins[WeaponSkinIndex] = 0;
-			}
+			CurrentWeaponSkins[WeaponSkinIndex] = 1 - CurrentWeaponSkins[WeaponSkinIndex];
 			bSwapMaterials = false;
 		}
 		if (Weapon->DifferentSkinMat.IsValidIndex(CurrentWeaponSkins[WeaponSkinIndex]))
@@ -442,41 +426,34 @@ void UPlayerGameInstance::SaveGame()
 {
 	if (UGameplayStatics::DoesSaveGameExist("Save1",0))
 	{
-		Save->SavedMoney = Money;
-		Save->SavedUpgradeMap = UpgradeMap;
-		Save->SavedCurrentWeapon = CurrentWeapon;
-		Save->SavedUnlockedLevels = UnlockedLevels;
-		Save->SavedCurrentGameFlag = CurrentGameFlag;
-		
-		Save->SavedMouseSensitivityScale = MouseSensitivityScale;
-		Save->SavedMasterVolumeScale = MasterVolumeScale;
-		Save->SavedSFXVolumeScale = SFXVolumeScale;
-		Save->SavedMusicVolumeScale = MusicVolumeScale;
-		
+		FillSaveGame();
 		UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
 	}
-	else
+	else if (SaveGameObject)
 	{
-		if (SaveGameObject)
+		Save = Cast<USwarmedSaveGame>(UGameplayStatics::CreateSaveGameObject(SaveGameObject));
+		if (Save)
 		{
-			Save = Cast<USwarmedSaveGame>(UGameplayStatics::CreateSaveGameObject(SaveGameObject));
-			if (Save)
-			{
-				Save->SavedMoney = Money;
-				Save->SavedUpgradeMap = UpgradeMap;
-				Save->SavedCurrentWeapon = CurrentWeapon;
-				Save->SavedUnlockedLevels = UnlockedLevels;
-				Save->SavedCurrentGameFlag = CurrentGameFlag;
-				
-				Save->SavedMouseSensitivityScale = MouseSensitivityScale;
-				Save->SavedMasterVolumeScale = MasterVolumeScale;
-				Save->SavedSFXVolumeScale = SFXVolumeScale;
-				Save->SavedMusicVolumeScale = MusicVolumeScale;
-				
-				UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
-			}
+			FillSaveGame();
+			UGameplayStatics::SaveGameToSlot(Save,"Save1", 0);
 		}
 	}
+}
+
+void UPlayerGameInstance::FillSaveGame()
+{
+	//Saved stats
+	Save->SavedMoney = Money;
+	Save->SavedUpgradeMap = UpgradeMap;
+	Save->SavedCurrentWeapon = CurrentWeapon;
+	Save->SavedUnlockedLevels = UnlockedLevels;
+	Save->SavedCurrentGameFlag = CurrentGameFlag;
+
+	//Saved options
+	Save->SavedMouseSensitivityScale = MouseSensitivityScale;
+	Save->SavedMasterVolumeScale = MasterVolumeScale;
+	Save->SavedSFXVolumeScale = SFXVolumeScale;
+	Save->SavedMusicVolumeScale = MusicVolumeScale;
 }
 
 void UPlayerGameInstance::LoadGame()

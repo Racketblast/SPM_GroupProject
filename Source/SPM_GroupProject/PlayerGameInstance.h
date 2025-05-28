@@ -61,6 +61,7 @@ public:
 	//For savegame
 	UFUNCTION(BlueprintCallable)
 	void SaveGame();
+	void FillSaveGame();
 	UFUNCTION(BlueprintCallable)
 	void LoadGame();
 	UFUNCTION(BlueprintCallable)
@@ -95,6 +96,7 @@ public:
 	FUpgradeInfo SetDefaultUpgradeInfo(const EUpgradeType Upgrade);
 	UFUNCTION(BlueprintCallable)
 	void BuyUpgrade(const EUpgradeType Upgrade,USoundBase* CanBuySound = nullptr, USoundBase* CantBuySound = nullptr);
+	void PlayBuySound(USoundBase* Sound, const class APlayerCharacter* Player) const;
 
 	UFUNCTION(BlueprintCallable)
 	FName GetArrayName();
