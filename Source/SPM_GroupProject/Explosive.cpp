@@ -94,7 +94,7 @@ void AExplosive::Explode()
             continue;
 
         float DistanceScale = 1.0f - (Distance / ExplosionRadius);
-        if (DistanceScale > 0.6)
+        if (DistanceScale > 0.7)
         {
             DistanceScale = 1.0f;
         }
