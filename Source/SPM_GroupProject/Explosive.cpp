@@ -76,79 +76,94 @@ void AExplosive::Explode()
 
    TSet<AActor*> DamagedActors;
 
-for (const FOverlapResult& Result : OverlapResults)
-{
-    AActor* HitActor = Result.GetActor();
-    if (!HitActor || DamagedActors.Contains(HitActor))
-        continue;
-
-    DamagedActors.Add(HitActor);
-
-    UPrimitiveComponent* HitComponent = Result.GetComponent();
-    if (!HitComponent) continue;
-
-    FVector TargetLocation = HitActor->GetActorLocation();
-    float Distance = FVector::Dist(GetActorLocation(), TargetLocation);
-
-    if (Distance > ExplosionRadius)
-        continue;
-
-    float DistanceScale = 1.0f - (Distance / ExplosionRadius);
-    DistanceScale = FMath::Clamp(DistanceScale, 0.0f, 1.0f);
-
-    float ScaledDamage = WeaponDamage * DistanceScale;
-    float ScaledPushForce = ExplosionPushForce * DistanceScale;
-
-    FVector Direction = (TargetLocation - GetActorLocation()).GetSafeNormal();
-    FVector LaunchVelocity = Direction * ScaledPushForce;
-    LaunchVelocity.Z += ScaledPushForce * 0.5f;
-
-    if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
+    for (const FOverlapResult& Result : OverlapResults)
     {
-        if (!HitCharacter->IsA<AFlyingEnemyAI>())
+        AActor* HitActor = Result.GetActor();
+        if (!HitActor || DamagedActors.Contains(HitActor))
+            continue;
+
+        DamagedActors.Add(HitActor);
+
+        UPrimitiveComponent* HitComponent = Result.GetComponent();
+        if (!HitComponent) continue;
+
+        FVector TargetLocation = HitActor->GetActorLocation();
+        float Distance = FVector::Dist(GetActorLocation(), TargetLocation);
+
+        if (Distance > ExplosionRadius)
+            continue;
+
+        float DistanceScale = 1.0f - (Distance / ExplosionRadius);
+        if (DistanceScale > 0.6)
         {
-            HitCharacter->LaunchCharacter(LaunchVelocity, true, true);
+            DistanceScale = 1.0f;
         }
-       
+        DistanceScale = FMath::Clamp(DistanceScale, 0.0f, 1.0f);
 
-        FHitResult HitResult;
-        HitResult.Location = HitCharacter->GetActorLocation();
-        HitResult.Component = HitComponent;
+        float ScaledDamage = ExplosionDamage * DistanceScale;
+        float ScaledPushForce = ExplosionPushForce * DistanceScale;
 
-        UGameplayStatics::ApplyPointDamage(
-            HitCharacter,
-            ScaledDamage,
-            Direction,
-            HitResult,
-            GetInstigatorController(),
-            this,
-            UDamageType::StaticClass()
-        );
+        FVector Direction = (TargetLocation - GetActorLocation()).GetSafeNormal();
+        FVector LaunchVelocity = Direction * ScaledPushForce;
+        LaunchVelocity.Z += ScaledPushForce * 0.5f;
 
-        if (APlayerCharacter* Player = Cast<APlayerCharacter>(HitCharacter))
+        if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
         {
-            Player->bEnemyHit = true;
-            Player->EnemyHitFalse();
-            UE_LOG(LogTemp, Warning, TEXT("Player hit by explosive"));
+            if (!HitCharacter->IsA<AFlyingEnemyAI>())
+            {
+                HitCharacter->LaunchCharacter(LaunchVelocity, true, true);
+            }
+           
+
+            FHitResult HitResult;
+            HitResult.Location = HitCharacter->GetActorLocation();
+            HitResult.Component = HitComponent;
+            
+            if (APlayerCharacter* Player = Cast<APlayerCharacter>(HitCharacter))
+            {
+                Player->bEnemyHit = true;
+                Player->EnemyHitFalse();
+                UE_LOG(LogTemp, Warning, TEXT("Player hit by explosive"));
+                UGameplayStatics::ApplyPointDamage(
+                    HitCharacter,
+                    ScaledDamage/4,
+                    Direction,
+                    HitResult,
+                    GetInstigatorController(),
+                    this,
+                    UDamageType::StaticClass()
+                );
+            }
+            else
+            {
+                UGameplayStatics::ApplyPointDamage(
+                    HitCharacter,
+                    ScaledDamage,
+                    Direction,
+                    HitResult,
+                    GetInstigatorController(),
+                    this,
+                    UDamageType::StaticClass()
+                );
+            }
+        }
+        else
+        {
+            if (HitComponent->IsSimulatingPhysics())
+            {
+                HitComponent->AddImpulse(LaunchVelocity, NAME_None, true);
+            }
+
+            if (HitActor->FindFunction("OnLineTraceHit"))
+            {
+                HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
+            }
         }
     }
-    else
-    {
-        if (HitComponent->IsSimulatingPhysics())
-        {
-            HitComponent->AddImpulse(LaunchVelocity, NAME_None, true);
-        }
-
-        if (HitActor->FindFunction("OnLineTraceHit"))
-        {
-            HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
-        }
-    }
-}
 
 
     Destroy();   
-    }
+}
 
 
 

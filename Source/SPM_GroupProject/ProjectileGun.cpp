@@ -37,6 +37,7 @@ void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
 	if (ProjectileClass && GetWorld() && CurrentAmmo > 0)
 	{
 		AExplosive* Projectile = GetWorld()->SpawnActor<AExplosive>(ProjectileClass, FireLocation, FireRotation);
+		Projectile->ExplosionDamage = WeaponDamage;
 		if (Projectile)
 		{
 			Projectile->SetInstigator(Cast<APawn>(OwnerCharacter));  
