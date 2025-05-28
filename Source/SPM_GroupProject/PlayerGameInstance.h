@@ -126,7 +126,9 @@ public:
 	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradePlayerStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradeGunStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
-	void UpgradeGunStatValue(APlayerCharacter* Player, FName Weapon, float& ValueToChange, FUpgradeInfo* UpgradeInfo);
+	void UpgradeGunStatValue(APlayerCharacter* Player, class AGun* Weapon, float& ValueToChange, FUpgradeInfo* UpgradeInfo);
+	void UpgradeGunStatAmmo(APlayerCharacter* Player, AGun* Weapon, FUpgradeInfo* UpgradeInfo);
+	void UpgradeGunSkin(APlayerCharacter* Player, AGun* Weapon, int32 WeaponSkinIndex);
 	
 	UFUNCTION(BlueprintCallable)
 	void StartDialogue(UAudioComponent* AudioComponent = nullptr);
