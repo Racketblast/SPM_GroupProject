@@ -23,6 +23,8 @@ public:
 	USwarmedSaveGame* Save;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bGameStarted = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bGameEnded = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Money;
