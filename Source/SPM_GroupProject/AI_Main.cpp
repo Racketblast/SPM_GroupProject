@@ -108,8 +108,6 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
         	{
         		if (USkeletalMeshComponent* MeshComp = GetMesh())
         		{
-        			bIsDead = true;
-
         			// Disable any damage-causing components
         	
 
