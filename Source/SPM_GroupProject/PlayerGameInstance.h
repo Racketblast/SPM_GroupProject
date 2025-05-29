@@ -46,11 +46,13 @@ public:
 	bool bCanPlayDialogue = false;
 	UPROPERTY(BlueprintReadOnly)
 	bool bDialogueIsPlaying = false;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadOnly)
 	FName CurrentDialogueRowName;
 	UPROPERTY(BlueprintReadWrite)
 	FName StartDialogueRowName;
 	FName NextDialogueRowName;
+	UPROPERTY(BlueprintReadWrite)
+	UAudioComponent* DialogueComponent;
 
 	//CurrentGameFlag means, at what point am I in the game. If CurrentGameFlag is less than a number it means that it should play, but if it's bigger, then it should not play
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -134,11 +136,14 @@ public:
 	void UpgradeGunStatValue(APlayerCharacter* Player, class AGun* Weapon, float& ValueToChange, FUpgradeInfo* UpgradeInfo);
 	void UpgradeGunStatAmmo(APlayerCharacter* Player, AGun* Weapon, FUpgradeInfo* UpgradeInfo);
 	void UpgradeGunSkin(APlayerCharacter* Player, AGun* Weapon, int32 WeaponSkinIndex);
-	
+
+	//Dialogue
 	UFUNCTION(BlueprintCallable)
-	void StartDialogue(UAudioComponent* AudioComponent = nullptr);
+	void StartDialogue();
 	UFUNCTION()
 	void PlayNextDialogue();
+	UFUNCTION(BlueprintCallable)
+	void StopDialogue();
 private:
 	FTimerHandle DialogueTimerHandle;
 	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);

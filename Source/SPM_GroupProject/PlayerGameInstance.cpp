@@ -8,6 +8,7 @@
 #include "PlayerCharacter.h"
 #include "ProjectileGun.h"
 #include "SwarmedSaveGame.h"
+#include "Components/AudioComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Containers/Map.h"
@@ -534,7 +535,7 @@ bool UPlayerGameInstance::HasGameChanged()
 	return true;
 }
 
-void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
+void UPlayerGameInstance::StartDialogue()
 {
 	if (!EventDialogueInfo)
 		return;
@@ -561,7 +562,11 @@ void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
 				if (Row->DialogueSound)
 				{
 					bDialogueIsPlaying = true;
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Row->DialogueSound, Player->GetActorLocation());
+					DialogueComponent = UGameplayStatics::SpawnSoundAtLocation(
+						GetWorld(),
+						Row->DialogueSound,
+						Player->GetActorLocation()
+					);
 					TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
 				}
 			}
@@ -589,7 +594,11 @@ void UPlayerGameInstance::PlayNextDialogue()
 			{
 				if (Row->DialogueSound)
 				{
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Row->DialogueSound, Player->GetActorLocation());
+					DialogueComponent = UGameplayStatics::SpawnSoundAtLocation(
+						GetWorld(),
+						Row->DialogueSound,
+						Player->GetActorLocation()
+					);
 					TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
 				}
 			}
@@ -603,4 +612,19 @@ void UPlayerGameInstance::PlayNextDialogue()
 	{
 		bDialogueIsPlaying = false;
 	}
+}
+
+void UPlayerGameInstance::StopDialogue()
+{
+	GetWorld()->GetTimerManager().ClearTimer(DialogueTimerHandle);
+
+	if (DialogueComponent && DialogueComponent->IsPlaying())
+	{
+		DialogueComponent->Stop();
+	}
+
+	bDialogueIsPlaying = false;
+	StartDialogueRowName = "";
+	CurrentDialogueRowName = "";
+	NextDialogueRowName = "";
 }
