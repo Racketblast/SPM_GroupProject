@@ -29,8 +29,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Money;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Level;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsWave;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EUpgradeType CurrentWeapon;
@@ -128,11 +126,13 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void ApplyAllUpgradeFunctions(class APlayerCharacter* Player);
-	
+
+	//Upgrade functions
 	UFUNCTION(BlueprintCallable)
 	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradePlayerStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradeGunStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
+	//Helper upgrade functions
 	void UpgradeGunStatValue(APlayerCharacter* Player, class AGun* Weapon, float& ValueToChange, FUpgradeInfo* UpgradeInfo);
 	void UpgradeGunStatAmmo(APlayerCharacter* Player, AGun* Weapon, FUpgradeInfo* UpgradeInfo);
 	void UpgradeGunSkin(APlayerCharacter* Player, AGun* Weapon, int32 WeaponSkinIndex);

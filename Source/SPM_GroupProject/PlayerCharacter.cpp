@@ -89,9 +89,6 @@ void APlayerCharacter::BeginPlay()
 			if (!GI->UpgradeMap.Contains(EUpgradeType::Pistol))
 			{
 				GI->BuyUpgrade(EUpgradeType::Pistol);
-				GI->BuyUpgrade(EUpgradeType::PistolDamage10);
-				GI->BuyUpgrade(EUpgradeType::PistolFiringSpeed10);
-				GI->BuyUpgrade(EUpgradeType::PistolAmmoSize);
 			}
 
 			// Apply all upgrades
