@@ -382,6 +382,10 @@ void APlayerCharacter::Melee()
 	
 	if (CurrentGun->bIsReloading)
 	return;
+
+	if (CurrentGun == GetWeaponInstance(EUpgradeType::DoomsdayGun))
+	return;
+	
 	
 	bUsingMelee = true;
 	bCanSwitchWeapons = false;
