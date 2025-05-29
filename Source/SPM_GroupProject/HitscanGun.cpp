@@ -152,8 +152,8 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
                                    *ImpulseDirection.ToString());
                         }
 
-                     // Replace values as needed
-
+                     
+                    ApplyBloodDecal(Hit);
                 
                 } else {BulletHoleDecal(Hit);}
 

@@ -133,7 +133,9 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 							   *ImpulseDirection.ToString());
 					}
 					bHitEnemyThisShot = true;
+					ApplyBloodDecal(Hit);
 				}
+				
 				else
 				{
 					BulletHoleDecal(Hit);
