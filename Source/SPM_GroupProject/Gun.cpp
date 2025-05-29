@@ -23,6 +23,24 @@ AGun::AGun()
 void AGun::BeginPlay()
 {
 	Super::BeginPlay();
+	if (!FireAudioComponent)
+	{
+		FireAudioComponent = NewObject<UAudioComponent>(this, TEXT("FireAudioComponent"));
+		if (FireAudioComponent)
+		{
+			FireAudioComponent->RegisterComponent();
+			FireAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		}
+	}
+	if (!MagEmptyAudioComponent)
+	{
+		MagEmptyAudioComponent = NewObject<UAudioComponent>(this, TEXT("MagEmptyAudioComponent"));
+		if (MagEmptyAudioComponent)
+		{
+			MagEmptyAudioComponent->RegisterComponent();
+			MagEmptyAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		}
+	}
 	BaseWeaponDamage = WeaponDamage;
 	BaseRoundsPerSecond = RoundsPerSecond;
 	BaseTotalAmmo = TotalAmmo;
@@ -40,7 +58,31 @@ void AGun::BeginPlay()
 		}
 	}
 }
+void AGun::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	PrimaryActorTick.bCanEverTick = true;
 
+	if (bIsRecoveringFromRecoil)
+	{
+		RecoilRecoveryElapsed += DeltaTime;
+		float Alpha = FMath::Clamp(RecoilRecoveryElapsed / RecoilRecoveryDuration, 0.0f, 1.0f);
+
+		APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OwnerCharacter);
+		if (PlayerCharacter && PlayerCharacter->ArmsRoot)
+		{
+			FVector NewLocation = FMath::Lerp(RecoilStartLocation, RecoilTargetLocation, Alpha);
+			PlayerCharacter->ArmsRoot->SetRelativeLocation(NewLocation);
+		}
+
+		if (Alpha >= 1.0f)
+		{
+			bIsRecoveringFromRecoil = false;
+			bRecoilApplied = false;
+		}
+	}
+  
+}
 void AGun::Reload()
 {
 	if (bIsReloading)
@@ -141,3 +183,103 @@ void AGun::CheckForUpgrades()
 		bHasAppliedUpgrades = true;
 	}
 }
+void AGun::ApplyBloodDecal(const FHitResult& Hit)
+{
+	if (!BloodDecalMaterial) return;
+
+	AActor* HitActor = Hit.GetActor();
+	if (!HitActor) return;
+
+	USkeletalMeshComponent* SkeletalMesh = HitActor->FindComponentByClass<USkeletalMeshComponent>();
+	if (!SkeletalMesh) return;
+
+	FVector DecalSize = FVector(decalSize, decalSize, decalSize);
+	FRotator DecalRotation = Hit.Normal.Rotation();
+
+	// Get bone name only if valid
+	FName BoneName = Hit.BoneName != NAME_None ? Hit.BoneName : NAME_None;
+
+	// Attach decal to the skeletal mesh, to a bone if available
+	UDecalComponent* BloodDecal = UGameplayStatics::SpawnDecalAttached(
+		BloodDecalMaterial,
+		DecalSize,
+		SkeletalMesh,
+		BoneName,
+		Hit.ImpactPoint,
+		DecalRotation,
+		EAttachLocation::KeepWorldPosition,
+		60.0f // lifespan
+		
+	);
+
+	if (BloodDecal)
+	{
+		//BloodDecal->SetFadeScreenSize(0.001f);
+		UE_LOG(LogTemp, Warning, TEXT("Spawned decal on skeletal mesh bone: %s"), *BoneName.ToString());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to spawn decal"));
+	}
+}
+
+
+
+
+void AGun::BulletHoleDecal(const FHitResult& Hit)
+{
+	FVector SurfaceNormal = Hit.Normal; // Normal of the hit surface (floor in this case)
+
+	FRotator DecalRotation = SurfaceNormal.Rotation(); // Convert the surface normal to a rotation
+
+	// Spawn the decal at the hit location with the correct rotation and scale
+	UGameplayStatics::SpawnDecalAtLocation(
+		GetWorld(),
+		BulletDecalMaterial,  // The material 
+		FVector(bdecalSize, bdecalSize, bdecalSize), 
+		Hit.Location, 
+		DecalRotation,  
+		60.0f  
+	);
+}
+void AGun::ApplyRecoilTranslation()
+{
+	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OwnerCharacter);
+	if (PlayerCharacter && PlayerCharacter->ArmsRoot)
+	{
+		// Get the player's current view direction (including pitch)
+		FVector CameraLoc;
+		FRotator CameraRot;
+		APlayerController* PC = Cast<APlayerController>(PlayerCharacter->GetController());
+
+		if (!PC)
+		{
+			return;
+		}
+
+		PC->GetPlayerViewPoint(CameraLoc, CameraRot);
+
+		FVector RecoilDirection = -CameraRot.Vector();  // Negative = push back relative to view
+		RecoilDirection.Normalize();
+
+		if (!bRecoilApplied)
+		{
+			bRecoilApplied = true;
+			OriginalArmsRootLocation = PlayerCharacter->ArmsRoot->GetRelativeLocation();
+
+			// Apply recoil instantly in direction opposite to camera view
+			FVector RecoilTranslation = RecoilDirection * RecoilAmount;
+			PlayerCharacter->ArmsRoot->AddWorldOffset(RecoilTranslation);
+
+			// Set up interpolation recovery
+			RecoilStartLocation = PlayerCharacter->ArmsRoot->GetRelativeLocation();
+			RecoilTargetLocation = OriginalArmsRootLocation;
+			RecoilRecoveryElapsed = 0.0f;
+			bIsRecoveringFromRecoil = true;
+		}
+	}
+}
+
+
+
+

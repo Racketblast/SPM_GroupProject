@@ -15,14 +15,11 @@ class SPM_GROUPPROJECT_API UPlayerGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 public:
-	UPlayerGameInstance();
 	virtual void Init() override;
-
-	void OnPostWorldInit(UWorld* World, const UWorld::InitializationValues IVS);
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class USwarmedSaveGame> SaveGameObject;
-	UPROPERTY(VisibleAnywhere,BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	USwarmedSaveGame* Save;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bGameStarted = false;
@@ -37,6 +34,7 @@ public:
 	EUpgradeType CurrentWeapon;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<EUpgradeType,FUpgradeInfo> UpgradeMap;
+	//{0,0,0,0} means the original value
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<int32> CurrentWeaponSkins = {0,0,0,0};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -64,6 +62,7 @@ public:
 	//For savegame
 	UFUNCTION(BlueprintCallable)
 	void SaveGame();
+	void FillSaveGame();
 	UFUNCTION(BlueprintCallable)
 	void LoadGame();
 	UFUNCTION(BlueprintCallable)
@@ -98,6 +97,7 @@ public:
 	FUpgradeInfo SetDefaultUpgradeInfo(const EUpgradeType Upgrade);
 	UFUNCTION(BlueprintCallable)
 	void BuyUpgrade(const EUpgradeType Upgrade,USoundBase* CanBuySound = nullptr, USoundBase* CantBuySound = nullptr);
+	void PlayBuySound(USoundBase* Sound, const class APlayerCharacter* Player) const;
 
 	UFUNCTION(BlueprintCallable)
 	FName GetArrayName();
@@ -129,13 +129,16 @@ public:
 	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradePlayerStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradeGunStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
+	void UpgradeGunStatValue(APlayerCharacter* Player, class AGun* Weapon, float& ValueToChange, FUpgradeInfo* UpgradeInfo);
+	void UpgradeGunStatAmmo(APlayerCharacter* Player, AGun* Weapon, FUpgradeInfo* UpgradeInfo);
+	void UpgradeGunSkin(APlayerCharacter* Player, AGun* Weapon, int32 WeaponSkinIndex);
 	
 	UFUNCTION(BlueprintCallable)
 	void StartDialogue(UAudioComponent* AudioComponent = nullptr);
 	UFUNCTION()
 	void PlayNextDialogue();
 private:
-	FTimerHandle TimerHandle;
+	FTimerHandle DialogueTimerHandle;
 	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);
 
 	void BuyWeapon(EUpgradeType Weapon);

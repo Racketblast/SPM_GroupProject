@@ -20,7 +20,7 @@ void AAmmoBox::CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedCo
 				if (Weapon->TotalAmmo < Weapon->MaxTotalAmmo)
 				{
 					UE_LOG(LogTemp, Warning, TEXT("AmmoBoxTriggered"));
-					Weapon->TotalAmmo += Weapon->MaxTotalAmmo/5;
+					Weapon->TotalAmmo += AmmoAmount;
 					if (Weapon->TotalAmmo > Weapon->MaxTotalAmmo)
 					{
 						Weapon->TotalAmmo = Weapon->MaxTotalAmmo;

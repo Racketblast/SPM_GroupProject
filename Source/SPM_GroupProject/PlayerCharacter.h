@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "Explosive.h"
 #include "Gun.h"
+#include "UpgradeEnums.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
@@ -75,6 +76,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	AGun* GetWeaponInstance(const FName WeaponName) const;
+	AGun* GetWeaponInstance(const EUpgradeType Weapon) const;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	UPROPERTY(VisibleAnywhere, Category = "Sway")
@@ -122,6 +124,16 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsDead = false;
+	
+
+	bool bCanScrollWeapon = true; 
+	FTimerHandle MouseWheelCooldownHandle;
+
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Switching")
+	float MouseWheelCooldownTime = 0.3f;
+
+	void ResetMouseWheelScroll();
 
 private:
 	FName WeaponName1 = "Pistol";
@@ -202,4 +214,11 @@ private:
 	void PerformMelee();
 	UFUNCTION(Category = "Melee")
 	void EndMelee();
+	void NextWeapon();
+	void PreviousWeapon();
+	UFUNCTION()
+	void HandleMouseWheel(float Value);
+
 };
+
+

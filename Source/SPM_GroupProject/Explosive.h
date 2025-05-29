@@ -12,6 +12,8 @@ class SPM_GROUPPROJECT_API AExplosive : public AActor
 public:
 	AExplosive();
 
+	UPROPERTY(EditDefaultsOnly, Category = "Grenade")
+	float ExplosionDamage = 40.0f;
 protected:
 	virtual void BeginPlay() override;
 	virtual void Explode();
@@ -36,9 +38,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Grenade")
 	float ExplosionRadius = 600.0f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Grenade")
-	float WeaponDamage = 40.0f;
 
 	float ExplosionPushForce = 600.0f;
 	FTimerHandle ExplosionTimer;

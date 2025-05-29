@@ -10,30 +10,10 @@ UCLASS()
 class SPM_GROUPPROJECT_API AMoneyBox : public ACollectableBox
 {
 	GENERATED_BODY()
-	
-protected:
-	virtual void BeginPlay() override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
-	class UMaterialInterface* FadeMaterial;
-
 public:		
 	UPROPERTY(EditAnywhere, Category="Money")
 	int32 MoneyAmount = 20;
-	
 private:
 	virtual void CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
-	
-	UPROPERTY(EditAnywhere, Category = "Self Destruct")
-	float LifeTime = 5.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Self Destruct")
-	bool bShouldDestroy = true;
-	
-	FTimerHandle SelfDestructTimer;
-	FTimerHandle FadeTimer;
-	
-	void SelfDestruct();
-	void SetFadeMaterial();
 };

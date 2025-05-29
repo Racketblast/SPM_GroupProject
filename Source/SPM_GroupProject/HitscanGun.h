@@ -6,7 +6,7 @@
 #include "Components/PointLightComponent.h"
 #include "HitscanGun.generated.h"
 
-// No bEnemyHit, no EnemyHitFalse!
+
 
 UCLASS()
 class SPM_GROUPPROJECT_API AHitscanGun : public AGun
@@ -14,19 +14,19 @@ class SPM_GROUPPROJECT_API AHitscanGun : public AGun
 	GENERATED_BODY()
 
 protected:
-	virtual void BeginPlay() override;
-	void ApplyBloodDecal(const FHitResult& Hit);
-	void BulletHoleDecal(const FHitResult& Hit);
-public:
-	virtual void Fire(FVector FireLocation, FRotator FireRotation) override;
 
+	
+	virtual void Fire(FVector FireLocation, FRotator FireRotation) override;
+public:
+	
+	
 	UPROPERTY(BlueprintReadOnly, Category = "Hit Result")
 	AActor* LastHitActor;
 
 	UPROPERTY(EditAnywhere, Category = "Effects")
 	class UNiagaraSystem* BulletHitEffect;
-	virtual void Tick(float DeltaTime) override;
-	void ApplyRecoilTranslation();
+	
+
 	
 protected:
 	UPROPERTY(EditDefaultsOnly)
@@ -37,18 +37,8 @@ protected:
 
 
 	float LastFireTime = 0.f;
-	UPROPERTY(EditDefaultsOnly, Category = "Effects")
-	UMaterialInterface* BloodDecalMaterial;
-	UPROPERTY(EditDefaultsOnly, Category = "Effects")
-	UMaterialInterface* BulletDecalMaterial;
-	// For interpolation
-	bool bIsRecoveringFromRecoil = false;
-	float RecoilRecoveryElapsed = 0.0f;
-	float RecoilRecoveryDuration = 0.15f;
 
-	FVector RecoilStartLocation;
-	FVector RecoilTargetLocation;
-	// Include at the top
+
 
 
 

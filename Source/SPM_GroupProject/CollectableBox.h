@@ -18,7 +18,9 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
+	TArray<UMaterialInterface*> FadeMaterials;
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -59,4 +61,16 @@ protected:
 
 	virtual void CollectableBoxTriggeredFunction(UPrimitiveComponent* OverlappedComponent,AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	
+	UPROPERTY(EditAnywhere, Category = "Self Destruct")
+	float LifeTime = 8.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Self Destruct")
+	bool bShouldDestroy = true;
+	
+	FTimerHandle SelfDestructTimer;
+	FTimerHandle FadeTimer;
+	
+	void SelfDestruct();
+	void SetFadeMaterial();
 };
