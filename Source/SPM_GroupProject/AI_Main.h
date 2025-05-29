@@ -29,7 +29,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	float AIDamage = 20;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<class ACollectableBox> AIDrop;
+	TArray<TSubclassOf<class ACollectableBox>>AIDrop;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 

@@ -33,20 +33,47 @@ void ATeleporter::Use_Implementation(APlayerCharacter* Player)
 		{
 			CachedGameInstance->Money += Player->PickedUpMoney;
 			
-			//Plays the mission incomplete dialogue for return
 			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 			{
+				//Plays the mission incomplete dialogue for return
 				if ( TargetLevelName == "Hub")
 				{
 					GI->StartDialogueRowName = "ReturnMissionIncomplete";
 				}
+				
+				// För level unlock 
+				if (UMissionSubsystem* MissionSub = CachedGameInstance->GetSubsystem<UMissionSubsystem>())
+				{
+					MissionSub->TryUnlockLevel();
+					if (MissionSub->WavesSurvived >= 2 && GI->CurrentGameFlag < 2 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3"))
+					{
+						GI->CurrentGameFlag = 2;
+						GI->StartDialogueRowName = "ReturnMissionComplete";
+					}
+					
+					if (MissionSub->IsMissionCompleted())
+					{
+						//Plays the mission complete dialogue for return if mission is complete and updates the game flag
+						if (UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3"))
+						{
+							if (GI->CurrentGameFlag < 3)
+							{
+								GI->CurrentGameFlag = 3;
+							}
+							GI->StartDialogueRowName = "ReturnMissionComplete";
+						}
+						else if (UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("MetroV3"))
+						{
+							if (GI->CurrentGameFlag < 4)
+							{
+								GI->CurrentGameFlag = 4;
+							}
+							GI->StartDialogueRowName = "EndGameGun1";
+						}
+					}
+				}
 			}
 			
-			// För level unlock 
-			if (UMissionSubsystem* MissionSub = CachedGameInstance->GetSubsystem<UMissionSubsystem>())
-			{
-				MissionSub->TryUnlockLevel();
-			}
 			Teleport();
 		}
 		else

@@ -104,15 +104,16 @@ void AArenaGameMode::BeginPlay()
 		
 		if (UGameplayStatics::GetCurrentLevelName(GetWorld(), true) == "Hub")
 		{
-			if (GI->CurrentGameFlag < 1)
+			if (GI->CurrentGameFlag == 0)
 			{
 				GI->StartDialogueRowName = "Intro";
 			}
+			
 			GI->StartDialogue();
 			
 			if (GI->CurrentGameFlag < 1)
 			{
-				GI->CurrentGameFlag++;
+				GI->CurrentGameFlag = 1;
 			}
 		}
 	}
@@ -128,12 +129,5 @@ void AArenaGameMode::ReturnToHub()
 
 void AArenaGameMode::GoToEnding()
 {
-	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
-	{
-		if (GI->CurrentGameFlag < 9)
-		{
-			GI->CurrentGameFlag = 9;
-		}
-	}
 	UGameplayStatics::OpenLevel(this, "CinematicHub");
 }

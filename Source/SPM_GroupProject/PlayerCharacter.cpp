@@ -124,6 +124,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("SelectWeapon2", IE_Pressed, this, &APlayerCharacter::SelectWeapon2);
 	PlayerInputComponent->BindAction("SelectWeapon3", IE_Pressed, this, &APlayerCharacter::SelectWeapon3);
 	PlayerInputComponent->BindAction("SelectWeapon4", IE_Pressed, this, &APlayerCharacter::SelectWeapon4);
+	PlayerInputComponent->BindAxis("MouseWheel", this, &APlayerCharacter::HandleMouseWheel);
+
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
@@ -241,6 +243,29 @@ void APlayerCharacter::ThrowGrenade()
 		GrenadeNum--;
 	}
 }
+void APlayerCharacter::HandleMouseWheel(float Value)
+{
+	if (!bCanScrollWeapon || FMath::Abs(Value) < KINDA_SMALL_NUMBER) return;
+
+	if (Value > 0)
+	{
+		NextWeapon();
+	}
+	else
+	{
+		PreviousWeapon();
+	}
+
+	// Start cooldown
+	bCanScrollWeapon = false;
+	GetWorld()->GetTimerManager().SetTimer(MouseWheelCooldownHandle, this, &APlayerCharacter::ResetMouseWheelScroll, MouseWheelCooldownTime, false);
+}
+void APlayerCharacter::ResetMouseWheelScroll()
+{
+	bCanScrollWeapon = true;
+}
+
+
 
 void APlayerCharacter::MoveForward(float Value)
 {
@@ -388,6 +413,8 @@ void APlayerCharacter::PerformMelee()
 			if (ACharacter* Char = Cast<ACharacter>(HitResult.GetActor()))
 			{
 				Char->TakeDamage(MeleeDamage, DamageEvent,nullptr,this);
+				bEnemyHit = true;
+				EnemyHitFalse();
 			}
 			//DrawDebugCylinder(GetWorld(), Start, HitResult.ImpactPoint, SweepRadius, 10,FColor::Orange, false, 2.0f);
 			//DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, SweepRadius, 16, FColor::Red, false, 2.0f);
@@ -560,6 +587,48 @@ void APlayerCharacter::SelectWeapon5()
 		}
 	}
 }
+void APlayerCharacter::NextWeapon()
+{
+	if (!bCanSwitchWeapons) return;
+
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		TArray<FName> WeaponNames = { WeaponName1, WeaponName2, WeaponName3, WeaponName4, WeaponName5 };
+		int32 CurrentIndex = WeaponNames.IndexOfByKey(GI->GetCurrentWeaponName());
+
+		for (int i = 1; i <= WeaponNames.Num(); ++i)
+		{
+			int32 NextIndex = (CurrentIndex + i) % WeaponNames.Num();
+			if (GI->HasBought(WeaponNames[NextIndex]))
+			{
+				SelectWeapon(WeaponNames[NextIndex]);
+				break;
+			}
+		}
+	}
+}
+
+void APlayerCharacter::PreviousWeapon()
+{
+	if (!bCanSwitchWeapons) return;
+
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		TArray<FName> WeaponNames = { WeaponName1, WeaponName2, WeaponName3, WeaponName4, WeaponName5 };
+		int32 CurrentIndex = WeaponNames.IndexOfByKey(GI->GetCurrentWeaponName());
+
+		for (int i = 1; i <= WeaponNames.Num(); ++i)
+		{
+			int32 PrevIndex = (CurrentIndex - i + WeaponNames.Num()) % WeaponNames.Num();
+			if (GI->HasBought(WeaponNames[PrevIndex]))
+			{
+				SelectWeapon(WeaponNames[PrevIndex]);
+				break;
+			}
+		}
+	}
+}
+
 
 void APlayerCharacter::AddRecoilImpulse(FRotator Impulse)
 {
@@ -629,6 +698,25 @@ void APlayerCharacter::HealPlayer(int32 HealAmount)
 	}
 }
 
+AGun* APlayerCharacter::GetWeaponInstance(const EUpgradeType Weapon) const
+{
+	switch (Weapon)
+	{
+	case EUpgradeType::Pistol:
+		return Weapon1Instance;
+	case EUpgradeType::Rifle:
+		return Weapon2Instance;
+	case EUpgradeType::Shotgun:
+		return Weapon3Instance;
+	case EUpgradeType::RocketLauncher:
+		return Weapon4Instance;
+	case EUpgradeType::DoomsdayGun:
+		return Weapon5Instance;
+	default:
+		return nullptr;
+	}
+}
+
 AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
 {
 	if (WeaponName == WeaponName1) return Weapon1Instance;
@@ -636,7 +724,6 @@ AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
 	if (WeaponName == WeaponName3) return Weapon3Instance;
 	if (WeaponName == WeaponName4) return Weapon4Instance;
 	if (WeaponName == WeaponName5) return Weapon5Instance;
-
 	return nullptr;
 }
 

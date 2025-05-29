@@ -14,6 +14,7 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "EngineUtils.h"
+#include "FlyingEnemyAI.h"
 #include "MeleeDamageType.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/DamageEvents.h"
@@ -25,6 +26,7 @@ AAI_Main::AAI_Main()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AISoundComponent"));
+	AudioComponent->SetupAttachment(RootComponent); 
 }
 
 /* ─────────────────────────────────────────────── */
@@ -49,17 +51,7 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 
         if (AIHealth <= 0)
         {
-			
-        	if (DamageEvent.DamageTypeClass == UMeleeDamageType::StaticClass())
-        	{
-        		UE_LOG(LogTemp, Display, TEXT("Melee kill"));
-        	}
-	        else
-	        {
-		        UE_LOG(LogTemp, Display, TEXT("Anything else kill"));
-	        }
-        	
-            AIHealth = 0;
+			AIHealth = 0;
             bIsDead = true;
         	OnEnemyDied.Broadcast(this);
         	
@@ -77,11 +69,27 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
             }
 
             // Drop item
-        	if (AIDrop)
+        	if (AIDrop[0] && AIDrop.Num() > 0)
         	{
         		FTransform T = GetTransform();
         		T.SetRotation({0, 0, 0, 0});
-        		GetWorld()->SpawnActor<ACollectableBox>(AIDrop, T);
+        		if (DamageEvent.DamageTypeClass == UMeleeDamageType::StaticClass())
+        		{
+        			UE_LOG(LogTemp, Display, TEXT("Melee kill"));
+			        if (AIDrop[1])
+			        {
+			        	if (AIDrop.Num() > 0)
+			        	{
+			        		int32 RandomIndex = FMath::RandRange(1, AIDrop.Num() - 1);
+        					GetWorld()->SpawnActor<ACollectableBox>(AIDrop[RandomIndex], T);
+			        	}
+			        }
+        		}
+        		else
+        		{
+        			UE_LOG(LogTemp, Display, TEXT("Anything else kill"));
+        			GetWorld()->SpawnActor<ACollectableBox>(AIDrop[0], T);
+        		}
         	}
 
             // Disable character movement
@@ -96,32 +104,49 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
             }
 
             // Enable ragdoll physics
-        	if (USkeletalMeshComponent* MeshComp = GetMesh())
+        	if (!IsA(AFlyingEnemyAI::StaticClass()))
         	{
-		        if (MeshComp->GetSkeletalMeshAsset())
-		        {
-		        	UE_LOG(LogTemp, Warning, TEXT("AI Killed"));
-		        	MeshComp->SetCollisionProfileName(TEXT("Ragdoll"));
-		        	MeshComp->SetSimulatePhysics(true);
-		        	MeshComp->SetAllBodiesSimulatePhysics(true);
-		        	MeshComp->WakeAllRigidBodies();
-		        	MeshComp->bBlendPhysics = true;
+        		if (USkeletalMeshComponent* MeshComp = GetMesh())
+        		{
+        			bIsDead = true;
 
-		        	// Calculate impulse direction (from the hit location)
-		        	FVector ImpulseDirection = GetActorLocation() - DamageCauser->GetActorLocation();
-		        	ImpulseDirection.Normalize();
+        			// Disable any damage-causing components
+        	
 
-		        	float ImpulseStrength = 20000.f; // Adjust based on how dramatic you want the effect
-		        	FVector Impulse = ImpulseDirection * ImpulseStrength;
-		        	AIDamage = 0;
+        			// Ragdoll physics setup
+        			MeshComp->SetCollisionProfileName(TEXT("Ragdoll"));
+        			MeshComp->SetCollisionObjectType(ECC_PhysicsBody);
+        			MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        			MeshComp->SetCollisionResponseToAllChannels(ECR_Block);
+        			MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+        			MeshComp->SetGenerateOverlapEvents(false);
 
-		        	FVector HitLocation = GetActorLocation(); // You can improve this if you have a real hit point
+        			MeshComp->SetSimulatePhysics(true);
+        			MeshComp->SetAllBodiesSimulatePhysics(true);
+        			MeshComp->WakeAllRigidBodies();
+        			MeshComp->bBlendPhysics = true;
 
-		        	MeshComp->AddImpulseAtLocation(Impulse, HitLocation);
+        			FVector ImpulseDir = GetActorLocation() - DamageCauser->GetActorLocation();
+        			ImpulseDir.Normalize();
+        			MeshComp->AddImpulse(ImpulseDir * 100.0f, NAME_None, true);
+        		}
+        	//	Ensure all child components also ignore ECC_Pawn
+	TArray<USceneComponent*> ChildComponents;
+        		GetRootComponent()->GetChildrenComponents(true, ChildComponents);
+        		for (USceneComponent* Child : ChildComponents)
+        		{
+        			if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Child))
+        			{
+        				// Only change if it's a collidable component
+        				if (Primitive->GetCollisionEnabled() != ECollisionEnabled::NoCollision)
+        				{
+        					Primitive->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+        					Primitive->SetGenerateOverlapEvents(false); // Optional: avoid triggering damage overlaps
+        				}
+        			}
+        		}
+        	}
 
-		        	// Optional: Destroy after delay
-		        	SetLifeSpan(10.f);
-		        }
 		        else
 		        {
 			        Destroy();
@@ -131,7 +156,7 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
             // Optional: Destroy after some delay
             SetLifeSpan(10.0f); // Character will be auto-destroyed after 10 seconds
         }
-    }
+    
 
     return DamageAmount;
 }

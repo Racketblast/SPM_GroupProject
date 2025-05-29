@@ -15,9 +15,6 @@ struct FDialogueInfo : public FTableRowBase
 	USoundBase* DialogueSound = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<UUserWidget> DialogueWidgetClass = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	int32 DialogueFlag = 0;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
@@ -28,7 +25,7 @@ struct FDialogueInfo : public FTableRowBase
 	
 	FDialogueInfo() {}
 
-	FDialogueInfo(USoundBase* InSound, TSubclassOf<UUserWidget> InWidgetClass, int32 InDialogueFlag = 0, FString InText = "", FName InNextDialogue = "")
-		: DialogueSound(InSound), DialogueWidgetClass(InWidgetClass), DialogueFlag(InDialogueFlag), DialogueText(InText), NextDialogue(InNextDialogue)
+	FDialogueInfo(USoundBase* InSound, int32 InDialogueFlag = 0, FString InText = "", FName InNextDialogue = "")
+		: DialogueSound(InSound), DialogueFlag(InDialogueFlag), DialogueText(InText), NextDialogue(InNextDialogue)
 	{}
 };
