@@ -16,6 +16,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "EnemyAI")
 	static bool FindValidTeleportLocation(APawn* Pawn, const FVector& TargetLocation, FVector& OutLocation, bool bAvoidFrontTeleport); 
 
+	// Kollar om det går att flyga på den angivna platsen utan att krocka med något
 	UFUNCTION(BlueprintCallable, Category = "EnemyAI")
 	static bool IsFlyableLocation(APawn* Pawn, UWorld* World, const FVector& Location, float ClearanceRadius = 100.f);
 	

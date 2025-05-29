@@ -17,6 +17,7 @@ void AFlyingAI_Controller::Tick(float DeltaSeconds)
 	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	APawn* ControlledPawn = GetPawn();
 
+	// Uppdatera blackboard key values. 
 	if (Player && ControlledPawn)
 	{
 		float Distance = FVector::Dist(Player->GetActorLocation(), ControlledPawn->GetActorLocation());
@@ -27,6 +28,7 @@ void AFlyingAI_Controller::Tick(float DeltaSeconds)
 		Blackboard->SetValueAsBool("PlayerVisible", bPlayerVisible);
 	}
 
+	// Uppdaterar en annan blackboard key value, som säger om fienden får attackera spelaren beroende på om dem precis har teleporterat. Använder CanShoot() för detta
 	if (AFlyingEnemyAI* fiende = Cast<AFlyingEnemyAI>(GetPawn()))
 	{
 		bool bCanShoot = fiende->CanShoot();
@@ -34,6 +36,7 @@ void AFlyingAI_Controller::Tick(float DeltaSeconds)
 	}
 }
 
+// Kallas när en flygande fiende spawnas, och ser till att BehaviorTree körs för fienden, och initierar Blackboarden. 
 void AFlyingAI_Controller::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -50,6 +53,7 @@ void AFlyingAI_Controller::OnPossess(APawn* InPawn)
 	}
 }
 
+// Används för att sätta Blackboard key "PlayerVisible"
 bool AFlyingAI_Controller::HasLineOfSightToPlayer() const
 {
 	APawn* AIPawn = GetPawn();
@@ -77,6 +81,7 @@ bool AFlyingAI_Controller::HasLineOfSightToPlayer() const
 	return HitResult.GetActor() == Player;
 }
 
+// Kallas från AFlyingEnemyAI, så man kan se och ändra värdet från enemy blueprint. 
 void AFlyingAI_Controller::SetPlayerInRange(float PlayerInRange)
 {
 	PlayerRangeThreshold = PlayerInRange;

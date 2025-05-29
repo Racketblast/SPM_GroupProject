@@ -1,13 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "FlyingAIHelper.h"
 #include "FlyingEnemyAI.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/GameplayStatics.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
 
-FVector FlyingAIHelper::ComputeSmartTargetLocation(
+// Beräknar en flygposition nära spelaren som, Tar hänsyn till tak/golv, Respekterar fiendens flyghöjdsgränser,
+// innehåller en slumpmässig variation av offsets för att göra rörelser mer naturliga, Kan göra fallback-försök om en position är blockerad
+FVector FlyingAIHelper::CalculateTargetLocation(
 	UWorld* World,
 	ACharacter* Player,
 	AFlyingEnemyAI* FlyingEnemy,
@@ -18,10 +20,11 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 	float ObstacleCheckDistance,
 	float ObstacleClearance)
 {
+	// Utgångspunkt, vilket är Spelarens position
 	FVector PlayerLocation = Player->GetActorLocation();
 	FVector TargetLocation = PlayerLocation;
 
-	// Line trace för att kolla taket
+	// Line trace för att kolla taket, utgår från spelaren och kållar uppåt. Ändrar z.offset beroende på hur nära spelaren är taket. 
 	FHitResult CeilingHit;
 	FCollisionQueryParams CeilingParams;
 	CeilingParams.AddIgnoredActor(Player);
@@ -53,7 +56,7 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 		TargetLocation.Z = FMath::Clamp(TargetLocation.Z, FlyingEnemy->GetMinAltitude(), FlyingEnemy->GetMaxAltitude());
 	}
 
-	// Lägger till en random offset
+	// Lägger till en random offset, om bAddRandomOffset är true, vilket kan sättas i BP för fienden
 	if (bAddRandomOffset)
 	{
 		TargetLocation += FVector(
@@ -63,14 +66,14 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 		);
 	}
 
-	// Kållar efter både tak och golv för att undvika att åka in i de
+	// Kållar efter både tak och golv för att undvika att åka in i de, flyttar positionen uppåt eller nedåt om vi är för nära golvet eller taket
 	FHitResult HitResult;
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(FlyingEnemy);
 
 	FVector Down = TargetLocation - FVector(0.f, 0.f, 10000.f);
 	FVector Up = TargetLocation + FVector(0.f, 0.f, 10000.f);
-
+	
 	if (World->LineTraceSingleByChannel(HitResult, TargetLocation, Down, ECC_Visibility, Params))
 	{
 		TargetLocation.Z = FMath::Max(TargetLocation.Z, HitResult.Location.Z + 200.f);
@@ -80,9 +83,10 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 		TargetLocation.Z = FMath::Min(TargetLocation.Z, HitResult.Location.Z - 200.f);
 	}
 
-	// Kållar efter hinder
+	// Kolla efter hinder med IsLocationClear
 	bool bValidLocation = IsLocationClear(World, TargetLocation, FlyingEnemy, ObstacleCheckDistance, ObstacleClearance);
 
+	// Om platsen är blockerad, försök igen
 	if (!bValidLocation && bAddRandomOffset)
 	{
 		FVector InitialRetryLocation = PlayerLocation + FVector(
@@ -100,12 +104,23 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 		{
 			TargetLocation = InitialRetryLocation;
 		}
+		else
+		{
+			// Fallback 
+			FVector Direction = (PlayerLocation - FromLocation).GetSafeNormal();
+			TargetLocation = FromLocation + Direction * 500.f;
+			TargetLocation.Z += ZOffset;
+
+			if (FlyingEnemy)
+			{
+				TargetLocation.Z = FMath::Clamp(TargetLocation.Z, FlyingEnemy->GetMinAltitude(), FlyingEnemy->GetMaxAltitude());
+			}
+		}
 		/*else
 		{
 			const float RetryDistance = 50.f;
 			bool bFoundValidPath = false;
 
-			// List of deliberate directions to try in order
 			FVector Forward = FlyingEnemy->GetActorForwardVector();
 			FVector Right = FlyingEnemy->GetActorRightVector();
 
@@ -117,7 +132,6 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 				(Forward - Right).GetSafeNormal(),
 				-Forward
 			};
-
 
 			for (const FVector& Dir : ProbeDirections)
 			{
@@ -138,7 +152,6 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 				}
 			}
 
-			// Final fallback if all retries failed
 			if (!bFoundValidPath)
 			{
 				FVector Direction = (PlayerLocation - FromLocation).GetSafeNormal();
@@ -151,23 +164,11 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 				}
 			}
 		}*/
-		else
-		{
-			// Fallback 
-			FVector Direction = (PlayerLocation - FromLocation).GetSafeNormal();
-			TargetLocation = FromLocation + Direction * 500.f;
-			TargetLocation.Z += ZOffset;
-
-			if (FlyingEnemy)
-			{
-				TargetLocation.Z = FMath::Clamp(TargetLocation.Z, FlyingEnemy->GetMinAltitude(), FlyingEnemy->GetMaxAltitude());
-			}
-		}
 	}
 	
 	// DrawDebugSphere(World, TargetLocation, 30.f, 12, FColor::Green, false, 2.f);
 
-	
+	// Kallar på IsMoving() så att vi vet när fienden började röra sig till den nya positionen.
 	if (FlyingEnemy)
 	{
 		FlyingEnemy->IsMoving();
@@ -176,6 +177,7 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 	return TargetLocation;
 }
 
+// Denna funktion gör linjestrålar i 6 riktningar från en given punkt. Den returnerar false om något är för nära
 bool FlyingAIHelper::IsLocationClear(
 	UWorld* World,
 	const FVector& Location,
@@ -183,19 +185,24 @@ bool FlyingAIHelper::IsLocationClear(
 	float Distance,
 	float Clearance)
 {
+	// Skapar riktningar (x, y, z, både positiv och negativ riktning), de är konstanta vektorer i Unreal Engine, Exempelvis FVector ForwardVector är (1, 0, 0)
 	TArray<FVector> Directions = {
 		FVector::ForwardVector, -FVector::ForwardVector,
 		FVector::RightVector,   -FVector::RightVector,
 		FVector::UpVector,      -FVector::UpVector
 	};
 
+	// Loopar genom riktningarna
 	for (const FVector& Dir : Directions)
 	{
 		FHitResult Hit;
 		FCollisionQueryParams Params;
 		Params.AddIgnoredActor(IgnoredActor);
+
+		// För varje riktning gör den en linjestråle från Location ut i den riktningen
 		if (World->LineTraceSingleByChannel(Hit, Location, Location + Dir * Distance, ECC_Visibility, Params))
 		{
+			// Om någon av linjestrålarna träffar något nära, så retuneras false
 			if (Hit.Distance < Clearance)
 			{
 				return false;
@@ -205,6 +212,8 @@ bool FlyingAIHelper::IsLocationClear(
 	return true;
 }
 
+
+// Används inte just nu
 bool FlyingAIHelper::IsPathClear(
 	UWorld* World,
 	const FVector& FromLocation,
@@ -231,7 +240,7 @@ bool FlyingAIHelper::IsPathClear(
 		Params.AddIgnoredActor(Enemy);
 	}
 
-	// Define the capsule shape
+	// Definerar capsule form
 	FCollisionShape CollisionShape = FCollisionShape::MakeCapsule(Radius, HalfHeight);
 
 	FHitResult Hit;
@@ -244,15 +253,11 @@ bool FlyingAIHelper::IsPathClear(
 		CollisionShape,
 		Params
 	);
-
-
-	// debug 
 	
+	// debug 
 	DrawDebugCapsule(World, FromLocation, HalfHeight, Radius, FQuat::Identity, FColor::Blue, false, 1.f);
 	DrawDebugCapsule(World, ToLocation, HalfHeight, Radius, FQuat::Identity, FColor::Red, false, 1.f);
 	DrawDebugLine(World, FromLocation, ToLocation, bHit ? FColor::Red : FColor::Green, false, 1.f, 0, 2.f);
 	
-
-
 	return !bHit;
 }

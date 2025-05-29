@@ -16,7 +16,7 @@ class SPM_GROUPPROJECT_API AFlyingAI_Controller : public AAI_Controller
 public:
 	bool HasLineOfSightToPlayer() const;
 
-	void SetPlayerInRange(float PlayerInRange);
+	void SetPlayerInRange(float PlayerInRange); // kallas från AFlyingEnemyAI
 
 protected:
 	virtual void Tick(float DeltaSeconds) override;
@@ -24,5 +24,5 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 
 private:
-	float PlayerRangeThreshold = 800.f; // Distansen innan spelaren är "in range"
+	float PlayerRangeThreshold = 800.f; // Distansen innan spelaren är "in range", sätts i AFlyingEnemyAI
 };

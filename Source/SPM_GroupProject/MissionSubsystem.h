@@ -30,8 +30,7 @@ public:
 	
 	int32 RequiredWaveToComplete = 2;
 	int32 WavesSurvived = 0;
-protected:
-	
+
 private:
 	bool bIsCompleted = false;
 

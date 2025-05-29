@@ -1,7 +1,5 @@
 
 #include "WaveManager.h"
-#include "Blueprint/UserWidget.h"
-#include "Kismet/GameplayStatics.h"
 #include "PlayerGameInstance.h"
 #include "TimerManager.h"
 #include "MissionSubsystem.h"
@@ -22,8 +20,6 @@ AWaveManager::AWaveManager()
 void AWaveManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	//StartNextWave();
 
 	FirstGraceSecondsRemaining = FirstWaveTimer;
 	bIsFirstGracePeriod = true;
@@ -56,8 +52,6 @@ void AWaveManager::UpdateFirstWaveCountdown()
 		bIsFirstGracePeriod = false;
 		StartNextWave();
 	}
-
-	//FirstGraceSecondsRemaining -= 1.0f;
 }
 
 FWaveData AWaveManager::GenerateWaveData(int32 WaveIndex) const
@@ -98,11 +92,6 @@ FWaveData AWaveManager::GenerateWaveData(int32 WaveIndex) const
 // Funktionen som startar waven. 
 void AWaveManager::StartNextWave()
 {
-	// För challenges, den rensar challenge resultat status för nästa wave, detta är endast för widget. 
-	/*if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
-	{
-		ChallengeSub->ResetChallengeStatus();
-	}*/
 	//UE_LOG(LogTemp, Warning, TEXT("bIsFirstGracePeriod StartNextWave: %s"), bIsFirstGracePeriod ? TEXT("true") : TEXT("false"));
 	SpawnQueue.Empty();
 	
@@ -135,34 +124,6 @@ void AWaveManager::StartNextWave()
 		int32 j = FMath::RandRange(0, i);
 		SpawnQueue.Swap(i, j);
 	}
-	
-	/*if (Waves.IsValidIndex(CurrentWaveIndex))
-	{
-		ActiveWaveData = Waves[CurrentWaveIndex];
-	}
-	else
-	{
-		ActiveWaveData = DefaultWave;
-
-		// Fallback för om man glömmer att fylla i DefaultWave i unreal.
-		if (ActiveWaveData.EnemyTypes.Num() == 0 && EnemyClass)
-		{
-			FEnemyTypeData DefaultType;
-			DefaultType.EnemyClass = EnemyClass;
-			DefaultType.MinCount = 5 + CurrentWaveIndex * 2;
-
-			ActiveWaveData.EnemyTypes.Add(DefaultType);
-
-			ActiveWaveData.MaxExtraCount = 3 + CurrentWaveIndex; // Detta är bara för att spawna extra fiender utöver de minimum kravet som MinCount sköter. Den behöver alltså inte vara större en MinCount och den bör faktiskt vara mindre egentligen för preformance skäl
-		}
-
-		// Här skrivs koden som bestämmer hur svårt default wavesen ska vara. Den utgår från det som skrivs in i unreal engine, och sedan adderas det med CurrentWaveIndex * DefaultWaveDifficultyMultiplier, detta kan dock ändras för balancing
-		for (FEnemyTypeData& Type : ActiveWaveData.EnemyTypes)
-		{
-			Type.MinCount += (CurrentWaveIndex + 1)  * DefaultWaveDifficultyMultiplier;             // ökar minimum spawnas av varje enemy type
-		}
-		//ActiveWaveData.MaxExtraCount += (CurrentWaveIndex + 1);            // ökar maximum spawns
-	}*/
 
 	//För challenges
 	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
@@ -185,13 +146,6 @@ void AWaveManager::StartNextWave()
 
 	UE_LOG(LogTemp, Warning, TEXT("This wave will spawn %d enemies."), TotalEnemiesToSpawn);
 	
-	/*GetWorldTimerManager().SetTimer(
-		EnemySpawnTimer,
-		this,
-		&AWaveManager::SpawnEnemy,
-		ActiveWaveData.TimeBetweenSpawns,
-		true
-	);*/
 	SpawnEnemy();
 }
 
@@ -408,15 +362,15 @@ void AWaveManager::TickGracePeriod()
 
 		UE_LOG(LogTemp, Warning, TEXT("Grace period ended. Starting next wave..."));
 		// Challenges debuging
-		if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+		/*if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
 		{
 			int32 f = ChallengeSub->GetCurrentChallengeRewardAmount();
-		}
+		}*/
 		StartNextWave();
 		return;
 	}
 
-	// Skriv ut GraceSecondsRemaining direkt till skärmen. Använder nu en Widget istället
+	// Debuging: Skriv ut GraceSecondsRemaining direkt till skärmen. 
 	/*GEngine->AddOnScreenDebugMessage(
 		-1,
 		1.1f,
@@ -495,7 +449,6 @@ void AWaveManager::PreviewNextWaveEnemyCount()
 		return;
 	}*/
 	
-	//PreviewWaveIndex = CurrentWaveIndex + 1;
 	int32 PreviewWaveIndex = bIsFirstGracePeriod ? 0 : CurrentWaveIndex + 1;
 
 	//UE_LOG(LogTemp, Warning, TEXT("PreviewNextWaveEnemyCount WaveIndex: %i"), PreviewWaveIndex);
