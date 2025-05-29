@@ -383,7 +383,7 @@ void AWaveManager::SpawnEnemyAtLocation(TSubclassOf<AActor> EnemyType, const FVe
 void AWaveManager::OnEnemyKilled()
 {
 	EnemiesKilledThisWave++;
-	UE_LOG(LogTemp, Warning, TEXT("Enemy died"));
+	UE_LOG(LogTemp, Warning, TEXT("Enemy died %i"), EnemiesKilledThisWave);
 
 	//För challenges
 	if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())

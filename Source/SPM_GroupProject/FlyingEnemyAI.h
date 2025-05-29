@@ -60,8 +60,6 @@ public:
 	bool CanShoot() const; 
 	void NotifyTeleported();
 
-	//void SetNewMoveTarget(const FVector& NewTarget);
-
 	UFUNCTION()
 	void TeleportToValidLocationNearPlayer();
 

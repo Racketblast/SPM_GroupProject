@@ -13,7 +13,6 @@ AFlyingEnemyAI::AFlyingEnemyAI()
 	PrimaryActorTick.bCanEverTick = true;
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	AIControllerClass = AFlyingAI_Controller::StaticClass();
-
 }
 
 void AFlyingEnemyAI::BeginPlay()
@@ -203,17 +202,6 @@ bool AFlyingEnemyAI::CanShoot() const
 {
 	return (GetWorld()->GetTimeSeconds() - LastTeleportTime) >= PostTeleportFireDelay;
 }
-
-// denna används aldrig
-/*void AFlyingEnemyAI::SetNewMoveTarget(const FVector& NewTarget)
-{
-	CurrentTargetLocation = NewTarget;
-	DestinationStartTime = GetWorld()->GetTimeSeconds();
-	bIsMovingToTarget = true;
-
-	FVector Direction = (NewTarget - GetActorLocation()).GetSafeNormal();
-	AddMovementInput(Direction, FlySpeed);
-}*/
 
 bool AFlyingEnemyAI::IsFireCooldownElapsed() const
 {

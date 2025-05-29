@@ -81,8 +81,7 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 	}
 
 	// Kållar efter hinder
-	bool bValidLocation = IsLocationClear(World, TargetLocation, FlyingEnemy, ObstacleCheckDistance, ObstacleClearance) &&
-	IsPathClear(World, FromLocation, TargetLocation, FlyingEnemy);
+	bool bValidLocation = IsLocationClear(World, TargetLocation, FlyingEnemy, ObstacleCheckDistance, ObstacleClearance);
 
 	if (!bValidLocation && bAddRandomOffset)
 	{
@@ -97,25 +96,28 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 			InitialRetryLocation.Z = FMath::Clamp(InitialRetryLocation.Z, FlyingEnemy->GetMinAltitude(), FlyingEnemy->GetMaxAltitude());
 		}
 
-		if (IsLocationClear(World, InitialRetryLocation, FlyingEnemy, ObstacleCheckDistance, ObstacleClearance) &&
-		IsPathClear(World, FromLocation, InitialRetryLocation, FlyingEnemy))
+		if (IsLocationClear(World, InitialRetryLocation, FlyingEnemy, ObstacleCheckDistance, ObstacleClearance))
 		{
 			TargetLocation = InitialRetryLocation;
 		}
-		else
+		/*else
 		{
 			const float RetryDistance = 50.f;
 			bool bFoundValidPath = false;
 
 			// List of deliberate directions to try in order
+			FVector Forward = FlyingEnemy->GetActorForwardVector();
+			FVector Right = FlyingEnemy->GetActorRightVector();
+
 			TArray<FVector> ProbeDirections = {
-				FVector::ForwardVector,
-				FVector::RightVector,
-				-FVector::RightVector,
-				(FVector::ForwardVector + FVector::RightVector).GetSafeNormal(),
-				(FVector::ForwardVector - FVector::RightVector).GetSafeNormal(),
-				-FVector::ForwardVector 
+				Forward,
+				Right,
+				-Right,
+				(Forward + Right).GetSafeNormal(),
+				(Forward - Right).GetSafeNormal(),
+				-Forward
 			};
+
 
 			for (const FVector& Dir : ProbeDirections)
 			{
@@ -148,8 +150,8 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 					TargetLocation.Z = FMath::Clamp(TargetLocation.Z, FlyingEnemy->GetMinAltitude(), FlyingEnemy->GetMaxAltitude());
 				}
 			}
-		}
-		/*else
+		}*/
+		else
 		{
 			// Fallback 
 			FVector Direction = (PlayerLocation - FromLocation).GetSafeNormal();
@@ -160,7 +162,7 @@ FVector FlyingAIHelper::ComputeSmartTargetLocation(
 			{
 				TargetLocation.Z = FMath::Clamp(TargetLocation.Z, FlyingEnemy->GetMinAltitude(), FlyingEnemy->GetMaxAltitude());
 			}
-		}*/
+		}
 	}
 	
 	// DrawDebugSphere(World, TargetLocation, 30.f, 12, FColor::Green, false, 2.f);
@@ -244,12 +246,12 @@ bool FlyingAIHelper::IsPathClear(
 	);
 
 
-	// Optional: draw the sweep
-	/*
+	// debug 
+	
 	DrawDebugCapsule(World, FromLocation, HalfHeight, Radius, FQuat::Identity, FColor::Blue, false, 1.f);
 	DrawDebugCapsule(World, ToLocation, HalfHeight, Radius, FQuat::Identity, FColor::Red, false, 1.f);
 	DrawDebugLine(World, FromLocation, ToLocation, bHit ? FColor::Red : FColor::Green, false, 1.f, 0, 2.f);
-	*/
+	
 
 
 	return !bHit;

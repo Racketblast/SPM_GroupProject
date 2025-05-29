@@ -20,6 +20,7 @@ EBTNodeResult::Type UBTTask_FireEnemyProjectile_FlyAI::ExecuteTask(UBehaviorTree
 	{
 		if (AFlyingEnemyAI* AICharacter = Cast<AFlyingEnemyAI>(Controller->GetPawn()))
 		{
+			// Lägger till en cooldown, som gör att fienden inte kan skjuta hur mycket som helst. Utan måste vänta lite efter att den har skjutit.
 			if (!AICharacter->IsFireCooldownElapsed())
 			{
 				return EBTNodeResult::Failed;
@@ -52,6 +53,7 @@ EBTNodeResult::Type UBTTask_FireEnemyProjectile_FlyAI::ExecuteTask(UBehaviorTree
 				}
 			}
 
+			//För cooldowns
 			AICharacter->NotifyFired(); 
 
 			return EBTNodeResult::Succeeded;
