@@ -81,6 +81,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 
     FHitResult Hit;
     FCollisionQueryParams Params;
+    
     Params.AddIgnoredActor(this);
     if (OwnerCharacter)
     {
@@ -135,8 +136,23 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
                         OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
                         this,
                         DamageType
-                    );
-                    ApplyBloodDecal(Hit); // Replace values as needed
+                        );
+                    if (Hit.Component.IsValid() && Hit.Component->IsSimulatingPhysics(Hit.BoneName))
+                        {
+                        ApplyBloodDecal(Hit);
+                            const float ImpulseStrength = 10000.0f;
+                            FVector ImpulseDirection = (Hit.ImpactPoint - FireLocation).GetSafeNormal(); // Direction of shot
+                            FVector Impulse = ImpulseDirection * ImpulseStrength;
+
+                            // Apply impulse at location on the specific bone
+                            Hit.Component->AddImpulseAtLocation(Impulse, Hit.ImpactPoint, Hit.BoneName);
+
+                            UE_LOG(LogTemp, Warning, TEXT("Applied impulse to bone: %s, Direction: %s"),
+                                   *Hit.BoneName.ToString(),
+                                   *ImpulseDirection.ToString());
+                        }
+
+                     // Replace values as needed
 
                 
                 } else {BulletHoleDecal(Hit);}

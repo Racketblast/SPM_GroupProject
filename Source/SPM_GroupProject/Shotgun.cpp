@@ -118,7 +118,20 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 						DamageType
 					);
 
-					ApplyBloodDecal(Hit);
+					if (Hit.Component.IsValid() && Hit.Component->IsSimulatingPhysics(Hit.BoneName))
+					{
+						ApplyBloodDecal(Hit);
+						const float ImpulseStrength = 10000.0f;
+						FVector ImpulseDirection = (Hit.ImpactPoint - FireLocation).GetSafeNormal(); // Direction of shot
+						FVector Impulse = ImpulseDirection * ImpulseStrength;
+
+						// Apply impulse at location on the specific bone
+						Hit.Component->AddImpulseAtLocation(Impulse, Hit.ImpactPoint, Hit.BoneName);
+
+						UE_LOG(LogTemp, Warning, TEXT("Applied impulse to bone: %s, Direction: %s"),
+							   *Hit.BoneName.ToString(),
+							   *ImpulseDirection.ToString());
+					}
 					bHitEnemyThisShot = true;
 				}
 				else
