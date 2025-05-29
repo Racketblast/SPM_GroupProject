@@ -49,8 +49,8 @@ void AAI_Controller::SetupPerceptionSystem()
 		SightConfig->SightRadius = 15000.0f;
 		SightConfig->LoseSightRadius = SightConfig->SightRadius + 25.f;
 		SightConfig->PeripheralVisionAngleDegrees = 90.0f;
-		SightConfig->SetMaxAge(5.f);
-		SightConfig->AutoSuccessRangeFromLastSeenLocation = 520.f;
+		//SightConfig->SetMaxAge(5.f);
+		//SightConfig->AutoSuccessRangeFromLastSeenLocation = 520.f;
 		SightConfig->DetectionByAffiliation.bDetectEnemies = true;
 		SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
 		SightConfig->DetectionByAffiliation.bDetectNeutrals = true;

@@ -27,5 +27,5 @@ public:
 
 	/** Vertical offset */
 	UPROPERTY(EditAnywhere, Category = "Projectile")
-	float MuzzleUpOffset = 50.f;
+	float MuzzleUpOffset = 10.f;
 };
