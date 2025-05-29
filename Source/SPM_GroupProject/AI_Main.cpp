@@ -112,7 +112,7 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
         	
 
         			// Ragdoll physics setup
-        			MeshComp->SetCollisionProfileName(TEXT("Ragdoll"));
+        			//MeshComp->SetCollisionProfileName(TEXT("Ragdoll"));
         			MeshComp->SetCollisionObjectType(ECC_PhysicsBody);
         			MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
         			MeshComp->SetCollisionResponseToAllChannels(ECR_Block);
