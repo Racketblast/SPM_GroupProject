@@ -13,7 +13,6 @@ ADebugCube::ADebugCube()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
-	StaticMeshComponent->SetupAttachment(GetRootComponent());
 
 }
 
@@ -37,6 +36,7 @@ void ADebugCube::DoAllFunctions()
 	GivePlayerMaxHealth();
 	GivePlayerMaxMoney();
 	GiveAllWeapons();
+	GiveLastFlag();
 }
 
 void ADebugCube::EnableAllLevels()
@@ -114,4 +114,15 @@ void ADebugCube::GiveAllWeapons()
 		}
 	}
 	
+}
+
+void ADebugCube::GiveLastFlag()
+{
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (bUnlockLastFlag)
+		{
+			GI->CurrentGameFlag = 9;
+		}
+	}
 }

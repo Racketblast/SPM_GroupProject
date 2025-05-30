@@ -16,7 +16,8 @@ public:
 	void SetOwnerCharacter(class APlayerCharacter* NewOwner);
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gun")
 	bool bHasInfiniteReloads = false;
-
+	virtual void Tick(float DeltaTime) override;
+	
 	UPROPERTY(BlueprintReadOnly)
 	int32 BaseTotalAmmo;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -37,7 +38,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float RealoadSpeed = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	UMaterialInterface* CurrentSkinMat;
+	TArray<UMaterialInterface*> DifferentSkinMat;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USceneComponent* MuzzlePoint;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
@@ -63,14 +64,15 @@ public:
 	bool bIsUpgraded = false;
 	void CheckForUpgrades();
 
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsReloading = false;
 protected:
 	virtual void BeginPlay() override;
-	
+	void ApplyBloodDecal(const FHitResult& Hit);
+	void BulletHoleDecal(const FHitResult& Hit);
 	UPROPERTY()
 	APlayerCharacter* OwnerCharacter;
 
-	UPROPERTY(BlueprintReadOnly)
-	bool bIsReloading = false;
 
 	FTimerHandle ReloadTimerHandle;
 
@@ -120,8 +122,22 @@ protected:
 	FRotator RecoilTargetRotation;
 	bool bApplyingRecoil = false;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	UMaterialInterface* BloodDecalMaterial;
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	UMaterialInterface* BulletDecalMaterial;
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	float decalSize = 20.f;
+	float bdecalSize = 10.f;
+	// For interpolation
+	bool bIsRecoveringFromRecoil = false;
+	float RecoilRecoveryElapsed = 0.0f;
+	float RecoilRecoveryDuration = 0.15f;
 
+	FVector RecoilStartLocation;
+	FVector RecoilTargetLocation;
+	// Include at the top
 
-
+	void ApplyRecoilTranslation();
 };
 

@@ -14,163 +14,231 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "EngineUtils.h"
+#include "FlyingEnemyAI.h"
+#include "MeleeDamageType.h"
+#include "Components/CapsuleComponent.h"
+#include "Engine/DamageEvents.h"
 
-
-/* ───────────────── CONSTRUCTOR ───────────────── */
+/* ─────────────────────────────────────────────── */
+/*                   CONSTRUCTOR                   */
+/* ─────────────────────────────────────────────── */
 AAI_Main::AAI_Main()
 {
-    PrimaryActorTick.bCanEverTick = true;             // Enable Tick()
-    // Create & attach an AudioComponent so BP designers can drop SFX cues.
-    AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AISoundComponent"));
+	PrimaryActorTick.bCanEverTick = true;
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AISoundComponent"));
+	AudioComponent->SetupAttachment(RootComponent); 
 }
 
-/* ───────────────── GETTER ─────────────────────── */
+/* ─────────────────────────────────────────────── */
 UBehaviorTree* AAI_Main::GetBehaviorTree() const { return BehaviorTree; }
 
-/* ───────────────── TAKE DAMAGE ────────────────── */
-float AAI_Main::TakeDamage(float                      DamageAmount,
-                           FDamageEvent const&        DamageEvent,
-                           AController*               EventInstigator,
-                           AActor*                    DamageCauser)
+/* ─────────────────────────────────────────────── */
+/*                    DAMAGE                       */
+/* ─────────────────────────────────────────────── */
+float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
+                           AController* EventInstigator, AActor* DamageCauser)
 {
-    // Early‑out if we’ve already processed death; prevents multiple Destroy() calls.
-    if (bIsDead) { return 0.f; }
-
-    AIHealth -= static_cast<int32>(DamageAmount);
-    UE_LOG(LogTemp, Verbose, TEXT("%s took %.1f dmg → %d HP"),
-           *GetName(), DamageAmount, AIHealth);
-
-    /* ------------- Hit VFX ----------------------- */
-    if (DamageEffect)
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+    if (!bIsDead)
     {
-        UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-            GetWorld(), DamageEffect, GetActorLocation());
-    }
+        AIHealth -= DamageAmount;
+        UE_LOG(LogTemp, Warning, TEXT("AI TakeDamage %.1f"), DamageAmount);
 
-    /* ------------- Death check ------------------- */
-    if (AIHealth <= 0)
-    {
-        AIHealth = 0;
-        bIsDead  = true;
-
-        /* --------- Loot drop -------- */
-        if (AIDrop)
+        if (DamageEffect)
         {
-            // Spawn loot with zero rotation so boxes sit flat.
-            FTransform SpawnTM = GetTransform();
-            SpawnTM.SetRotation(FQuat::Identity);
-            GetWorld()->SpawnActor<ACollectableBox>(AIDrop, SpawnTM);
+            UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), DamageEffect, GetActorLocation());
         }
 
-        /* --------- Wave manager notification ------ */
-        for (TActorIterator<AWaveManager> It(GetWorld()); It; ++It)
+        if (AIHealth <= 0)
         {
-            (*It)->OnEnemyKilled();
-            break;      // Only the first WM is relevant.
+			AIHealth = 0;
+            bIsDead = true;
+        	OnEnemyDied.Broadcast(this);
+        	
+            // Notify wave manager
+            for (TActorIterator<AWaveManager> It(GetWorld()); It; ++It)
+            {
+                (*It)->OnEnemyKilled();
+                break;
+            }
+
+            // Play Niagara death effect
+            if (DeathEffect)
+            {
+                UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), DeathEffect, GetActorLocation());
+            }
+
+            // Drop item
+        	if (AIDrop[0] && AIDrop.Num() > 0)
+        	{
+        		FTransform T = GetTransform();
+        		T.SetRotation({0, 0, 0, 0});
+        		if (DamageEvent.DamageTypeClass == UMeleeDamageType::StaticClass())
+        		{
+        			UE_LOG(LogTemp, Display, TEXT("Melee kill"));
+			        if (AIDrop[1])
+			        {
+			        	if (AIDrop.Num() > 0)
+			        	{
+			        		int32 RandomIndex = FMath::RandRange(1, AIDrop.Num() - 1);
+        					GetWorld()->SpawnActor<ACollectableBox>(AIDrop[RandomIndex], T);
+			        	}
+			        }
+        		}
+        		else
+        		{
+        			UE_LOG(LogTemp, Display, TEXT("Anything else kill"));
+        			GetWorld()->SpawnActor<ACollectableBox>(AIDrop[0], T);
+        		}
+        	}
+
+            // Disable character movement
+            GetCharacterMovement()->DisableMovement();
+            GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+            // Stop AI logic
+            if (AAIController* AICont = Cast<AAIController>(GetController()))
+            {
+                AICont->StopMovement();
+                AICont->UnPossess();
+            }
+
+            // Enable ragdoll physics
+        	if (!IsA(AFlyingEnemyAI::StaticClass()))
+        	{
+        		if (USkeletalMeshComponent* MeshComp = GetMesh())
+        		{
+        			// Disable any damage-causing components
+        	
+
+        			// Ragdoll physics setup
+        			//MeshComp->SetCollisionProfileName(TEXT("Ragdoll"));
+        			MeshComp->SetCollisionObjectType(ECC_PhysicsBody);
+        			MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+        			MeshComp->SetCollisionResponseToAllChannels(ECR_Block);
+        			MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+        			MeshComp->SetGenerateOverlapEvents(false);
+
+        			MeshComp->SetSimulatePhysics(true);
+        			MeshComp->SetAllBodiesSimulatePhysics(true);
+        			MeshComp->WakeAllRigidBodies();
+        			MeshComp->bBlendPhysics = true;
+
+        			FVector ImpulseDir = GetActorLocation() - DamageCauser->GetActorLocation();
+        			ImpulseDir.Normalize();
+        			MeshComp->AddImpulse(ImpulseDir * 100.0f, NAME_None, true);
+        		}
+        	//	Ensure all child components also ignore ECC_Pawn
+	TArray<USceneComponent*> ChildComponents;
+        		GetRootComponent()->GetChildrenComponents(true, ChildComponents);
+        		for (USceneComponent* Child : ChildComponents)
+        		{
+        			if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Child))
+        			{
+        				// Only change if it's a collidable component
+        				if (Primitive->GetCollisionEnabled() != ECollisionEnabled::NoCollision)
+        				{
+        					Primitive->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+        					Primitive->SetGenerateOverlapEvents(false); // Optional: avoid triggering damage overlaps
+        				}
+        			}
+        		}
+        	}
+
+		    else
+		    {
+			    Destroy();
+		    }
+        	
+        	// Optional: Destroy after some delay
+        	SetLifeSpan(10.0f); // Character will be auto-destroyed after 10 seconds
+			}
         }
+    
 
-        /* --------- Death VFX -------- */
-        if (DeathEffect)
-        {
-            UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-                GetWorld(), DeathEffect, GetActorLocation());
-        }
-
-        Destroy();      // Remove pawn; controller will be automatically detached.
-    }
-
-    return DamageAmount;   // Base implementation expects we echo back the amount taken.
+    return DamageAmount;
 }
 
-/* ───────────────── BEGIN PLAY ─────────────────── */
+/* ─────────────────────────────────────────────── */
 void AAI_Main::BeginPlay()
 {
-    Super::BeginPlay();
+	Super::BeginPlay();
+	AIHealth = MaxAIHealth;
 
-    AIHealth = MaxAIHealth;            // Reset health after construction defaults
+	if (UCharacterMovementComponent* Move = GetCharacterMovement())
+	{
+		Move->bUseRVOAvoidance             = true;
+		Move->AvoidanceConsiderationRadius = 500.f;
+		Move->AvoidanceWeight              = 0.7f;
+	}	//AI Crowd avoidance attempt
 
-    /*  --------- Crowd avoidance tuning ---------- */
-    if (UCharacterMovementComponent* Move = GetCharacterMovement())
-    {
-        // Enable Reciprocal Velocity Obstacles (RVO) so groups flow around each other.
-        Move->bUseRVOAvoidance             = true;
-        Move->AvoidanceConsiderationRadius = 500.f;  // How far ahead pawn “looks”
-        Move->AvoidanceWeight              = 0.7f;   // Lower → more easily yields
-    }
-
-    LastKnownLocation = GetActorLocation();   // Seed stuck check
+	LastKnownLocation = GetActorLocation();
 }
 
-/* ───────────────── TICK ───────────────────────── */
+/* ─────────────────────────────────────────────── */
 void AAI_Main::Tick(float DeltaTime)
 {
-    Super::Tick(DeltaTime);
+	Super::Tick(DeltaTime);
 
-    /*  --------- Ignore while airborne ---------- */
-    if (UCharacterMovementComponent* Move = GetCharacterMovement();
-        Move && (Move->IsFalling() || Move->IsFlying()))
-    {
-        return;
-    }
+	/*  Skip when jumping or flying */
+	if (UCharacterMovementComponent* Move = GetCharacterMovement();
+	    Move && (Move->IsFalling() || Move->IsFlying()))
+	{
+		return;
+	}
 
-    /*  --------- Reset stuck timer vid firing -- */
-    if (AAI_Controller* AICont = Cast<AAI_Controller>(GetController()))
-    {
-        if (UBlackboardComponent* BB = AICont->GetBlackboardComponent())
-        {
-            if (BB->GetValueAsBool(FName("IsFiring")))
-            {
-                // reset timers vid IsFiring
-                TimeSinceLastMovement = 0.f;
-                LastKnownLocation     = GetActorLocation();
-                return;
-            }
-        }
-    }
+	/*  Skip “stuck” while AI is firing */
+	if (AAI_Controller* AIC = Cast<AAI_Controller>(GetController()))
+	{
+		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
+		{
+			if (BB->GetValueAsBool(FName("IsFiring")))
+			{
+				TimeSinceLastMovement = 0.f;
+				LastKnownLocation     = GetActorLocation();
+				return;                                   
+			}
+		}
+	}
 
-    /*  --------- Detect lack of movement --------- */
-    const FVector Curr = GetActorLocation();
-    if (FVector::DistSquared(Curr, LastKnownLocation) > FMath::Square(MinMoveDistance))
-    {
-        // Pawn moved enough → reset timers.
-        LastKnownLocation     = Curr;
-        TimeSinceLastMovement = 0.f;
-    }
-    else
-    {
-        TimeSinceLastMovement += DeltaTime;
-    }
+	/* stuck-detection */
+	const FVector Curr = GetActorLocation();
+	if (FVector::DistSquared(Curr, LastKnownLocation) >
+	    MinMoveDistance * MinMoveDistance)
+	{
+		LastKnownLocation     = Curr;
+		TimeSinceLastMovement = 0.f;
+	}
+	else
+	{
+		TimeSinceLastMovement += DeltaTime;
+	}
 
-    /*  --------- Krav för JumpToNavmesh ------ */
-    if (TimeSinceLastMovement > StuckCheckInterval || IsOutsideNavMesh())
-    {
-        if (AAI_Controller* AICont = Cast<AAI_Controller>(GetController()))
-        {
-            //Nullptr
-            if (UBlackboardComponent* BB = AICont->GetBlackboardComponent())
-            {
-                BB->SetValueAsBool(FName("TeleportToNavmesh"), true);
-            }
-        }
-    }
+	if (TimeSinceLastMovement > StuckCheckInterval || IsOutsideNavMesh())
+	{
+		if (AAI_Controller* AICont = Cast<AAI_Controller>(GetController()))
+		{
+			if (UBlackboardComponent* BB = AICont->GetBlackboardComponent())
+			{
+				BB->SetValueAsBool(FName("TeleportToNavmesh"), true);
+			}
+		}
+	}
 }
 
-/* ───────────────── INPUT BINDINGS ─────────────── */
+/* ─────────────────────────────────────────────── */
 void AAI_Main::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-    Super::SetupPlayerInputComponent(PlayerInputComponent);
-    // No direct input for AI pawns, but keeping override for future debugging.
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
-/* ───────────────── NAVMESH TEST ─────────────────  */
-/* Kallas från tick ovan
-  En av kraven för JumpToNavmesh */
+/* ─────────────────────────────────────────────── */
 bool AAI_Main::IsOutsideNavMesh() const
 {
-    const UNavigationSystemV1* Nav =
-        FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
-    if (!Nav) { return false; }
+	const UNavigationSystemV1* Nav =
+	    FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+	if (!Nav) return false;
 
-    FNavLocation Dummy;
-    return !Nav->ProjectPointToNavigation(GetActorLocation(), Dummy);
+	FNavLocation Dummy;
+	return !Nav->ProjectPointToNavigation(GetActorLocation(), Dummy);
 }

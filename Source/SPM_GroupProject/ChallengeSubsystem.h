@@ -112,7 +112,7 @@ public:
 	bool GetJustStartedChallenge() const; 
 	void ResetJustStartedChallenge();
 
-	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	UFUNCTION(BlueprintCallable, Category = "Challenge") 
 	int32 GetCurrentChallengeRewardAmount() const; 
 	
 	// För tids baserad challenge
@@ -131,7 +131,10 @@ public:
 	bool ShouldShowChallengeTimer() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Challenges") //  Kalla på denna funktion när fienderna dör
-	void AddTimeToWaveChallenge(); 
+	void AddTimeToWaveChallenge();
+
+	UFUNCTION(BlueprintCallable, Category = "Challenge") // används för att vissa rewarden i UI om man klarade av en challenge
+	int32 GetLastCompletedChallengeRewardAmount() const;
 
 private:
 	UPROPERTY()
@@ -151,5 +154,8 @@ private:
 	int32 RewardMoneyAmount = 100;
 
 	TMap<EChallengeType, int32> ChallengeRewardMap;
+
+	// Används för att kunna displaya rewarden för challengen som man just klarade av när grace perioden är. 
+	FChallengeData LastCompletedChallenge;
 };
 

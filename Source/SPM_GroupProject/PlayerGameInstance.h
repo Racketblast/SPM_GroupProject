@@ -15,38 +15,42 @@ class SPM_GROUPPROJECT_API UPlayerGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 public:
-	UPlayerGameInstance();
 	virtual void Init() override;
-
-	void OnPostWorldInit(UWorld* World, const UWorld::InitializationValues IVS);
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class USwarmedSaveGame> SaveGameObject;
-	UPROPERTY(VisibleAnywhere,BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	USwarmedSaveGame* Save;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bGameStarted = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bGameEnded = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Money;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Level;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsWave;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EUpgradeType CurrentWeapon;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TMap<EUpgradeType,FUpgradeInfo> UpgradeMap;
+	//{0,0,0,0} means the original value
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> CurrentWeaponSkins = {0,0,0,0};
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bSwapMaterials = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bCanPlayDialogue = false;
 	UPROPERTY(BlueprintReadOnly)
 	bool bDialogueIsPlaying = false;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadOnly)
 	FName CurrentDialogueRowName;
 	UPROPERTY(BlueprintReadWrite)
 	FName StartDialogueRowName;
 	FName NextDialogueRowName;
+	UPROPERTY(BlueprintReadWrite)
+	UAudioComponent* DialogueComponent;
 
 	//CurrentGameFlag means, at what point am I in the game. If CurrentGameFlag is less than a number it means that it should play, but if it's bigger, then it should not play
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -60,6 +64,7 @@ public:
 	//For savegame
 	UFUNCTION(BlueprintCallable)
 	void SaveGame();
+	void FillSaveGame();
 	UFUNCTION(BlueprintCallable)
 	void LoadGame();
 	UFUNCTION(BlueprintCallable)
@@ -94,6 +99,7 @@ public:
 	FUpgradeInfo SetDefaultUpgradeInfo(const EUpgradeType Upgrade);
 	UFUNCTION(BlueprintCallable)
 	void BuyUpgrade(const EUpgradeType Upgrade,USoundBase* CanBuySound = nullptr, USoundBase* CantBuySound = nullptr);
+	void PlayBuySound(USoundBase* Sound, const class APlayerCharacter* Player) const;
 
 	UFUNCTION(BlueprintCallable)
 	FName GetArrayName();
@@ -121,17 +127,25 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ApplyAllUpgradeFunctions(class APlayerCharacter* Player);
 
-	
+	//Upgrade functions
+	UFUNCTION(BlueprintCallable)
 	void UseUpgradeFunction(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradePlayerStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
 	void UpgradeGunStats(const EUpgradeType Upgrade, class APlayerCharacter* Player);
-	
+	//Helper upgrade functions
+	void UpgradeGunStatValue(APlayerCharacter* Player, class AGun* Weapon, float& ValueToChange, FUpgradeInfo* UpgradeInfo);
+	void UpgradeGunStatAmmo(APlayerCharacter* Player, AGun* Weapon, FUpgradeInfo* UpgradeInfo);
+	void UpgradeGunSkin(APlayerCharacter* Player, AGun* Weapon, int32 WeaponSkinIndex);
+
+	//Dialogue
 	UFUNCTION(BlueprintCallable)
-	void StartDialogue(UAudioComponent* AudioComponent = nullptr);
+	void StartDialogue();
 	UFUNCTION()
 	void PlayNextDialogue();
+	UFUNCTION(BlueprintCallable)
+	void StopDialogue();
 private:
-	FTimerHandle TimerHandle;
+	FTimerHandle DialogueTimerHandle;
 	FString ConvertUpgradeTypeToString(const EUpgradeType Upgrade);
 
 	void BuyWeapon(EUpgradeType Weapon);

@@ -16,7 +16,7 @@ AMissionAndChallengeManager::AMissionAndChallengeManager()
 void AMissionAndChallengeManager::BeginPlay()
 {
 	Super::BeginPlay();
-
+	//UE_LOG(LogTemp, Warning, TEXT("SetRequiredWavesToComplete BeginPlay %i"), RequiredWavesToComplete);
 	// Missions
 	if (UWorld* World = GetWorld())
 	{

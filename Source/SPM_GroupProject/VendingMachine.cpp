@@ -11,7 +11,6 @@
 AVendingMachine::AVendingMachine()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
-	StaticMeshComponent->SetupAttachment(GetRootComponent());
 }
 void AVendingMachine::Use_Implementation(APlayerCharacter* Player)
 {
@@ -70,6 +69,52 @@ void AVendingMachine::UseVendingMachine()
 					}
 				}
 				break;
+			case EVendingMachineSpewOut::AmmoShotgun:
+				if (AGun* Weapon = Player->GetWeaponInstance("Shotgun"))
+				{
+					if (Weapon->TotalAmmo < Weapon->MaxTotalAmmo)
+					{
+						if (IfPlayerHasEnoughMoney(Player,GI))
+						{
+							Weapon->TotalAmmo += Weapon->MaxTotalAmmo/5;
+							if (Weapon->TotalAmmo > Weapon->MaxTotalAmmo)
+							{
+								Weapon->TotalAmmo = Weapon->MaxTotalAmmo;
+							}
+						}
+					}
+					else
+					{
+						if (CantBuySound)
+						{
+							UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantBuySound, GetActorLocation());
+						}
+					}
+				}
+				break;
+			case EVendingMachineSpewOut::AmmoRocketLauncher:
+				if (AGun* Weapon = Player->GetWeaponInstance("RocketLauncher"))
+				{
+					if (Weapon->TotalAmmo < Weapon->MaxTotalAmmo)
+					{
+						if (IfPlayerHasEnoughMoney(Player,GI))
+						{
+							Weapon->TotalAmmo += Weapon->MaxTotalAmmo/5;
+							if (Weapon->TotalAmmo > Weapon->MaxTotalAmmo)
+							{
+								Weapon->TotalAmmo = Weapon->MaxTotalAmmo;
+							}
+						}
+					}
+					else
+					{
+						if (CantBuySound)
+						{
+							UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantBuySound, GetActorLocation());
+						}
+					}
+				}
+				break;
 			default:
 				break;
 			}
@@ -86,14 +131,14 @@ bool AVendingMachine::IfPlayerHasEnoughMoney(APlayerCharacter* Player, UPlayerGa
 		{
 			if (Player->PickedUpMoney + GI->Money >= SpewOutCost)
 			{
-				if (Player->PickedUpMoney >= SpewOutAmount)
+				if (Player->PickedUpMoney >= SpewOutCost)
 				{
-					Player->PickedUpMoney -= SpewOutAmount;
+					Player->PickedUpMoney -= SpewOutCost;
 				}
 				else
 				{
-					SpewOutAmount -= Player->PickedUpMoney;
-					GI->Money -= SpewOutAmount;
+					SpewOutCost -= Player->PickedUpMoney;
+					GI->Money -= SpewOutCost;
 				}
 				
 				if (CanBuySound)

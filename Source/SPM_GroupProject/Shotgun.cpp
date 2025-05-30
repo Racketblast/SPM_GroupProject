@@ -10,32 +10,6 @@
 #include "TimerManager.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
-#include "Components/DecalComponent.h" // Required for UDecalComponent
-
-void AShotgun::BeginPlay()
-{
-	Super::BeginPlay();
-	OwnerCharacter = Cast<APlayerCharacter>(GetOwner());
-
-	if (!FireAudioComponent)
-	{
-		FireAudioComponent = NewObject<UAudioComponent>(this, TEXT("FireAudioComponent"));
-		if (FireAudioComponent)
-		{
-			FireAudioComponent->RegisterComponent();
-			FireAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-		}
-	}
-	if (!MagEmptyAudioComponent)
-	{
-		MagEmptyAudioComponent = NewObject<UAudioComponent>(this, TEXT("FireAudioComponent"));
-		if (MagEmptyAudioComponent)
-		{
-			MagEmptyAudioComponent->RegisterComponent();
-			MagEmptyAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-		}
-	}
-}
 
 void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 {
@@ -45,14 +19,6 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 	if (CurrentAmmo <= 0)
 	{
 		Reload();
-		/*if (MagEmptySound && MagEmptyAudioComponent)
-		{
-			if (MagEmptyAudioComponent->IsPlaying())
-				MagEmptyAudioComponent->Stop();
-
-			MagEmptyAudioComponent->SetSound(MagEmptySound);
-			MagEmptyAudioComponent->Play();
-		}*/
 		return;
 	}
 
@@ -132,10 +98,17 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 						Player->EnemyHitFalse();
 					}
 
-					// Apply point damage per pellet
+					//  Headshot check
+					float FinalDamage = WeaponDamage / NumPellets;
+					if (Hit.BoneName == FName("head"))
+					{
+						FinalDamage *= 2.0f;
+						UE_LOG(LogTemp, Warning, TEXT("Headshot! Double damage applied."));
+					}
+
 					UGameplayStatics::ApplyPointDamage(
 						HitActor,
-						WeaponDamage / NumPellets,
+						FinalDamage,
 						ShotDirection,
 						Hit,
 						OwnerCharacter ? OwnerCharacter->GetController() : nullptr,
@@ -143,9 +116,24 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 						DamageType
 					);
 
-					ApplyBloodDecalTemp(Hit);
+					if (Hit.Component.IsValid() && Hit.Component->IsSimulatingPhysics(Hit.BoneName))
+					{
+						ApplyBloodDecal(Hit);
+						const float ImpulseStrength = 10000.0f;
+						FVector ImpulseDirection = (Hit.ImpactPoint - FireLocation).GetSafeNormal(); // Direction of shot
+						FVector Impulse = ImpulseDirection * ImpulseStrength;
+
+						// Apply impulse at location on the specific bone
+						Hit.Component->AddImpulseAtLocation(Impulse, Hit.ImpactPoint, Hit.BoneName);
+
+						UE_LOG(LogTemp, Warning, TEXT("Applied impulse to bone: %s, Direction: %s"),
+							   *Hit.BoneName.ToString(),
+							   *ImpulseDirection.ToString());
+					}
 					bHitEnemyThisShot = true;
+					ApplyBloodDecal(Hit);
 				}
+				
 				else
 				{
 					BulletHoleDecal(Hit);
@@ -171,103 +159,8 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 		ApplyRecoilTranslation();
 	}
 }
-
-
 void AShotgun::EnemyHitFalse()
 {
 	bEnemyHit = false;
 	UE_LOG(LogTemp, Error, TEXT("hit false"));
-}
-void AShotgun::ApplyRecoilTranslation()
-{
-	// Check if we have a valid reference to the player character and the ArmsRoot component
-	APlayerCharacter* PlayerCharacter = Cast<APlayerCharacter>(OwnerCharacter);
-	if (PlayerCharacter && PlayerCharacter->ArmsRoot)
-	{
-		// Get the direction the player is facing in world space (backward direction from player)
-		FVector BackwardDirection = -PlayerCharacter->GetActorForwardVector(); // This points backward in world space
-
-		// Check if recoil has been applied already, to avoid applying it multiple times
-		if (!bRecoilApplied)
-		{
-			// Store the original position of the arms root before applying recoil
-			OriginalArmsRootLocation = PlayerCharacter->ArmsRoot->GetRelativeLocation();
-
-			// Apply recoil translation in world space (backward toward the player)
-			FVector RecoilTranslation = BackwardDirection * RecoilAmount; // Recoil backwards in world space
-			PlayerCharacter->ArmsRoot->AddWorldOffset(RecoilTranslation); // Apply the offset in world space
-
-			// Set the recoil flag to true so we don't apply it again
-			bRecoilApplied = true;
-
-			// Set up a timer to return the arms root to the original position after 0.2 seconds
-			FTimerHandle TimerHandle;
-
-			// Set the timer to move the arms back to the original position after 0.2 seconds
-			GetWorld()->GetTimerManager().SetTimer(TimerHandle, [PlayerCharacter, this]()
-			{
-				// Reset the arms to the original position
-				if (PlayerCharacter && PlayerCharacter->ArmsRoot)
-				{
-					PlayerCharacter->ArmsRoot->SetRelativeLocation(OriginalArmsRootLocation);
-				}
-
-				// After resetting, allow recoil to be applied again
-				bRecoilApplied = false;
-			}, 0.25f, false); // 0.2 seconds delay
-		}
-	}
-}
-void AShotgun::ApplyBloodDecalTemp(const FHitResult& Hit)
-{
-	if (!BloodDecalMaterial) return;
-
-	AActor* HitActor = Hit.GetActor();
-	if (!HitActor) return;
-
-	USkeletalMeshComponent* SkeletalMesh = HitActor->FindComponentByClass<USkeletalMeshComponent>();
-	if (!SkeletalMesh) return;
-
-	FVector DecalSize = FVector(20.0f, 20.0f, 20.0f);
-	FRotator DecalRotation = Hit.Normal.Rotation();
-
-	// Get bone name only if valid
-	FName BoneName = Hit.BoneName != NAME_None ? Hit.BoneName : NAME_None;
-
-	// Attach decal to the skeletal mesh, to a bone if available
-	UDecalComponent* BloodDecal = UGameplayStatics::SpawnDecalAttached(
-		BloodDecalMaterial,
-		DecalSize,
-		SkeletalMesh,
-		BoneName,
-		Hit.ImpactPoint,
-		DecalRotation,
-		EAttachLocation::KeepWorldPosition,
-		60.0f // lifespan
-	);
-
-	if (BloodDecal)
-	{
-		BloodDecal->SetFadeScreenSize(0.001f);
-		UE_LOG(LogTemp, Warning, TEXT("Spawned decal on skeletal mesh bone: %s"), *BoneName.ToString());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to spawn decal"));
-	}
-}
-
-void AShotgun::BulletHoleDecal(const FHitResult& Hit)
-{
-	FVector SurfaceNormal = Hit.Normal;
-	FRotator DecalRotation = SurfaceNormal.Rotation();
-
-	UGameplayStatics::SpawnDecalAtLocation(
-		GetWorld(),
-		BulletDecalMaterial,
-		FVector(10.0f, 10.0f, 10.0f),
-		Hit.Location,
-		DecalRotation,
-		60.0f
-	);
 }

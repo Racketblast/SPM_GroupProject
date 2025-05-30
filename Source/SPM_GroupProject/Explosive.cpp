@@ -12,7 +12,7 @@
 #include "GameFramework/Actor.h"
 #include "GameFramework/DamageType.h"        
 #include "Engine/EngineTypes.h"               
-
+#include "FlyingEnemyAI.h"
 
 AExplosive::AExplosive()
 {
@@ -58,7 +58,7 @@ void AExplosive::Explode()
     // VFX & SFX
     if (ExplosionEffectAsset)
     {
-        float ScaleFactor = ExplosionRadius / 200.0f; // Adjust 100.0f if your particle system expects a different base size
+        float ScaleFactor = ExplosionRadius / 200.0f; 
 
         UGameplayStatics::SpawnEmitterAtLocation(
             GetWorld(),
@@ -74,66 +74,86 @@ void AExplosive::Explode()
         UGameplayStatics::PlaySoundAtLocation(this, ExplosionSound, ExplosionCenter);
     }
 
+   TSet<AActor*> DamagedActors;
+
     for (const FOverlapResult& Result : OverlapResults)
     {
         AActor* HitActor = Result.GetActor();
-        if (!HitActor) continue;
+        if (!HitActor || DamagedActors.Contains(HitActor))
+            continue;
+
+        DamagedActors.Add(HitActor);
 
         UPrimitiveComponent* HitComponent = Result.GetComponent();
         if (!HitComponent) continue;
 
         FVector TargetLocation = HitActor->GetActorLocation();
-        float Distance = FVector::Dist(ExplosionCenter, TargetLocation);
+        float Distance = FVector::Dist(GetActorLocation(), TargetLocation);
 
-        // Skip anything outside radius just in case
         if (Distance > ExplosionRadius)
             continue;
 
-        // Scale factor (1 = center, 0 = edge)
         float DistanceScale = 1.0f - (Distance / ExplosionRadius);
+        if (DistanceScale > 0.7)
+        {
+            DistanceScale = 1.0f;
+        }
         DistanceScale = FMath::Clamp(DistanceScale, 0.0f, 1.0f);
 
-        float ScaledDamage = WeaponDamage * DistanceScale;
+        float ScaledDamage = ExplosionDamage * DistanceScale;
         float ScaledPushForce = ExplosionPushForce * DistanceScale;
 
-        FVector Direction = (TargetLocation - ExplosionCenter).GetSafeNormal();
+        FVector Direction = (TargetLocation - GetActorLocation()).GetSafeNormal();
         FVector LaunchVelocity = Direction * ScaledPushForce;
-        LaunchVelocity.Z += ScaledPushForce * 0.5f;  // Add upward kick
+        LaunchVelocity.Z += ScaledPushForce * 0.5f;
 
         if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
         {
-            HitCharacter->LaunchCharacter(LaunchVelocity, true, true);
+            if (!HitCharacter->IsA<AFlyingEnemyAI>())
+            {
+                HitCharacter->LaunchCharacter(LaunchVelocity, true, true);
+            }
+           
 
             FHitResult HitResult;
             HitResult.Location = HitCharacter->GetActorLocation();
             HitResult.Component = HitComponent;
-
-            UGameplayStatics::ApplyPointDamage(
-                HitCharacter,
-                ScaledDamage,
-                Direction,
-                HitResult,
-                GetInstigatorController(),
-                this,
-                UDamageType::StaticClass()
-            );
-
+            
             if (APlayerCharacter* Player = Cast<APlayerCharacter>(HitCharacter))
             {
                 Player->bEnemyHit = true;
                 Player->EnemyHitFalse();
                 UE_LOG(LogTemp, Warning, TEXT("Player hit by explosive"));
+                UGameplayStatics::ApplyPointDamage(
+                    HitCharacter,
+                    ScaledDamage/4,
+                    Direction,
+                    HitResult,
+                    GetInstigatorController(),
+                    this,
+                    UDamageType::StaticClass()
+                );
+            }
+            else
+            {
+                UGameplayStatics::ApplyPointDamage(
+                    HitCharacter,
+                    ScaledDamage,
+                    Direction,
+                    HitResult,
+                    GetInstigatorController(),
+                    this,
+                    UDamageType::StaticClass()
+                );
             }
         }
         else
         {
-            // If it's a physics object, apply impulse
             if (HitComponent->IsSimulatingPhysics())
             {
                 HitComponent->AddImpulse(LaunchVelocity, NAME_None, true);
             }
 
-            // Optional: trigger Blueprintable explosion behavior
             if (HitActor->FindFunction("OnLineTraceHit"))
             {
                 HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
@@ -141,5 +161,9 @@ void AExplosive::Explode()
         }
     }
 
-    Destroy();
+
+    Destroy();   
 }
+
+
+

@@ -25,12 +25,26 @@ void UChallengeSubsystem::PreviewNextChallenge()
 	
 	int32 Index = -1;
 
+	bool OnlyHasPistol = true;
+
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (GI->HasBought("Rifle") || GI->HasBought("Shotgun") || GI->HasBought("Rocketlauncher"))
+		{
+			OnlyHasPistol = false;
+		}
+	}
+
 	// Loopar tills vi får en challenge som vi inte hade på waven innan. 
 	do 
 	{
 		Index = UKismetMathLibrary::RandomInteger(PossibleChallenges.Num());
 	} 
-	while (PossibleChallenges[Index].Type == LastChallengeType && PossibleChallenges.Num() > 1); 
+	while (PossibleChallenges.Num() > 1 && (
+		PossibleChallenges[Index].Type == LastChallengeType ||
+		(OnlyHasPistol && PossibleChallenges[Index].Type == EChallengeType::PistolOnly)));
+		
+	//PossibleChallenges[Index].Type == LastChallengeType && PossibleChallenges.Num() > 1 && (!OnlyHasPistol && PossibleChallenges[Index].Type == EChallengeType::PistolOnly)
 	
 	CurrentChallenge = PossibleChallenges[Index];
 	CurrentChallenge.bIsCompleted = false;
@@ -74,6 +88,9 @@ void UChallengeSubsystem::CompleteCurrentChallenge()
 	{
 		HandleChallengeSuccess();
 	}
+
+	// Sparar den nuvarande challengen innan den blir överskriven och byts till en ny challenge
+	LastCompletedChallenge = CurrentChallenge;
 
 	CurrentChallenge.bIsCompleted = true;
 	bIsChallengeActive = false;
@@ -186,6 +203,20 @@ int32 UChallengeSubsystem::GetCurrentChallengeRewardAmount() const
 		//UE_LOG(LogTemp, Warning, TEXT("No custom reward found for challenge %s. Using default."), *UEnum::GetValueAsString(CurrentChallenge.Type));
 	}
 	
+	//UE_LOG(LogTemp, Warning, TEXT("Reward found for challenge %s. Reward amount is %d."), *UEnum::GetValueAsString(CurrentChallenge.Type), FoundReward ? *FoundReward : RewardMoneyAmount);
+	return FoundReward ? *FoundReward : RewardMoneyAmount;
+}
+
+// Används för UI
+int32 UChallengeSubsystem::GetLastCompletedChallengeRewardAmount() const
+{
+	const int32* FoundReward = ChallengeRewardMap.Find(LastCompletedChallenge.Type);
+
+	if (!FoundReward)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("No custom reward found for challenge %s. Using default."), *UEnum::GetValueAsString(CurrentChallenge.Type));
+	}
+
 	//UE_LOG(LogTemp, Warning, TEXT("Reward found for challenge %s. Reward amount is %d."), *UEnum::GetValueAsString(CurrentChallenge.Type), FoundReward ? *FoundReward : RewardMoneyAmount);
 	return FoundReward ? *FoundReward : RewardMoneyAmount;
 }

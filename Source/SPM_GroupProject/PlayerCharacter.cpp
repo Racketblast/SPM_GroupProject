@@ -13,7 +13,9 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Explosive.h"
-#include "Blueprint/UserWidget.h"
+#include "MeleeDamageType.h"
+#include "Components/AudioComponent.h"
+#include "Engine/DamageEvents.h"
 
 APlayerCharacter::APlayerCharacter()
 {
@@ -40,7 +42,15 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
+	if (!DashAudioComponent)
+	{
+		DashAudioComponent = NewObject<UAudioComponent>(this, TEXT("DashAudioComponent"));
+		if (DashAudioComponent)
+		{
+			DashAudioComponent->RegisterComponent();
+			DashAudioComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
+		}
+	}
 	BasePlayerMaxHealth = PlayerMaxHealth;
 	
 	Weapon1Instance = GetWorld()->SpawnActor<AGun>(GWeapon1);
@@ -79,9 +89,6 @@ void APlayerCharacter::BeginPlay()
 			if (!GI->UpgradeMap.Contains(EUpgradeType::Pistol))
 			{
 				GI->BuyUpgrade(EUpgradeType::Pistol);
-				GI->BuyUpgrade(EUpgradeType::PistolDamage10);
-				GI->BuyUpgrade(EUpgradeType::PistolFiringSpeed10);
-				GI->BuyUpgrade(EUpgradeType::PistolAmmoSize);
 			}
 
 			// Apply all upgrades
@@ -96,12 +103,6 @@ void APlayerCharacter::BeginPlay()
 	{
 		GameMode->FadeIn(this);
 	}
-
-	//For creating the UseWidget
-	if (UseWidgetClass)
-	{
-		UseWidget = CreateWidget<UUserWidget>(GetWorld(), UseWidgetClass);
-	}
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -114,11 +115,14 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &APlayerCharacter::ThrowGrenade);
 	PlayerInputComponent->BindAction("Use", IE_Pressed, this, &APlayerCharacter::Use);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &APlayerCharacter::Reload);
+	PlayerInputComponent->BindAction("Melee", IE_Pressed, this, &APlayerCharacter::Melee);
 
 	PlayerInputComponent->BindAction("SelectWeapon1", IE_Pressed, this, &APlayerCharacter::SelectWeapon1);
 	PlayerInputComponent->BindAction("SelectWeapon2", IE_Pressed, this, &APlayerCharacter::SelectWeapon2);
 	PlayerInputComponent->BindAction("SelectWeapon3", IE_Pressed, this, &APlayerCharacter::SelectWeapon3);
 	PlayerInputComponent->BindAction("SelectWeapon4", IE_Pressed, this, &APlayerCharacter::SelectWeapon4);
+	PlayerInputComponent->BindAxis("MouseWheel", this, &APlayerCharacter::HandleMouseWheel);
+
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerCharacter::MoveRight);
@@ -236,6 +240,29 @@ void APlayerCharacter::ThrowGrenade()
 		GrenadeNum--;
 	}
 }
+void APlayerCharacter::HandleMouseWheel(float Value)
+{
+	if (!bCanScrollWeapon || FMath::Abs(Value) < KINDA_SMALL_NUMBER) return;
+
+	if (Value > 0)
+	{
+		NextWeapon();
+	}
+	else
+	{
+		PreviousWeapon();
+	}
+
+	// Start cooldown
+	bCanScrollWeapon = false;
+	GetWorld()->GetTimerManager().SetTimer(MouseWheelCooldownHandle, this, &APlayerCharacter::ResetMouseWheelScroll, MouseWheelCooldownTime, false);
+}
+void APlayerCharacter::ResetMouseWheelScroll()
+{
+	bCanScrollWeapon = true;
+}
+
+
 
 void APlayerCharacter::MoveForward(float Value)
 {
@@ -310,6 +337,8 @@ void APlayerCharacter::Shoot()
 {
 	if (!CurrentGun) return;
 
+	if (!bCanShoot) return;
+
 	USceneComponent* Muzzle = CurrentGun->GetMuzzlePoint();
 	if (!Muzzle) return;
 
@@ -336,8 +365,72 @@ void APlayerCharacter::Reload()
 {
 	if (CurrentGun)
 	{
-		CurrentGun->Reload();
+		if (bCanShoot)
+		{
+			CurrentGun->Reload();
+		}
 	}
+}
+
+void APlayerCharacter::Melee()
+{
+	if (bUsingMelee)
+	return;
+	
+	if (CurrentGun->bIsReloading)
+	return;
+
+	if (CurrentGun == GetWeaponInstance(EUpgradeType::DoomsdayGun))
+	return;
+	
+	
+	bUsingMelee = true;
+	bCanSwitchWeapons = false;
+	bCanShoot = false;
+	
+	float StartDelay = MeleeHitsPerSecond * 0.1;
+	GetWorld()->GetTimerManager().SetTimer(MeleeTimerHandle, this, &APlayerCharacter::PerformMelee, StartDelay, false);
+}
+
+void APlayerCharacter::PerformMelee()
+{
+	FVector Start = PlayerCamera->GetComponentLocation();
+	FVector End = Start + PlayerCamera->GetForwardVector() * UseDistance;
+
+	TArray<FHitResult> HitResults;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	
+	TSubclassOf<UDamageType> DamageTypeClass = UMeleeDamageType::StaticClass();
+	FDamageEvent DamageEvent(DamageTypeClass);
+	
+	float SweepRadius = 25.f;
+	FCollisionShape CollisionShape = FCollisionShape::MakeSphere(SweepRadius);
+
+	if (GetWorld()->SweepMultiByChannel(HitResults, Start, End, FQuat::Identity, ECC_Visibility, CollisionShape, Params))
+	{
+		for (const FHitResult& HitResult : HitResults)
+		{
+			if (ACharacter* Char = Cast<ACharacter>(HitResult.GetActor()))
+			{
+				Char->TakeDamage(MeleeDamage, DamageEvent,nullptr,this);
+				bEnemyHit = true;
+				EnemyHitFalse();
+			}
+			//DrawDebugCylinder(GetWorld(), Start, HitResult.ImpactPoint, SweepRadius, 10,FColor::Orange, false, 2.0f);
+			//DrawDebugSphere(GetWorld(), HitResult.ImpactPoint, SweepRadius, 16, FColor::Red, false, 2.0f);
+		}
+	}
+	
+	float EndDelay = MeleeHitsPerSecond * 0.9;
+	GetWorld()->GetTimerManager().SetTimer(MeleeTimerHandle, this, &APlayerCharacter::EndMelee, EndDelay, false);
+}
+
+void APlayerCharacter::EndMelee()
+{
+	bUsingMelee = false;
+	bCanSwitchWeapons = true;
+	bCanShoot = true;
 }
 
 void APlayerCharacter::SelectWeapon(FName Weapon)
@@ -495,6 +588,48 @@ void APlayerCharacter::SelectWeapon5()
 		}
 	}
 }
+void APlayerCharacter::NextWeapon()
+{
+	if (!bCanSwitchWeapons) return;
+
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		TArray<FName> WeaponNames = { WeaponName1, WeaponName2, WeaponName3, WeaponName4, WeaponName5 };
+		int32 CurrentIndex = WeaponNames.IndexOfByKey(GI->GetCurrentWeaponName());
+
+		for (int i = 1; i <= WeaponNames.Num(); ++i)
+		{
+			int32 NextIndex = (CurrentIndex + i) % WeaponNames.Num();
+			if (GI->HasBought(WeaponNames[NextIndex]))
+			{
+				SelectWeapon(WeaponNames[NextIndex]);
+				break;
+			}
+		}
+	}
+}
+
+void APlayerCharacter::PreviousWeapon()
+{
+	if (!bCanSwitchWeapons) return;
+
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		TArray<FName> WeaponNames = { WeaponName1, WeaponName2, WeaponName3, WeaponName4, WeaponName5 };
+		int32 CurrentIndex = WeaponNames.IndexOfByKey(GI->GetCurrentWeaponName());
+
+		for (int i = 1; i <= WeaponNames.Num(); ++i)
+		{
+			int32 PrevIndex = (CurrentIndex - i + WeaponNames.Num()) % WeaponNames.Num();
+			if (GI->HasBought(WeaponNames[PrevIndex]))
+			{
+				SelectWeapon(WeaponNames[PrevIndex]);
+				break;
+			}
+		}
+	}
+}
+
 
 void APlayerCharacter::AddRecoilImpulse(FRotator Impulse)
 {
@@ -564,6 +699,25 @@ void APlayerCharacter::HealPlayer(int32 HealAmount)
 	}
 }
 
+AGun* APlayerCharacter::GetWeaponInstance(const EUpgradeType Weapon) const
+{
+	switch (Weapon)
+	{
+	case EUpgradeType::Pistol:
+		return Weapon1Instance;
+	case EUpgradeType::Rifle:
+		return Weapon2Instance;
+	case EUpgradeType::Shotgun:
+		return Weapon3Instance;
+	case EUpgradeType::RocketLauncher:
+		return Weapon4Instance;
+	case EUpgradeType::DoomsdayGun:
+		return Weapon5Instance;
+	default:
+		return nullptr;
+	}
+}
+
 AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
 {
 	if (WeaponName == WeaponName1) return Weapon1Instance;
@@ -571,7 +725,6 @@ AGun* APlayerCharacter::GetWeaponInstance(const FName WeaponName) const
 	if (WeaponName == WeaponName3) return Weapon3Instance;
 	if (WeaponName == WeaponName4) return Weapon4Instance;
 	if (WeaponName == WeaponName5) return Weapon5Instance;
-
 	return nullptr;
 }
 
@@ -588,6 +741,16 @@ void APlayerCharacter::AirDash()
 
 	GetCharacterMovement()->Velocity = DashVelocity;
 	bHasDashed = true;
+	if (DashSound && DashAudioComponent)
+	{
+		if (DashAudioComponent->IsPlaying())
+		{
+			DashAudioComponent->Stop();
+		}
+		DashAudioComponent->SetSound(DashSound);
+		DashAudioComponent->Play();
+	}
+
 }
 
 void APlayerCharacter::Landed(const FHitResult& Hit)
@@ -598,6 +761,7 @@ void APlayerCharacter::Landed(const FHitResult& Hit)
 
 float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	if (bIsDead) return 0;
 
 	PlayerHealth -= DamageAmount;

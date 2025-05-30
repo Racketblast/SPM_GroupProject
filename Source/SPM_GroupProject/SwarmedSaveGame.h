@@ -29,6 +29,8 @@ public:
 	int32 SavedCurrentGameFlag;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSet<FName> SavedUnlockedLevels;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<int32> SavedCurrentSkins;
 
 	//Options saved
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

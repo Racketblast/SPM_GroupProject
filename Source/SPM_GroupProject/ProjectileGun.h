@@ -2,6 +2,7 @@
 
 #include "Explosive.h"
 #include "Gun.h"
+#include "Components/PointLightComponent.h"
 #include "ProjectileGun.generated.h"
 
 UCLASS()
@@ -15,7 +16,6 @@ public:
 	{
 		ProjectileClass = NewClass;
 	}
-void BeginPlay();
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class AExplosive> ProjectileClass;
@@ -23,10 +23,5 @@ protected:
 private:
 	bool bCanFire = true;
 	FTimerHandle FireRateTimerHandle;
-
 	void ResetFire();
-	// ProjectileGun.h
-
-void ApplyRecoilTranslation();
-
 };

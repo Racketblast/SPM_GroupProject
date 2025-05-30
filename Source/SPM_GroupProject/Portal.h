@@ -56,10 +56,11 @@ protected:
 	UPROPERTY()
 	UTextureRenderTarget2D* PortalFarawayRenderTarget;
 	
-	
+	//The portal that it's leading to
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class APortal* LinkedPortal = this;
 private:
+	//Needed to make a capture after game has started
 	UFUNCTION()
 	void DelayedInitialCapture();
 	UPROPERTY()

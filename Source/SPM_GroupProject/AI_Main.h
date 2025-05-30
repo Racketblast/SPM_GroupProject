@@ -9,78 +9,68 @@
 #include "AI_Main.generated.h"
 
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAIDeathEvent);
+
 UCLASS()
 class SPM_GROUPPROJECT_API AAI_Main : public ACharacter
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 public:
-    /* ---------------- CONSTRUCTION ---------------- */
-    /// Sets default property values and creates components that must exist
-    /// before BeginPlay (e.g. audio component).
-    AAI_Main();
+	// default values for properties
+	AAI_Main();
 
-    /* ---------------- GETTERS --------------------- */
-    /// Needed by AI_Controller::RunBehaviorTree().
-    UBehaviorTree* GetBehaviorTree() const;
+	UBehaviorTree* GetBehaviorTree() const;
 
-    /* ---------------- Gameplay stats -------------- */
-    UPROPERTY(BlueprintReadWrite)                     // Current health – replicated to BP
-    int32 AIHealth = 0;
+	UPROPERTY(BlueprintReadWrite)
+	int32 AIHealth;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	int32 MaxAIHealth = 100;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float AIDamage = 20;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	TArray<TSubclassOf<class ACollectableBox>>AIDrop;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)   // Max health, tweakable in editor
-    int32 MaxAIHealth = 100;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)   // Damage dealt per projectile/melee
-    float AIDamage = 20.f;
-
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)   // Loot crate to spawn on death
-    TSubclassOf<class ACollectableBox> AIDrop;
-
-    /* ------------- AActor overrides --------------- */
-    virtual float TakeDamage(float DamageAmount,
-                             struct FDamageEvent const& DamageEvent,
-                             class AController* EventInstigator,
-                             AActor* DamageCauser) override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 protected:
-    virtual void BeginPlay() override;                // Init runtime state
+	virtual void BeginPlay() override;
 
-    /* ---------------- AI data --------------------- */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI", meta=(AllowPrivateAccess="true"))
-    UBehaviorTree* BehaviorTree = nullptr;            // BT asset assigned in editor
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
+	UBehaviorTree* BehaviorTree;
 
-    UPROPERTY(BlueprintReadWrite)                     // Used by anim BP to gate attacks
-    bool bIsAttacking = false;
+	UPROPERTY(BlueprintReadWrite)
+	bool bIsAttacking = false;
 
-    /* ---------------- SFX / VFX ------------------- */
-    UPROPERTY(EditDefaultsOnly, Category="Sound")
-    class UAudioComponent* AudioComponent = nullptr;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sound")
+	class UAudioComponent* AudioComponent;
 
-    UPROPERTY(EditDefaultsOnly, Category="Effects")
-    class UNiagaraSystem* DamageEffect = nullptr;
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	class UNiagaraSystem* DamageEffect;
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	UNiagaraSystem* DeathEffect;
 
-    UPROPERTY(EditDefaultsOnly, Category="Effects")
-    UNiagaraSystem* DeathEffect = nullptr;
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAIDeathEvent, AAI_Main*, DeadEnemy);
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FAIDeathEvent OnEnemyDied;
+public:	
+	virtual void Tick(float DeltaTime) override;
+	
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-public:
-    virtual void Tick(float DeltaTime) override;      // Per‑frame behavior
-    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsDead = false;
 
 private:
-    /* ------------- Internal state ----------------- */
-    bool bIsDead = false;             // Guard to run death logic only once
+	
+	FVector LastKnownLocation;
+	float TimeSinceLastMovement = 2.0f;
 
-    /* ------------- “Stuck” detection -------------- */
-    FVector LastKnownLocation;        // Where we last confirmed movement
-    float   TimeSinceLastMovement = 2.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Teleport Check")
+	float StuckCheckInterval = 5.0f;
 
-    UPROPERTY(EditDefaultsOnly, Category="Teleport Check")
-    float StuckCheckInterval = 5.f;   // Seconds with no movement before flag
+	UPROPERTY(EditDefaultsOnly, Category = "Teleport Check")
+	float MinMoveDistance = 10.0f;
 
-    UPROPERTY(EditDefaultsOnly, Category="Teleport Check")
-    float MinMoveDistance   = 10.f;   // Squared distance threshold (cm)
-
-    bool IsOutsideNavMesh() const;    // Helper: true if pawn fell off navigation
+	bool IsOutsideNavMesh() const;
 };
-

@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "Explosive.h"
 #include "Gun.h"
+#include "UpgradeEnums.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
@@ -36,6 +37,18 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	int32 UseDistance = 300;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
+	int32 MeleeDistance = 150;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
+	float MeleeDamage = 40;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Melee")
+	float MeleeHitsPerSecond = 0.8;
+	
+	UPROPERTY(BlueprintReadWrite, Category="Melee")
+	bool bUsingMelee = false;
 
 	UPROPERTY(BlueprintReadWrite)
 	int32 PlayerHealth;
@@ -63,6 +76,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	AGun* GetWeaponInstance(const FName WeaponName) const;
+	AGun* GetWeaponInstance(const EUpgradeType Weapon) const;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	UPROPERTY(VisibleAnywhere, Category = "Sway")
@@ -70,9 +84,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bCanSwitchWeapons = true;
-
+	
 	UPROPERTY(BlueprintReadOnly)
-	UUserWidget* UseWidget;
+	bool bCanShoot = true;
 	
 	UPROPERTY(BlueprintReadOnly)
 	bool bShowUseWidget = false;
@@ -88,6 +102,7 @@ protected:
 	void ThrowGrenade();
 	void Use();
 	void Reload();
+	void Melee();
 	void SelectWeapon1();
 	void SelectWeapon2();
 	void SelectWeapon3();
@@ -106,11 +121,21 @@ protected:
 	bool Weapon3Equipped = false;
 	bool Weapon4Equipped = false;
 	bool Weapon5Equipped = false;
+	
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsDead = false;
+	
+
+	bool bCanScrollWeapon = true; 
+	FTimerHandle MouseWheelCooldownHandle;
+
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Switching")
+	float MouseWheelCooldownTime = 0.3f;
+
+	void ResetMouseWheelScroll();
 
 private:
-	UPROPERTY(Blueprintable)
-	bool bIsDead = false;
-
 	FName WeaponName1 = "Pistol";
 	FName WeaponName2 = "Rifle";
 	FName WeaponName3 = "Shotgun";
@@ -173,11 +198,27 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Audio")
 	USoundBase* DamageSound;
-	
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UUserWidget> UseWidgetClass;
 
 	void CheckforUse();
 	
 	AActor* LastUseTarget;
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase*DashSound;
+
+	UPROPERTY(VisibleAnywhere, Category = "Sound")
+	UAudioComponent* DashAudioComponent;
+
+	//Melee handlers for delay
+	FTimerHandle MeleeTimerHandle;
+	UFUNCTION(Category = "Melee")
+	void PerformMelee();
+	UFUNCTION(Category = "Melee")
+	void EndMelee();
+	void NextWeapon();
+	void PreviousWeapon();
+	UFUNCTION()
+	void HandleMouseWheel(float Value);
+
 };
+
+

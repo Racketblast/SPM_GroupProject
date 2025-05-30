@@ -11,7 +11,6 @@
 AEndGameGunPickup::AEndGameGunPickup()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
-	StaticMeshComponent->SetupAttachment(GetRootComponent());
 }
 
 void AEndGameGunPickup::Use_Implementation(APlayerCharacter* Player)
