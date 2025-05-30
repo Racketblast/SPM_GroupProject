@@ -1,49 +1,103 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// ───────────────────────────────────────────────────────────────────────────── //
+//  BTTask_FindPlayerLocation – Behavior‑Tree Task  (FULLY ANNOTATED)
+//  ---------------------------------------------------------------------------
+//  Responsibilities
+//  ---------------
+//  • Query the current player character’s world position.
+//  • Convert that raw position into a location guaranteed to be on the NavMesh
+//    so a Move‑To task can path there safely.
+//      – If **SearchRandom** is *true* (tunable in the Blueprint inspector),
+//        pick a random reachable point within **SearchRadius** meters of the
+//        player.  This is great for strafing / circling behaviours.
+//      – Otherwise, snap the exact player location to the closest navigable
+//        point (projects through walls/floors if needed).
+//  • Store that vector into the Blackboard key chosen in the BT editor.
+//  • Return **Succeeded** when a valid NavMesh point is written; **Failed**
+//    otherwise so the BT can try an alternate branch.
+//
+//  Why do the NavMesh checks here instead of in the MoveTo node?
+//  ------------------------------------------------------------
+//  MoveTo will abort immediately if given a non‑navigable destination, which
+//  creates a flicker of “Fail → Replan” spam when the player stands outside
+//  the agent’s NavMesh (ledge, air, etc.).  By projecting up‑front we avoid
+//  that and get predictable behaviour.
+// ───────────────────────────────────────────────────────────────────────────── //
 
 #include "BTTask_FindPlayerLocation.h"
 
-#include "NavigationSystem.h"
-#include "BehaviorTree/BlackboardComponent.h"
-#include "GameFramework/Character.h"
-#include "Kismet/GameplayStatics.h"
+// Engine headers
+#include "NavigationSystem.h"                       // NavMesh queries
+#include "BehaviorTree/BlackboardComponent.h"       // Blackboard access helpers
+#include "GameFramework/Character.h"                // ACharacter base class
+#include "Kismet/GameplayStatics.h"                 // GetPlayerCharacter helper
 
-UBTTask_FindPlayerLocation::UBTTask_FindPlayerLocation(FObjectInitializer const& ObjectInitializer)
+// ────────────────────────────────────────────────────────────────
+// Constructor – set the display name that appears in the BT editor
+UBTTask_FindPlayerLocation::UBTTask_FindPlayerLocation(
+    const FObjectInitializer& ObjectInitializer) :
+    Super(ObjectInitializer)
 {
-	NodeName = "Find Player Location";
+    NodeName = TEXT("Find Player Location");
 }
 
-EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
+// ────────────────────────────────────────────────────────────────
+// ExecuteTask – called each time the BT reaches this node
+EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(
+    UBehaviorTreeComponent& OwnerComp,
+    uint8* /*NodeMemory*/)
 {
-	if (auto* const Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))
-	{
-		auto const PlayerLocation = Player->GetActorLocation();
+    // 1) Fetch the lone player pawn (index 0 is safe in single‑player titles)
+    if (ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))
+    {
+        const FVector PlayerLocation = Player->GetActorLocation();
 
-		FNavLocation ProjectedLocation;
-		if (auto* const NavSys = UNavigationSystemV1::GetCurrent(GetWorld()))
-		{
-			if (SearchRandom)
-			{
-				if (NavSys->GetRandomPointInNavigableRadius(PlayerLocation, SearchRadius, ProjectedLocation))
-				{
-					OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), ProjectedLocation.Location);
-					FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-					return EBTNodeResult::Succeeded;
-				}
-			}
-			else
-			{
-				// Project player location to the nearest NavMesh point
-				if (NavSys->ProjectPointToNavigation(PlayerLocation, ProjectedLocation, FVector(100.f, 100.f, 700.f)))
-				{
-					OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), ProjectedLocation.Location);
-					FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
-					return EBTNodeResult::Succeeded;
-				}
-			}
-		}
-	}
+        // 2) Ask the navigation system for a point the agent can actually walk to
+        if (UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld()))
+        {
+            FNavLocation ProjectedLocation; // reusable OUT param
 
-	return EBTNodeResult::Failed;
+
+            //Hittils oanvänd logik för att få en fiende att sprida ut sig lite mer så inte alla springer i en kö
+            //Används endast om Findplayerlocation har icheckat SearchRandom inne i Behavior tree
+            if (SearchRandom)
+            {
+                // 2a) Pick a random reachable point around the player
+                if (NavSys->GetRandomPointInNavigableRadius(
+                        PlayerLocation,      // centre
+                        SearchRadius,        // metres
+                        ProjectedLocation))  // OUT
+                {
+                    // 3) Write result to BB and exit early with success
+                    OwnerComp.GetBlackboardComponent()
+                             ->SetValueAsVector(GetSelectedBlackboardKey(),
+                                                ProjectedLocation.Location);
+
+                    FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+                    return EBTNodeResult::Succeeded;
+                }
+            }
+            //Logiken för närmaste navmesh punkt
+            else
+            {
+                // 2b) Snap the exact player point to the nearest NavMesh polygon
+                //     Extent box loosely based on character half‑width / height
+                static const FVector Extent(100.f, 100.f, 700.f);
+
+                if (NavSys->ProjectPointToNavigation(PlayerLocation,
+                                                    ProjectedLocation,
+                                                    Extent))
+                {
+                    OwnerComp.GetBlackboardComponent()
+                             ->SetValueAsVector(GetSelectedBlackboardKey(),
+                                                ProjectedLocation.Location);
+
+                    FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
+                    return EBTNodeResult::Succeeded;
+                }
+            }
+        }
+    }
+
+    // Couldn’t find player, nav‑system, or a valid nav point → fail gracefully
+    return EBTNodeResult::Failed;
 }
-

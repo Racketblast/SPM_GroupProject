@@ -18,7 +18,9 @@ EBTNodeResult::Type UBTTask_StopMovement::ExecuteTask(UBehaviorTreeComponent& Ow
 		//  stoppar chase movement utan att påverka physics och navlink moves
 		if (Cont->GetPathFollowingComponent())
 		{
+			//Avbryter dens aktiva "path request"
 			Cont->StopMovement();
+			//Move to playerlocation från chase blir cancelled om man clearar playerlocation
 			OwnerComp.GetBlackboardComponent()->ClearValue(FName("PlayerLocation"));
 
 		}

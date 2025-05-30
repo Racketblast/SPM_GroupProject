@@ -116,6 +116,10 @@ void AArenaGameMode::BeginPlay()
 				GI->CurrentGameFlag = 1;
 			}
 		}
+		else
+		{
+			GI->StopDialogue();
+		}
 	}
 }
 

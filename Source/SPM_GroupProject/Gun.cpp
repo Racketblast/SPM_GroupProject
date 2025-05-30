@@ -5,10 +5,10 @@
 #include "Sound/SoundBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
+#include "Components/DecalComponent.h"
 
 AGun::AGun()
 {
-	//PrimaryActorTick.bCanEverTick = false;
 	PrimaryActorTick.bCanEverTick = true;
 	WeaponMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponMesh"));
 	SetRootComponent(WeaponMeshComponent);
@@ -46,8 +46,7 @@ void AGun::BeginPlay()
 	BaseTotalAmmo = TotalAmmo;
 	BaseMaxAmmo = MaxAmmo;
 	BaseMaxTotalAmmo = MaxTotalAmmo;
-
-	// 🔊 Initialize reload audio component
+	
 	if (!ReloadAudioComponent)
 	{
 		ReloadAudioComponent = NewObject<UAudioComponent>(this, TEXT("ReloadAudioComponent"));
@@ -113,7 +112,7 @@ void AGun::Reload()
 		Player->bCanSwitchWeapons = false;
 	}
 	
-	// 🔊 Play reload sound
+
 	if (ReloadSound && ReloadAudioComponent)
 	{
 		if (ReloadAudioComponent->IsPlaying())
@@ -164,25 +163,7 @@ void AGun::SetOwnerCharacter(APlayerCharacter* NewOwner)
 	OwnerCharacter = NewOwner;
 }
 
-void AGun::CheckForUpgrades()
-{
-	if (bHasAppliedUpgrades) return;
 
-	if (!bIsUpgraded)
-	{
-		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
-		{
-			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
-			{
-				for (const TPair<EUpgradeType, FUpgradeInfo>& Upgrade : GI->UpgradeMap)
-				{
-					GI->UpgradeGunStats(Upgrade.Key, Player);
-				}
-			}
-		}
-		bHasAppliedUpgrades = true;
-	}
-}
 void AGun::ApplyBloodDecal(const FHitResult& Hit)
 {
 	if (!BloodDecalMaterial) return;
@@ -208,29 +189,19 @@ void AGun::ApplyBloodDecal(const FHitResult& Hit)
 		Hit.ImpactPoint,
 		DecalRotation,
 		EAttachLocation::KeepWorldPosition,
-		60.0f // lifespan
+		60.0f 
 		
 	);
 
 	if (BloodDecal)
 	{
-		//BloodDecal->SetFadeScreenSize(0.001f);
-		UE_LOG(LogTemp, Warning, TEXT("Spawned decal on skeletal mesh bone: %s"), *BoneName.ToString());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to spawn decal"));
+		BloodDecal->SetFadeScreenSize(0.001f);
 	}
 }
 
-
-
-
 void AGun::BulletHoleDecal(const FHitResult& Hit)
 {
-	FVector SurfaceNormal = Hit.Normal; // Normal of the hit surface (floor in this case)
-
-	FRotator DecalRotation = SurfaceNormal.Rotation(); // Convert the surface normal to a rotation
+	FRotator DecalRotation = Hit.Normal.Rotation();
 
 	// Spawn the decal at the hit location with the correct rotation and scale
 	UGameplayStatics::SpawnDecalAtLocation(
@@ -241,6 +212,7 @@ void AGun::BulletHoleDecal(const FHitResult& Hit)
 		DecalRotation,  
 		60.0f  
 	);
+	
 }
 void AGun::ApplyRecoilTranslation()
 {
@@ -258,7 +230,6 @@ void AGun::ApplyRecoilTranslation()
 		}
 
 		PC->GetPlayerViewPoint(CameraLoc, CameraRot);
-
 		FVector RecoilDirection = -CameraRot.Vector();  // Negative = push back relative to view
 		RecoilDirection.Normalize();
 
@@ -277,6 +248,25 @@ void AGun::ApplyRecoilTranslation()
 			RecoilRecoveryElapsed = 0.0f;
 			bIsRecoveringFromRecoil = true;
 		}
+	}
+}
+void AGun::CheckForUpgrades()
+{
+	if (bHasAppliedUpgrades) return;
+
+	if (!bIsUpgraded)
+	{
+		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+		{
+			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0)))
+			{
+				for (const TPair<EUpgradeType, FUpgradeInfo>& Upgrade : GI->UpgradeMap)
+				{
+					GI->UpgradeGunStats(Upgrade.Key, Player);
+				}
+			}
+		}
+		bHasAppliedUpgrades = true;
 	}
 }
 

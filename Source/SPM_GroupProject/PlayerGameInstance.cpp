@@ -8,6 +8,7 @@
 #include "PlayerCharacter.h"
 #include "ProjectileGun.h"
 #include "SwarmedSaveGame.h"
+#include "Components/AudioComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Containers/Map.h"
@@ -142,23 +143,23 @@ void UPlayerGameInstance::BuyWeapon(EUpgradeType Weapon)
 	switch (Weapon)
 	{
 	case EUpgradeType::Pistol:
-		BuyUpgrade(EUpgradeType::PistolDamage10);
-		BuyUpgrade(EUpgradeType::PistolFiringSpeed10);
+		BuyUpgrade(EUpgradeType::PistolDamage);
+		BuyUpgrade(EUpgradeType::PistolFiringSpeed);
 		BuyUpgrade(EUpgradeType::PistolAmmoSize);
 		break;
 	case EUpgradeType::Rifle:
-		BuyUpgrade(EUpgradeType::RifleDamage10);
-		BuyUpgrade(EUpgradeType::RifleFiringSpeed10);
+		BuyUpgrade(EUpgradeType::RifleDamage);
+		BuyUpgrade(EUpgradeType::RifleFiringSpeed);
 		BuyUpgrade(EUpgradeType::RifleAmmoSize);
 		break;
 	case EUpgradeType::Shotgun:
-		BuyUpgrade(EUpgradeType::ShotgunDamage10);
-		BuyUpgrade(EUpgradeType::ShotgunFiringSpeed10);
+		BuyUpgrade(EUpgradeType::ShotgunDamage);
+		BuyUpgrade(EUpgradeType::ShotgunFiringSpeed);
 		BuyUpgrade(EUpgradeType::ShotgunAmmoSize);
 		break;
 	case EUpgradeType::RocketLauncher:
-		BuyUpgrade(EUpgradeType::RocketLauncherDamage10);
-		BuyUpgrade(EUpgradeType::RocketLauncherFiringSpeed10);
+		BuyUpgrade(EUpgradeType::RocketLauncherDamage);
+		BuyUpgrade(EUpgradeType::RocketLauncherFiringSpeed);
 		BuyUpgrade(EUpgradeType::RocketLauncherAmmoSize);
 		break;
 	default:
@@ -245,7 +246,7 @@ void UPlayerGameInstance::UpgradePlayerStats(const EUpgradeType Upgrade, class A
 	FUpgradeInfo* UpgradeInfo = UpgradeMap.Find(Upgrade);
 	switch (Upgrade)
 	{
-	case EUpgradeType::Health20:
+	case EUpgradeType::Health:
 		Player->PlayerMaxHealth = Player->BasePlayerMaxHealth + UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
 		Player->PlayerHealth = Player->PlayerMaxHealth;
 		break;
@@ -255,9 +256,6 @@ void UPlayerGameInstance::UpgradePlayerStats(const EUpgradeType Upgrade, class A
 		break;
 	case EUpgradeType::Speed:
 		Player->GetCharacterMovement()->MaxWalkSpeed = Player->BasePlayerMaxHealth + UpgradeInfo->UpgradeValues[UpgradeInfo->UpgradeOwned-1];
-		break;
-	case EUpgradeType::Jump50:
-		Player->GetCharacterMovement()->JumpZVelocity *= 1 + 0.5 * UpgradeInfo->UpgradeOwned;
 		break;
 	default:
 		break;
@@ -278,30 +276,30 @@ void UPlayerGameInstance::UpgradeGunStats(const EUpgradeType Upgrade, class APla
 		switch (Upgrade)
 		{
 			//Damage
-		case EUpgradeType::PistolDamage10:
+		case EUpgradeType::PistolDamage:
 			UpgradeGunStatValue(Player, Pistol, Pistol->WeaponDamage, UpgradeInfo);
 			break;
-		case EUpgradeType::RifleDamage10:
+		case EUpgradeType::RifleDamage:
 			UpgradeGunStatValue(Player, Rifle, Rifle->WeaponDamage, UpgradeInfo);
 			break;
-		case EUpgradeType::ShotgunDamage10:
+		case EUpgradeType::ShotgunDamage:
 			UpgradeGunStatValue(Player, Shotgun, Shotgun->WeaponDamage, UpgradeInfo);
 			break;
-		case EUpgradeType::RocketLauncherDamage10:
+		case EUpgradeType::RocketLauncherDamage:
 			UpgradeGunStatValue(Player, RocketLauncher, RocketLauncher->WeaponDamage, UpgradeInfo);
 			break;	
 
 			//Firing speed
-		case EUpgradeType::PistolFiringSpeed10:
+		case EUpgradeType::PistolFiringSpeed:
 			UpgradeGunStatValue(Player, Pistol, Pistol->RoundsPerSecond, UpgradeInfo);
 			break;
-		case EUpgradeType::RifleFiringSpeed10:
+		case EUpgradeType::RifleFiringSpeed:
 			UpgradeGunStatValue(Player, Rifle, Rifle->RoundsPerSecond, UpgradeInfo);
 			break;
-		case EUpgradeType::ShotgunFiringSpeed10:
+		case EUpgradeType::ShotgunFiringSpeed:
 			UpgradeGunStatValue(Player,Shotgun, Shotgun->RoundsPerSecond, UpgradeInfo);
 			break;
-		case EUpgradeType::RocketLauncherFiringSpeed10:
+		case EUpgradeType::RocketLauncherFiringSpeed:
 			UpgradeGunStatValue(Player, RocketLauncher, RocketLauncher->RoundsPerSecond, UpgradeInfo);
 			break;
 			
@@ -534,7 +532,7 @@ bool UPlayerGameInstance::HasGameChanged()
 	return true;
 }
 
-void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
+void UPlayerGameInstance::StartDialogue()
 {
 	if (!EventDialogueInfo)
 		return;
@@ -561,7 +559,11 @@ void UPlayerGameInstance::StartDialogue(UAudioComponent* AudioComponent)
 				if (Row->DialogueSound)
 				{
 					bDialogueIsPlaying = true;
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Row->DialogueSound, Player->GetActorLocation());
+					DialogueComponent = UGameplayStatics::SpawnSoundAtLocation(
+						GetWorld(),
+						Row->DialogueSound,
+						Player->GetActorLocation()
+					);
 					TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
 				}
 			}
@@ -589,7 +591,11 @@ void UPlayerGameInstance::PlayNextDialogue()
 			{
 				if (Row->DialogueSound)
 				{
-					UGameplayStatics::PlaySoundAtLocation(GetWorld(), Row->DialogueSound, Player->GetActorLocation());
+					DialogueComponent = UGameplayStatics::SpawnSoundAtLocation(
+						GetWorld(),
+						Row->DialogueSound,
+						Player->GetActorLocation()
+					);
 					TimeUntilNextDialogue = Row->DialogueSound->GetDuration();
 				}
 			}
@@ -603,4 +609,19 @@ void UPlayerGameInstance::PlayNextDialogue()
 	{
 		bDialogueIsPlaying = false;
 	}
+}
+
+void UPlayerGameInstance::StopDialogue()
+{
+	GetWorld()->GetTimerManager().ClearTimer(DialogueTimerHandle);
+
+	if (DialogueComponent && DialogueComponent->IsPlaying())
+	{
+		DialogueComponent->Stop();
+	}
+
+	bDialogueIsPlaying = false;
+	StartDialogueRowName = "";
+	CurrentDialogueRowName = "";
+	NextDialogueRowName = "";
 }

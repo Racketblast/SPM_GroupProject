@@ -6,7 +6,7 @@ AImpactExplosive::AImpactExplosive()
 	// Enable simulation and collision
 	if (ExplosiveMesh)
 	{
-		ExplosiveMesh->SetSimulatePhysics(true);
+		//ExplosiveMesh->SetSimulatePhysics(true);
 		ExplosiveMesh->SetNotifyRigidBodyCollision(true); // Enable hit events
 	}
 }
