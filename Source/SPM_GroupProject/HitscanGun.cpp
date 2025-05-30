@@ -40,15 +40,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
     if (CurrentAmmo <= 0)
     {
         Reload();
-        /*if (MagEmptySound  && MagEmptyAudioComponent)
-        {
-            if (MagEmptyAudioComponent->IsPlaying())
-            {
-                MagEmptyAudioComponent->Stop();
-            }
-            MagEmptyAudioComponent->SetSound(MagEmptySound);
-            MagEmptyAudioComponent->Play();
-        }*/
+
             return;
     }
     

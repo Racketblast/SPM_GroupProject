@@ -58,7 +58,7 @@ void AExplosive::Explode()
     // VFX & SFX
     if (ExplosionEffectAsset)
     {
-        float ScaleFactor = ExplosionRadius / 200.0f; // Adjust 100.0f if your particle system expects a different base size
+        float ScaleFactor = ExplosionRadius / 200.0f; 
 
         UGameplayStatics::SpawnEmitterAtLocation(
             GetWorld(),

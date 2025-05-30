@@ -35,12 +35,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UDamageType> DamageType;
 
-
 	float LastFireTime = 0.f;
-
-
-
-
 
 	UPROPERTY()
 	UPointLightComponent* MuzzleFlashLight;

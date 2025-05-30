@@ -10,8 +10,6 @@
 #include "TimerManager.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
-#include "Components/DecalComponent.h" // Required for UDecalComponent
-
 
 void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 {
