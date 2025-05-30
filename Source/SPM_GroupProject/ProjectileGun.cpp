@@ -15,23 +15,12 @@ void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
 	if (CurrentAmmo <= 0)
 	{
 		Reload();
-		/*if (MagEmptySound  && MagEmptyAudioComponent)
-		{
-			if (MagEmptyAudioComponent->IsPlaying())
-			{
-				MagEmptyAudioComponent->Stop();
-			}
-			MagEmptyAudioComponent->SetSound(MagEmptySound);
-			MagEmptyAudioComponent->Play();
-		}*/
 		return;
 	}
 	if (!bCanFire || bIsReloading)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Cannot fire: either reloading or waiting for fire rate cooldown."));
 		return;
 	}
-
 
 
 	if (ProjectileClass && GetWorld() && CurrentAmmo > 0)
@@ -44,10 +33,6 @@ void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
 		}
 		if (OwnerCharacter)
 		{
-			float RecoilPitch = FMath::FRandRange(RecoilPitchMin, RecoilPitchMax);
-			float RecoilYaw = FMath::FRandRange(RecoilYawMin, RecoilYawMax);
-
-			OwnerCharacter->AddRecoilImpulse(FRotator(-RecoilPitch, RecoilYaw, 0.f)); // Negative pitch = up kick
 			ApplyRecoilTranslation(); 
 		}
 		CurrentAmmo--;
