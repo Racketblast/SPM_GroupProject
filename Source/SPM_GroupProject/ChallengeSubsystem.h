@@ -22,6 +22,9 @@ enum class EChallengeType : uint8
 	PistolOnly UMETA(DisplayName = "Only Use Pistol"),
 	NoDamage UMETA(DisplayName = "Don't Take Any Damage"),
 	ClearWaveInTime UMETA(DisplayName = "Clear the wave within time"),
+	RifleOnly UMETA(DisplayName = "Only Use Rifle"),
+	ShotgunOnly UMETA(DisplayName = "Only Use Shotgun"),
+	RocketlauncherOnly UMETA(DisplayName = "Only Use Rocketlauncher"),
 	// Lägg till flera challenges här
 };
 

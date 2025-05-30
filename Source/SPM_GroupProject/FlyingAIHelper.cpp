@@ -222,16 +222,20 @@ bool FlyingAIHelper::IsPathClear(
 {
 	if (!World || !FlyingEnemy) return false;
 
+	// Hämta kapselkomponenten
 	UCapsuleComponent* Capsule = FlyingEnemy->GetCapsuleComponent();
 	if (!Capsule) return false;
 
+	// Tar kapselns mått
 	float Radius = Capsule->GetScaledCapsuleRadius();
 	float HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
 
+	//Förbered kollisionsparametrar
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(FlyingEnemy);
 	Params.bTraceComplex = false;
 
+	//  Ignorera andra flygande fiender
 	TArray<AActor*> AllFlyingEnemies;
 	UGameplayStatics::GetAllActorsOfClass(World, AFlyingEnemyAI::StaticClass(), AllFlyingEnemies);
 
@@ -240,9 +244,10 @@ bool FlyingAIHelper::IsPathClear(
 		Params.AddIgnoredActor(Enemy);
 	}
 
-	// Definerar capsule form
+	// Definiera kapseln
 	FCollisionShape CollisionShape = FCollisionShape::MakeCapsule(Radius, HalfHeight);
-
+	
+	// Utför capsule sweep
 	FHitResult Hit;
 	bool bHit = World->SweepSingleByChannel(
 		Hit,

@@ -24,23 +24,34 @@ void UChallengeSubsystem::PreviewNextChallenge()
 	int32 Index = -1;
 
 	bool OnlyHasPistol = true;
+	bool HasRifle = false;
+	bool HasShotgun = false;
+	bool HasRocket = false;
 
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
-		if (GI->HasBought("Rifle") || GI->HasBought("Shotgun") || GI->HasBought("Rocketlauncher"))
+		HasRifle = GI->HasBought("Rifle");
+		HasShotgun = GI->HasBought("Shotgun");
+		HasRocket = GI->HasBought("Rocketlauncher");
+		
+		if (HasRifle || HasShotgun || HasRocket)
 		{
 			OnlyHasPistol = false;
 		}
 	}
 
-	// Loopar tills vi får en challenge som vi inte hade på waven innan. 
+	// Loopar tills vi får en challenge som vi inte hade på waven innan.
+	// Kontrollerar också att man inte för weapons challenges som man inte borde få ännu, typ som pistol challengen när man bara har pistolen. 
 	do 
 	{
 		Index = UKismetMathLibrary::RandomInteger(PossibleChallenges.Num());
 	} 
 	while (PossibleChallenges.Num() > 1 && (
 		PossibleChallenges[Index].Type == LastChallengeType ||
-		(OnlyHasPistol && PossibleChallenges[Index].Type == EChallengeType::PistolOnly)));
+		(OnlyHasPistol && PossibleChallenges[Index].Type == EChallengeType::PistolOnly)) ||
+		(!HasRifle && PossibleChallenges[Index].Type == EChallengeType::RifleOnly) ||
+		(!HasShotgun && PossibleChallenges[Index].Type == EChallengeType::ShotgunOnly) ||
+		(!HasRocket && PossibleChallenges[Index].Type == EChallengeType::RocketlauncherOnly));
 	
 	CurrentChallenge = PossibleChallenges[Index];
 	CurrentChallenge.bIsCompleted = false;
@@ -265,15 +276,43 @@ void UChallengeSubsystem::NotifyPlayerDamaged()
 // Används i PlayerCharacter
 void UChallengeSubsystem::NotifyWeaponFired(FName WeaponName)
 {
-	if (!bIsChallengeActive) return;
-    
-	if (CurrentChallenge.Type == EChallengeType::PistolOnly && !bHasFailedCurrentChallenge)
+	// Ser till att funktionen inte körs ifall man har misslyckats challengen eller ifall det inte finns en aktiv challenge
+	if (!bIsChallengeActive || bHasFailedCurrentChallenge)
+		return;
+
+	// Denna switch sats kollar om spelaren brutit mot en vapenspecifik utmaning
+	switch (CurrentChallenge.Type)
 	{
-		if (WeaponName != "Pistol") 
+	case EChallengeType::PistolOnly:
+		if (WeaponName != "Pistol")
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Challenge Failed: Fired with wrong weapon: %s"), *WeaponName.ToString());
 			HandleChallengeFailure();
 		}
+		break;
+	case EChallengeType::RifleOnly:
+		if (WeaponName != "Rifle")
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Challenge Failed: Fired with wrong weapon: %s"), *WeaponName.ToString());
+			HandleChallengeFailure();
+		}
+		break;
+	case EChallengeType::ShotgunOnly:
+		if (WeaponName != "Shotgun")
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Challenge Failed: Fired with wrong weapon: %s"), *WeaponName.ToString());
+			HandleChallengeFailure();
+		}
+		break;
+	case EChallengeType::RocketlauncherOnly:
+		if (WeaponName != "Rocketlauncher")
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Challenge Failed: Fired with wrong weapon: %s"), *WeaponName.ToString());
+			HandleChallengeFailure();
+		}
+		break;
+	default:
+		break;
 	}
 }
 
