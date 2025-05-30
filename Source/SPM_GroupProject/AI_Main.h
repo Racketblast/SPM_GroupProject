@@ -12,58 +12,75 @@
 UCLASS()
 class SPM_GROUPPROJECT_API AAI_Main : public ACharacter
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	// default values for properties
-	AAI_Main();
+    /* ---------------- CONSTRUCTION ---------------- */
+    /// Sets default property values and creates components that must exist
+    /// before BeginPlay (e.g. audio component).
+    AAI_Main();
 
-	UBehaviorTree* GetBehaviorTree() const;
+    /* ---------------- GETTERS --------------------- */
+    /// Needed by AI_Controller::RunBehaviorTree().
+    UBehaviorTree* GetBehaviorTree() const;
 
-	UPROPERTY(BlueprintReadWrite)
-	int32 AIHealth;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	int32 MaxAIHealth = 100;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	float AIDamage = 20;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	TSubclassOf<class ACollectableBox> AIDrop;
+    /* ---------------- Gameplay stats -------------- */
+    UPROPERTY(BlueprintReadWrite)                     // Current health – replicated to BP
+    int32 AIHealth = 0;
 
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)   // Max health, tweakable in editor
+    int32 MaxAIHealth = 100;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)   // Damage dealt per projectile/melee
+    float AIDamage = 20.f;
+
+    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)   // Loot crate to spawn on death
+    TSubclassOf<class ACollectableBox> AIDrop;
+
+    /* ------------- AActor overrides --------------- */
+    virtual float TakeDamage(float DamageAmount,
+                             struct FDamageEvent const& DamageEvent,
+                             class AController* EventInstigator,
+                             AActor* DamageCauser) override;
 
 protected:
-	virtual void BeginPlay() override;
+    virtual void BeginPlay() override;                // Init runtime state
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
-	UBehaviorTree* BehaviorTree;
+    /* ---------------- AI data --------------------- */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI", meta=(AllowPrivateAccess="true"))
+    UBehaviorTree* BehaviorTree = nullptr;            // BT asset assigned in editor
 
-	UPROPERTY(BlueprintReadWrite)
-	bool bIsAttacking = false;
+    UPROPERTY(BlueprintReadWrite)                     // Used by anim BP to gate attacks
+    bool bIsAttacking = false;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Sound")
-	class UAudioComponent* AudioComponent;
+    /* ---------------- SFX / VFX ------------------- */
+    UPROPERTY(EditDefaultsOnly, Category="Sound")
+    class UAudioComponent* AudioComponent = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Effects")
-	class UNiagaraSystem* DamageEffect;
-	UPROPERTY(EditDefaultsOnly, Category = "Effects")
-	UNiagaraSystem* DeathEffect;
+    UPROPERTY(EditDefaultsOnly, Category="Effects")
+    class UNiagaraSystem* DamageEffect = nullptr;
 
-public:	
-	virtual void Tick(float DeltaTime) override;
-	
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+    UPROPERTY(EditDefaultsOnly, Category="Effects")
+    UNiagaraSystem* DeathEffect = nullptr;
+
+public:
+    virtual void Tick(float DeltaTime) override;      // Per‑frame behavior
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 private:
-	bool bIsDead = false;
-	
-	FVector LastKnownLocation;
-	float TimeSinceLastMovement = 2.0f;
+    /* ------------- Internal state ----------------- */
+    bool bIsDead = false;             // Guard to run death logic only once
 
-	UPROPERTY(EditDefaultsOnly, Category = "Teleport Check")
-	float StuckCheckInterval = 5.0f;
+    /* ------------- “Stuck” detection -------------- */
+    FVector LastKnownLocation;        // Where we last confirmed movement
+    float   TimeSinceLastMovement = 2.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Teleport Check")
-	float MinMoveDistance = 10.0f;
+    UPROPERTY(EditDefaultsOnly, Category="Teleport Check")
+    float StuckCheckInterval = 5.f;   // Seconds with no movement before flag
 
-	bool IsOutsideNavMesh() const;
+    UPROPERTY(EditDefaultsOnly, Category="Teleport Check")
+    float MinMoveDistance   = 10.f;   // Squared distance threshold (cm)
+
+    bool IsOutsideNavMesh() const;    // Helper: true if pawn fell off navigation
 };
+
