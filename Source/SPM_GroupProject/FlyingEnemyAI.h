@@ -77,7 +77,7 @@ public:
 	float FireCooldown = 2.0f; // Sekunder mellan skot som fienden skjuter
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	float PlayerInRange = 1000.f; // Distansen innan spelaren är "in range"
+	float PlayerInRange = 1500.f; // Distansen innan spelaren är "in range"
 	
 	// För UBTTask_FlyToPlayerLocation task
 	UPROPERTY(EditAnywhere, Category = "Flight")
