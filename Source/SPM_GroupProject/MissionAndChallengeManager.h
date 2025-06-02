@@ -52,7 +52,7 @@ public:
 	float TimeToAddOnEnemyKilled = 1.0f;
 
 	// för animationer
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge") // ändrade från int32 till float, om detta skappar problem, så ändra tillbaka
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge") 
 	float SuccessAnimationTimer = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Challenge")

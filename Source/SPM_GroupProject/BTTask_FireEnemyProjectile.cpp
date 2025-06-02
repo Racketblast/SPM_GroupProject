@@ -30,7 +30,7 @@ EBTNodeResult::Type UBTTask_FireEnemyProjectile::ExecuteTask(
 	/*  “IsFiring” true for given duration second */
 	BB->SetValueAsBool(FName("IsFiring"), true);
 
-	FTimerHandle TmpHandle;
+	/*FTimerHandle TmpHandle;
 	TWeakObjectPtr<UBlackboardComponent> WeakBB = BB;
 
 	AI->GetWorldTimerManager().SetTimer(
@@ -42,7 +42,21 @@ EBTNodeResult::Type UBTTask_FireEnemyProjectile::ExecuteTask(
 				WeakBB->SetValueAsBool(FName("IsFiring"), false);
 			}
 		}),
-		5.0f, false);
+		5.0f, false);*/
+	if (!AI->GetWorldTimerManager().IsTimerActive(ResetFireHandle))
+	{
+		// Capture the BB weakly so the delegate won't extend its lifetime.
+		TWeakObjectPtr<UBlackboardComponent> WeakBB(BB);
+		// Timer delegate executed after FiringCooldown seconds
+		FTimerDelegate ResetDel = FTimerDelegate::CreateWeakLambda(AI /*owner tracked weakly by the delegate*/, [WeakBB]()
+			{
+				if (WeakBB.IsValid())
+				{
+					WeakBB->SetValueAsBool(TEXT("IsFiring"), false);
+				}
+			});
+		AI->GetWorldTimerManager().SetTimer(/*out*/ResetFireHandle,ResetDel,FiringCooldown,/*bLoop=*/false);
+	}
 
 	/*  Rotate toward player */
 	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(AI, 0);

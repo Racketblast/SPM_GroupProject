@@ -23,9 +23,5 @@ protected:
 private:
 	bool bCanFire = true;
 	FTimerHandle FireRateTimerHandle;
-
 	void ResetFire();
-	
-	UPROPERTY()
-	UPointLightComponent* MuzzleFlashLight;
 };

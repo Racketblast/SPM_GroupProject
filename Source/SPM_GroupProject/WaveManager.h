@@ -4,8 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Engine/TargetPoint.h"
-#include "Blueprint/UserWidget.h"
 #include "EnemySpawnPoint.h"
 #include "NiagaraSystem.h"
 #include "WaveManager.generated.h"
@@ -120,9 +118,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Spawning") 
 	int32 EnemiesPerSpawnBatch = 2;
-
-	/*UPROPERTY(EditAnywhere, Category = "Spawning")
-	int32 MaxConcurrentSpawnVFX = 2;*/
 
 	int32 CurrentWaveIndex;
 	

@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "ChallengeSubsystem.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "PlayerGameInstance.h"
@@ -9,13 +8,12 @@
 #include "PlayerCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
+
 void UChallengeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
 	UE_LOG(LogTemp, Warning, TEXT("ChallengeSubsystem initialized, waiting for manager to load challenge data."));
-	
-	//AssignNewChallenge();
 }
 
 void UChallengeSubsystem::PreviewNextChallenge()
@@ -26,25 +24,34 @@ void UChallengeSubsystem::PreviewNextChallenge()
 	int32 Index = -1;
 
 	bool OnlyHasPistol = true;
+	bool HasRifle = false;
+	bool HasShotgun = false;
+	bool HasRocket = false;
 
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
-		if (GI->HasBought("Rifle") || GI->HasBought("Shotgun") || GI->HasBought("Rocketlauncher"))
+		HasRifle = GI->HasBought("Rifle");
+		HasShotgun = GI->HasBought("Shotgun");
+		HasRocket = GI->HasBought("Rocketlauncher");
+		
+		if (HasRifle || HasShotgun || HasRocket)
 		{
 			OnlyHasPistol = false;
 		}
 	}
 
-	// Loopar tills vi får en challenge som vi inte hade på waven innan. 
+	// Loopar tills vi får en challenge som vi inte hade på waven innan.
+	// Kontrollerar också att man inte för weapons challenges som man inte borde få ännu, typ som pistol challengen när man bara har pistolen. 
 	do 
 	{
 		Index = UKismetMathLibrary::RandomInteger(PossibleChallenges.Num());
 	} 
 	while (PossibleChallenges.Num() > 1 && (
 		PossibleChallenges[Index].Type == LastChallengeType ||
-		(OnlyHasPistol && PossibleChallenges[Index].Type == EChallengeType::PistolOnly)));
-		
-	//PossibleChallenges[Index].Type == LastChallengeType && PossibleChallenges.Num() > 1 && (!OnlyHasPistol && PossibleChallenges[Index].Type == EChallengeType::PistolOnly)
+		(OnlyHasPistol && PossibleChallenges[Index].Type == EChallengeType::PistolOnly)) ||
+		(!HasRifle && PossibleChallenges[Index].Type == EChallengeType::RifleOnly) ||
+		(!HasShotgun && PossibleChallenges[Index].Type == EChallengeType::ShotgunOnly) ||
+		(!HasRocket && PossibleChallenges[Index].Type == EChallengeType::RocketlauncherOnly));
 	
 	CurrentChallenge = PossibleChallenges[Index];
 	CurrentChallenge.bIsCompleted = false;
@@ -53,18 +60,14 @@ void UChallengeSubsystem::PreviewNextChallenge()
 	bIsChallengeActive = false;
 	
 	UE_LOG(LogTemp, Warning, TEXT("New Challenge: %s"), *CurrentChallenge.Description.ToString());
-
-
+	
 	
 	// för animationer, var orginellt i ActivateCurrentChallenge
-	JustStartedChallenge = true; // för animatio
+	JustStartedChallenge = true; // för animation
 	
 	UE_LOG(LogTemp, Warning, TEXT("JustStartedChallenge: %s"), JustStartedChallenge ? TEXT("true") : TEXT("false"));
 	//UE_LOG(LogTemp, Warning, TEXT("StartedChallengeAnimationTimer: %f"), StartedChallengeAnimationTimer);
-	/*if (StartedChallengeAnimationTimer <= 0)
-	{
-		StartedChallengeAnimationTimer = 4.f;
-	}*/
+
 	GetWorld()->GetTimerManager().SetTimer( // För att aktivera en animation och sedan stänga av den vid rätt tillfälle 
 	ResetJustStartedChallengeTimerHandle,
 	this,
@@ -129,7 +132,6 @@ void UChallengeSubsystem::HandleChallengeSuccess()
 	GiveChallengeReward();
 
 	UE_LOG(LogTemp, Log, TEXT("Challenge Completed Successfully!"));
-	//ResetChallengeStatus(); // För att bara aktivera en animation för en sekund och sedan sätta tillbaka variablerna till false.
 
 	GetWorld()->GetTimerManager().SetTimer( // För att aktivera en animation och sedan stänga av den vid rätt tillfälle 
 	ResetChallengeStatusTimerHandle,
@@ -146,7 +148,6 @@ void UChallengeSubsystem::HandleChallengeFailure()
 	bChallengeJustFailed = true;
 
 	UE_LOG(LogTemp, Warning, TEXT("Challenge Failed!"));
-	//ResetChallengeStatus(); // För att bara aktivera en animation för en sekund och sedan sätta tillbaka variablerna till false.
 
 	GetWorld()->GetTimerManager().SetTimer( // För att aktivera en animation och sedan stänga av den vid rätt tillfälle 
 	ResetChallengeStatusTimerHandle,
@@ -179,9 +180,6 @@ void UChallengeSubsystem::SetAnimationTimers(float Success, float Failed, float 
 
 void UChallengeSubsystem::GiveChallengeReward()
 {
-	/*int32* FoundReward = ChallengeRewardMap.Find(CurrentChallenge.Type);
-	int32 RewardAmount = FoundReward ? *FoundReward : RewardMoneyAmount; */
-
 	int32 RewardAmount = GetCurrentChallengeRewardAmount();
 
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
@@ -278,23 +276,49 @@ void UChallengeSubsystem::NotifyPlayerDamaged()
 // Används i PlayerCharacter
 void UChallengeSubsystem::NotifyWeaponFired(FName WeaponName)
 {
-	if (!bIsChallengeActive) return;
-    
-	if (CurrentChallenge.Type == EChallengeType::PistolOnly && !bHasFailedCurrentChallenge)
+	// Ser till att funktionen inte körs ifall man har misslyckats challengen eller ifall det inte finns en aktiv challenge
+	if (!bIsChallengeActive || bHasFailedCurrentChallenge)
+		return;
+
+	// Denna switch sats kollar om spelaren brutit mot en vapenspecifik utmaning
+	switch (CurrentChallenge.Type)
 	{
-		if (WeaponName != "Pistol") 
+	case EChallengeType::PistolOnly:
+		if (WeaponName != "Pistol")
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Challenge Failed: Fired with wrong weapon: %s"), *WeaponName.ToString());
 			HandleChallengeFailure();
 		}
+		break;
+	case EChallengeType::RifleOnly:
+		if (WeaponName != "Rifle")
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Challenge Failed: Fired with wrong weapon: %s"), *WeaponName.ToString());
+			HandleChallengeFailure();
+		}
+		break;
+	case EChallengeType::ShotgunOnly:
+		if (WeaponName != "Shotgun")
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Challenge Failed: Fired with wrong weapon: %s"), *WeaponName.ToString());
+			HandleChallengeFailure();
+		}
+		break;
+	case EChallengeType::RocketlauncherOnly:
+		if (WeaponName != "Rocketlauncher")
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Challenge Failed: Fired with wrong weapon: %s"), *WeaponName.ToString());
+			HandleChallengeFailure();
+		}
+		break;
+	default:
+		break;
 	}
 }
 
 // För tids baserad challenge
 void UChallengeSubsystem::StartWaveChallenge()
 {
-	//if (!bIsChallengeActive) return;              Kanske kan behövas, skulle antagligen fixa ifall timern startar med mindre tid en vad den ska ha
-	
 	if (CurrentChallenge.Type != EChallengeType::ClearWaveInTime)
 		return;
 	
