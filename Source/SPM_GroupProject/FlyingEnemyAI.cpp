@@ -171,6 +171,16 @@ bool AFlyingEnemyAI::IsVisibleToPlayer() const
 		}
 	}
 
+	// Ignorera alla objekt man kan see igenom (tittar efter en tag)
+	for (TActorIterator<AActor> It(GetWorld()); It; ++It)
+	{
+		AActor* Actor = *It;
+		if (Actor->Tags.Contains("SeeThroughObject"))
+		{
+			Params.AddIgnoredActor(Actor);
+		}
+	}
+
 	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, PlayerViewLoc, GetActorLocation(), ECC_Visibility, Params);
 	
 	/*if (bHit)
