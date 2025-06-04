@@ -28,6 +28,8 @@ public:
 	virtual void Use_Implementation(APlayerCharacter* Player) override;
 	
 	virtual void ShowInteractable_Implementation(bool bShow) override;
+
+	virtual void BeginPlay() override;
 	
 	void UseVendingMachine();
 protected:

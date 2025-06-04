@@ -29,7 +29,14 @@ void AStoreBox::ShowInteractable_Implementation(bool bShow)
 
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
-		GI->CurrentInteractText = InteractText;
+		if (bShow)
+		{
+			GI->CurrentInteractText = InteractText;
+		}
+		else
+		{
+			GI->CurrentInteractText = "";
+		}
 	}
 }
 

@@ -11,12 +11,6 @@
 AVendingMachine::AVendingMachine()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
-	
-	InteractText = TEXT("Buy ");
-	InteractText.Append(StaticEnum<EVendingMachineSpewOut>()->GetDisplayNameTextByValue(static_cast<int64>(SpewOut)).ToString());
-	InteractText.Append(TEXT(" for "));
-	InteractText.AppendInt(SpewOutCost);
-	InteractText.Append(TEXT("$"));
 }
 
 void AVendingMachine::Use_Implementation(APlayerCharacter* Player)
@@ -30,9 +24,29 @@ void AVendingMachine::ShowInteractable_Implementation(bool bShow)
 	
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
-		GI->CurrentInteractText = InteractText;
+		if (bShow)
+		{
+			GI->CurrentInteractText = InteractText;
+		}
+		else
+		{
+			GI->CurrentInteractText = "";
+		}
 	}
 }
+
+
+void AVendingMachine::BeginPlay()
+{
+	Super::BeginPlay();
+	
+	InteractText = TEXT("Buy ");
+	InteractText.Append(StaticEnum<EVendingMachineSpewOut>()->GetDisplayNameTextByValue(static_cast<int64>(SpewOut)).ToString());
+	InteractText.Append(TEXT(" for "));
+	InteractText.AppendInt(SpewOutCost);
+	InteractText.Append(TEXT("$"));
+}
+
 
 void AVendingMachine::UseVendingMachine()
 {
@@ -65,7 +79,7 @@ void AVendingMachine::UseVendingMachine()
 					{
 						if (IfPlayerHasEnoughMoney(Player,GI))
 						{
-							Weapon->TotalAmmo += Weapon->MaxTotalAmmo/5;
+							Weapon->TotalAmmo += Weapon->MaxAmmo;
 							if (Weapon->TotalAmmo > Weapon->MaxTotalAmmo)
 							{
 								Weapon->TotalAmmo = Weapon->MaxTotalAmmo;
@@ -88,7 +102,7 @@ void AVendingMachine::UseVendingMachine()
 					{
 						if (IfPlayerHasEnoughMoney(Player,GI))
 						{
-							Weapon->TotalAmmo += Weapon->MaxTotalAmmo/5;
+							Weapon->TotalAmmo += Weapon->MaxAmmo;
 							if (Weapon->TotalAmmo > Weapon->MaxTotalAmmo)
 							{
 								Weapon->TotalAmmo = Weapon->MaxTotalAmmo;
@@ -111,7 +125,7 @@ void AVendingMachine::UseVendingMachine()
 					{
 						if (IfPlayerHasEnoughMoney(Player,GI))
 						{
-							Weapon->TotalAmmo += Weapon->MaxTotalAmmo/5;
+							Weapon->TotalAmmo += Weapon->MaxAmmo;
 							if (Weapon->TotalAmmo > Weapon->MaxTotalAmmo)
 							{
 								Weapon->TotalAmmo = Weapon->MaxTotalAmmo;
