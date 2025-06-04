@@ -34,7 +34,9 @@ EBTNodeResult::Type UBTTask_StrafeStep::ExecuteTask(
     // Build a right‑vector perpendicular to the player direction (XY plane)
     const FVector PawnLoc  = CachedPawn->GetActorLocation();
     const FVector ToPlayer = (Player->GetActorLocation() - PawnLoc).GetSafeNormal2D();
-    const FVector RightDir = FVector::CrossProduct(FVector::UpVector, ToPlayer);
+    FVector RightDir = FVector::CrossProduct(FVector::UpVector, ToPlayer);
+    RightDir.Z = 0.f;
+    RightDir.Normalize();
 
     // Pick L or R randomly & add distance variance ---------------------------
     const float SideSign = (FMath::RandBool() ? 1.f : -1.f);
