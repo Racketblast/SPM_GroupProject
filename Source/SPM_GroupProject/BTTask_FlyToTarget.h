@@ -28,6 +28,7 @@ private:
 	TArray<FVector> CurrentPath;
 	int32 CurrentPathIndex = 0;
 	float AcceptanceRadius = 100.f;
+	bool bFallbackUsed = false;
 
 	FVector GetNextPathPoint() const;
 	void MoveToward(UBehaviorTreeComponent& OwnerComp, float DeltaSeconds);
