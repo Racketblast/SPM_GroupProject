@@ -3,6 +3,7 @@
 
 #include "TeleportScreen.h"
 
+#include "PlayerGameInstance.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -11,6 +12,7 @@
 ATeleportScreen::ATeleportScreen()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
+	InteractText = TEXT("Open Teleport Screen");
 }
 
 void ATeleportScreen::Use_Implementation(APlayerCharacter* Player)
@@ -54,5 +56,10 @@ void ATeleportScreen::Use_Implementation(APlayerCharacter* Player)
 void ATeleportScreen::ShowInteractable_Implementation(bool bShow)
 {
 	StaticMeshComponent->SetRenderCustomDepth(bShow);
+	
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		GI->CurrentInteractText = InteractText;
+	}
 }
 

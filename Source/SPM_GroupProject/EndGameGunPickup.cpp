@@ -11,6 +11,7 @@
 AEndGameGunPickup::AEndGameGunPickup()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
+	InteractText = TEXT("Pickup Doomsday Gun");
 }
 
 void AEndGameGunPickup::Use_Implementation(APlayerCharacter* Player)
@@ -32,6 +33,11 @@ void AEndGameGunPickup::Use_Implementation(APlayerCharacter* Player)
 void AEndGameGunPickup::ShowInteractable_Implementation(bool bShow)
 {
 	StaticMeshComponent->SetRenderCustomDepth(bShow);
+	
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		GI->CurrentInteractText = InteractText;
+	}
 }
 
 // Called when the game starts or when spawned

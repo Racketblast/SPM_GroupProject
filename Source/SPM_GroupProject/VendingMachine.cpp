@@ -11,7 +11,14 @@
 AVendingMachine::AVendingMachine()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
+	
+	InteractText = TEXT("Buy ");
+	InteractText.Append(StaticEnum<EVendingMachineSpewOut>()->GetDisplayNameTextByValue(static_cast<int64>(SpewOut)).ToString());
+	InteractText.Append(TEXT(" for "));
+	InteractText.AppendInt(SpewOutCost);
+	InteractText.Append(TEXT("$"));
 }
+
 void AVendingMachine::Use_Implementation(APlayerCharacter* Player)
 {
 	UseVendingMachine();
@@ -20,6 +27,11 @@ void AVendingMachine::Use_Implementation(APlayerCharacter* Player)
 void AVendingMachine::ShowInteractable_Implementation(bool bShow)
 {
 	StaticMeshComponent->SetRenderCustomDepth(bShow);
+	
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		GI->CurrentInteractText = InteractText;
+	}
 }
 
 void AVendingMachine::UseVendingMachine()

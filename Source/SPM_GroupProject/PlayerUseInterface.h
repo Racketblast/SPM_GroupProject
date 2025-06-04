@@ -23,4 +23,6 @@ public:
 	void Use(class APlayerCharacter* Player);
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "PlayerInteraction")
 	void ShowInteractable(bool bShow);
+protected:
+	FString InteractText;
 };

@@ -15,6 +15,7 @@
 AStoreBox::AStoreBox()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
+	InteractText = TEXT("Open Store");
 }
 
 void AStoreBox::Use_Implementation(APlayerCharacter* Player)
@@ -25,6 +26,11 @@ void AStoreBox::Use_Implementation(APlayerCharacter* Player)
 void AStoreBox::ShowInteractable_Implementation(bool bShow)
 {
 	StaticMeshComponent->SetRenderCustomDepth(bShow);
+
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		GI->CurrentInteractText = InteractText;
+	}
 }
 
 void AStoreBox::OpenStoreMenu()

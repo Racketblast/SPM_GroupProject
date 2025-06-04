@@ -41,6 +41,8 @@ public:
 	TArray<int32> CurrentWeaponSkins = {0,0,0,0};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bSwapMaterials = false;
+	UPROPERTY(BlueprintReadOnly)
+	FString CurrentInteractText;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bCanPlayDialogue = false;
