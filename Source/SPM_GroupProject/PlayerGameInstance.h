@@ -27,6 +27,8 @@ public:
 	bool bGameEnded = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bUsingGamepad = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bWeirdMode = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Money;
