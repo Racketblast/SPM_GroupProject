@@ -27,6 +27,7 @@ void UChallengeSubsystem::PreviewNextChallenge()
 	bool HasRifle = false;
 	bool HasShotgun = false;
 	bool HasRocket = false;
+	bool hasGrenade = true;
 
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
@@ -40,6 +41,15 @@ void UChallengeSubsystem::PreviewNextChallenge()
 		}
 	}
 
+	if (APlayerCharacter* Player = Cast<APlayerCharacter>(GetOuter()))
+	{
+		if (Player->GrenadeNum <= 0)
+		{
+			hasGrenade = false;
+		}
+		UE_LOG(LogTemp, Warning, TEXT("hasGrenade: %s"), hasGrenade ? TEXT("true") : TEXT("false"));
+	}
+
 	// Loopar tills vi får en challenge som vi inte hade på waven innan.
 	// Kontrollerar också att man inte för weapons challenges som man inte borde få ännu, typ som pistol challengen när man bara har pistolen. 
 	do 
@@ -51,7 +61,8 @@ void UChallengeSubsystem::PreviewNextChallenge()
 		(OnlyHasPistol && PossibleChallenges[Index].Type == EChallengeType::PistolOnly)) ||
 		(!HasRifle && PossibleChallenges[Index].Type == EChallengeType::RifleOnly) ||
 		(!HasShotgun && PossibleChallenges[Index].Type == EChallengeType::ShotgunOnly) ||
-		(!HasRocket && PossibleChallenges[Index].Type == EChallengeType::RocketlauncherOnly));
+		(!HasRocket && PossibleChallenges[Index].Type == EChallengeType::RocketlauncherOnly)||
+		(!hasGrenade && PossibleChallenges[Index].Type == EChallengeType::KillWithAGrenade));
 	
 	CurrentChallenge = PossibleChallenges[Index];
 	CurrentChallenge.bIsCompleted = false;
@@ -87,6 +98,14 @@ void UChallengeSubsystem::CompleteCurrentChallenge()
 {
 	if (!bIsChallengeActive) return;
 
+	if (CurrentChallenge.Type == EChallengeType::KillWithAGrenade)
+	{
+		if (GrenadeKillsThisWave < 1)
+		{
+			HandleChallengeFailure();
+		}
+	}
+
 	if (!bHasFailedCurrentChallenge)
 	{
 		HandleChallengeSuccess();
@@ -97,6 +116,10 @@ void UChallengeSubsystem::CompleteCurrentChallenge()
 
 	CurrentChallenge.bIsCompleted = true;
 	bIsChallengeActive = false;
+
+	GrenadeKillsThisWave = 0;
+
+	PreviewNextChallenge();
 }
 
 FText UChallengeSubsystem::GetChallengeDescription() const // Används för widget
@@ -145,7 +168,11 @@ void UChallengeSubsystem::HandleChallengeSuccess()
 void UChallengeSubsystem::HandleChallengeFailure()
 {
 	bHasFailedCurrentChallenge = true;
-	bChallengeJustFailed = true;
+
+	if (CurrentChallenge.Type != EChallengeType::KillWithAGrenade)
+	{
+		bChallengeJustFailed = true;
+	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Challenge Failed!"));
 
@@ -314,6 +341,26 @@ void UChallengeSubsystem::NotifyWeaponFired(FName WeaponName)
 	default:
 		break;
 	}
+}
+
+// Döda en fiende med en granat
+void UChallengeSubsystem::OnEnemyKilledWithGrenade()
+{
+	if (!bIsChallengeActive || bHasFailedCurrentChallenge)
+		return;
+
+	if (CurrentChallenge.Type != EChallengeType::KillWithAGrenade)
+		return;
+	
+	GrenadeKillsThisWave++;
+
+	UE_LOG(LogTemp, Warning, TEXT("Enemy killed with grenade. Total grenade kills: %d"), GrenadeKillsThisWave);
+
+	// You can increase this to require multiple grenade kills per challenge
+	/*if (GrenadeKillsThisWave < 1)
+	{
+		HandleChallengeFailure();
+	}*/
 }
 
 // För tids baserad challenge

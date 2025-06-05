@@ -25,6 +25,7 @@ enum class EChallengeType : uint8
 	RifleOnly UMETA(DisplayName = "Only Use Rifle"),
 	ShotgunOnly UMETA(DisplayName = "Only Use Shotgun"),
 	RocketlauncherOnly UMETA(DisplayName = "Only Use Rocketlauncher"),
+	KillWithAGrenade UMETA(DisplayName = "Kill a enemy with a Grenade"),
 	// Lägg till flera challenges här
 };
 
@@ -70,6 +71,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Challenge")
 	FText GetChallengeDescription() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Challenge")
+	void OnEnemyKilledWithGrenade();
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Challenge")
 	bool bChallengeJustFailed = false;
@@ -160,5 +164,7 @@ private:
 
 	// Används för att kunna displaya rewarden för challengen som man just klarade av när grace perioden är. 
 	FChallengeData LastCompletedChallenge;
+
+	int32 GrenadeKillsThisWave = 0;
 };
 
