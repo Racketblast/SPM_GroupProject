@@ -214,10 +214,12 @@ private:
 
 	//Melee handlers for delay
 	FTimerHandle MeleeTimerHandle;
-	UFUNCTION(Category = "Melee")
+	UFUNCTION()
 	void PerformMelee();
-	UFUNCTION(Category = "Melee")
+	UFUNCTION()
 	void EndMelee();
+
+	//For scroll weapon switching
 	void NextWeapon();
 	void PreviousWeapon();
 	UFUNCTION()
