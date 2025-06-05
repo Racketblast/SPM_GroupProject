@@ -18,5 +18,6 @@ class SPM_GROUPPROJECT_API AEndGameGun : public AGun
 	
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class AEndGameExplosive> ProjectileClass;
-	
+private:
+	FName PlayNextDialogue = "DontShootThat";
 };
