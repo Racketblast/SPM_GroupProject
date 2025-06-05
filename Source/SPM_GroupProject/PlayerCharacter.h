@@ -177,6 +177,7 @@ private:
 	class UAIPerceptionStimuliSourceComponent* StimulusSource;
 	void SetupStimulusSource();
 	FTimerHandle EnemyHitResetTimerHandle;
+	FTimerHandle EnemyHeadHitResetTimerHandle;
 	UPROPERTY(EditAnywhere, Category = "Sway")
 	float SwayAmount = 2.0f;
 
