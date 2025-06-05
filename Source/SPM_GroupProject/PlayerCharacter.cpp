@@ -336,7 +336,7 @@ void APlayerCharacter::EnemyHeadHitFalse()
 	GetWorldTimerManager().SetTimerForNextTick([this]()
 	{
 		GetWorldTimerManager().SetTimer(
-			EnemyHitResetTimerHandle,
+			EnemyHeadHitResetTimerHandle,
 			[this]()
 			{
 				bEnemyHeadHit = false;
