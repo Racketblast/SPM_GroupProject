@@ -10,7 +10,7 @@
 #include "TimerManager.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
-#include "PlayerCharacter.h"
+
 void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 {
 	if (bIsReloading)
@@ -92,11 +92,7 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 
 				if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
 				{
-					if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
-					{
-						Player->bEnemyHit = true;
-						Player->EnemyHitFalse();
-					}
+					
 
 					//  Headshot check
 					float FinalDamage = WeaponDamage / NumPellets;
@@ -110,7 +106,12 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 							UE_LOG(LogTemp, Error, TEXT("hit HEAD activated (from gun)"));
 							Player->EnemyHeadHitFalse();
 						}
+					}else if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
+					{
+						Player->bEnemyHit = true;
+						Player->EnemyHitFalse();
 					}
+			
 
 					UGameplayStatics::ApplyPointDamage(
 						HitActor,
