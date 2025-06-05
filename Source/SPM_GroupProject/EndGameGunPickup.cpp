@@ -11,7 +11,7 @@
 AEndGameGunPickup::AEndGameGunPickup()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
-	InteractText = TEXT("Pickup Doomsday Gun");
+	InteractText = TEXT("pickup doomsday gun");
 }
 
 void AEndGameGunPickup::Use_Implementation(APlayerCharacter* Player)

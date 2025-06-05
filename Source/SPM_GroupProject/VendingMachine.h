@@ -11,10 +11,10 @@ UENUM(BlueprintType)
 enum class EVendingMachineSpewOut : uint8
 {
 	None        UMETA(DisplayName = "None"),
-	Health        UMETA(DisplayName = "Health"),
-	AmmoRifle	UMETA(DisplayName = "Ammo Rifle"),
-	AmmoShotgun	UMETA(DisplayName = "Ammo Shotgun"),
-	AmmoRocketLauncher	UMETA(DisplayName = "Ammo RocketLauncher"),
+	Health        UMETA(DisplayName = "health"),
+	AmmoRifle	UMETA(DisplayName = "rifle ammo"),
+	AmmoShotgun	UMETA(DisplayName = "shotgun ammo"),
+	AmmoRocketLauncher	UMETA(DisplayName = "rocketLauncher ammo"),
 	// Add more as needed
 };
 UCLASS()

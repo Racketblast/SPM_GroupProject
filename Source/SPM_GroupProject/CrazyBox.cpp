@@ -9,7 +9,7 @@
 ACrazyBox::ACrazyBox()
 {
 	CubeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("CubeMesh");
-	InteractText = TEXT("be Crazy");
+	InteractText = TEXT("be crazy");
 }
 
 void ACrazyBox::Use_Implementation(APlayerCharacter* Player)

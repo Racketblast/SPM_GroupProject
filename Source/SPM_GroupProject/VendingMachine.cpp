@@ -40,7 +40,7 @@ void AVendingMachine::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	InteractText = TEXT("Buy ");
+	InteractText = TEXT("buy ");
 	InteractText.Append(StaticEnum<EVendingMachineSpewOut>()->GetDisplayNameTextByValue(static_cast<int64>(SpewOut)).ToString());
 	InteractText.Append(TEXT(" for "));
 	InteractText.AppendInt(SpewOutCost);
