@@ -358,7 +358,7 @@ void APlayerCharacter::Shoot()
 	USceneComponent* Muzzle = CurrentGun->GetMuzzlePoint();
 	if (!Muzzle) return;
 
-	if (CurrentGun == Weapon4Instance)
+	if (CurrentGun == Weapon4Instance || CurrentGun == Weapon5Instance)
 	{
 		CurrentGun->Fire(Muzzle->GetComponentLocation(), PlayerCamera->GetComponentRotation());
 	}
