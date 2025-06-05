@@ -27,10 +27,11 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bEnemyHit = false;
-
+bool bEnemyHeadHit = false;
+	
 	UFUNCTION(BlueprintCallable)
 	void EnemyHitFalse();
-
+	void EnemyHeadHitFalse();
 	void AddRecoilImpulse(FRotator Impulse);
 	UPROPERTY(EditAnywhere)
 	USceneComponent* Hand;
