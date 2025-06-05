@@ -426,7 +426,7 @@ void AWaveManager::EndWave()
 	{
 		ChallengeSub->CompleteCurrentChallenge();
 		ChallengeSub->NotifyWaveCleared();
-		ChallengeSub->PreviewNextChallenge();
+		//ChallengeSub->PreviewNextChallenge();
 	}
 
 	// Missions
