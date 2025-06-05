@@ -18,6 +18,10 @@ AGun::AGun()
 	WeaponSkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponSkeletalMesh"));
 	WeaponSkeletalMesh->SetupAttachment(WeaponMeshComponent);
 	MuzzlePoint->SetRelativeLocation(FVector(50.f, 0.f, 0.f));
+
+	//Sound setup
+	FireAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("FireAudioComponent"));
+	FireAudioComponent->SetupAttachment(WeaponMeshComponent);
 }
 
 void AGun::BeginPlay()

@@ -92,7 +92,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Sound")
 	USoundBase*MagEmptySound;
 	
-	UPROPERTY(VisibleAnywhere, Category = "Sound")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sound")
 	UAudioComponent* FireAudioComponent;
 
 	// Audio component for reload sound
