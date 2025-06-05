@@ -35,7 +35,7 @@ ATeleporter::ATeleporter()
 		TeleportTriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ATeleporter::OnTriggerBeginOverlap);
 	}
 
-	InteractText = TEXT("Teleport");
+	InteractText = TEXT("teleport");
 }
 
 void ATeleporter::Use_Implementation(APlayerCharacter* Player)

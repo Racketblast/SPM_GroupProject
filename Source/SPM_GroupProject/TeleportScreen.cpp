@@ -12,7 +12,7 @@
 ATeleportScreen::ATeleportScreen()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
-	InteractText = TEXT("Open Teleport Screen");
+	InteractText = TEXT("open teleport screen");
 }
 
 void ATeleportScreen::Use_Implementation(APlayerCharacter* Player)
