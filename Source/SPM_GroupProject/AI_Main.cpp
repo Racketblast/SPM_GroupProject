@@ -101,6 +101,7 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
             {
                 AICont->StopMovement();
                 AICont->UnPossess();
+            	AICont->Destroy();
             }
 
             // Enable ragdoll physics

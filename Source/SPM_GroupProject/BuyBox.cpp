@@ -9,6 +9,7 @@
 ABuyBox::ABuyBox()
 {
 	CubeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CubeMeshComponent"));
+	RootComponent = CubeMeshComponent;
 }
 
 void ABuyBox::Use_Implementation(APlayerCharacter* Player)

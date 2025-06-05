@@ -3,14 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Kismet/GameplayStatics.h"
 
 class AFlyingEnemyAI;
 
 class SPM_GROUPPROJECT_API FlyingAIHelper
 {
 public:
-	static FVector ComputeSmartTargetLocation(
+	static FVector CalculateTargetLocation(
 		UWorld* World,
 		ACharacter* Player,
 		AFlyingEnemyAI* FlyingEnemy,
@@ -29,4 +28,10 @@ public:
 		float Distance,
 		float Clearance
 	);
+
+	// Används inte just nu
+	static bool IsPathClear(UWorld* World,
+	const FVector& FromLocation,
+	const FVector& ToLocation,
+	AFlyingEnemyAI* FlyingEnemy); 
 };

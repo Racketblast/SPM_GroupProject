@@ -6,9 +6,7 @@
 #include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "BTTask_FlyToPlayerLocation.generated.h"
 
-/**
- * 
- */
+
 UCLASS()
 class SPM_GROUPPROJECT_API UBTTask_FlyToPlayerLocation : public UBTTask_BlackboardBase
 {
@@ -38,18 +36,17 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float BackoffCooldownTime = 1.5f;
 
-	void MoveTowardTarget(APawn* Pawn, const FVector& TargetLocation);
-
-	void CheckIfStuck(UBehaviorTreeComponent& OwnerComp, APawn* Pawn, const FVector& TargetLocation);
-
 	UPROPERTY(EditAnywhere, Category = "Targeting")
 	float TargetUpdateInterval = 2.0f;
 
-	float TimeSinceLastTargetUpdate = 0.0f;
+	void MoveTowardTarget(APawn* Pawn, const FVector& TargetLocation);
+
+	void CheckIfStuck(UBehaviorTreeComponent& OwnerComp, APawn* Pawn, const FVector& TargetLocation);
 
 private:
 	FVector LastLocation;
 	float TimeSinceLastMove = 0.0f;
 	bool bBackingOff = false;
 	float BackoffElapsed = 0.0f;
+	float TimeSinceLastTargetUpdate = 0.0f;
 };

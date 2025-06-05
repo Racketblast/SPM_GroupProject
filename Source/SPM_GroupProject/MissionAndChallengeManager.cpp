@@ -4,7 +4,6 @@
 #include "MissionAndChallengeManager.h"
 #include "MissionSubsystem.h"
 #include "ChallengeSubsystem.h"
-#include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 
 
@@ -17,6 +16,7 @@ void AMissionAndChallengeManager::BeginPlay()
 {
 	Super::BeginPlay();
 	//UE_LOG(LogTemp, Warning, TEXT("SetRequiredWavesToComplete BeginPlay %i"), RequiredWavesToComplete);
+	
 	// Missions
 	if (UWorld* World = GetWorld())
 	{
@@ -31,8 +31,8 @@ void AMissionAndChallengeManager::BeginPlay()
 	{
 		if (UChallengeSubsystem* ChallengeSubsystem = World->GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
 		{
-			ChallengeSubsystem->LoadChallengeDataFromManager(); /*Jag skulle kunna lägga till en bool som skyddar från att detta blir kallat flera gånger,
-																dock så skulle alla challenges då ha samma rewards på alla levels, då man nu utan boolen skulle kunna ändra hur mycket pengar man får från en challenge mellan levels*/
+			ChallengeSubsystem->LoadChallengeDataFromManager();
+			
 			ChallengeSubsystem->SetRewardMoneyAmount(DefaultChallengeRewardAmount);
 
 			ChallengeSubsystem->SetAnimationTimers(SuccessAnimationTimer, FailedAnimationTimer, StartedChallengeAnimationTimer); // för animationer

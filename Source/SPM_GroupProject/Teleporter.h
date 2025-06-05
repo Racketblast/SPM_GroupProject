@@ -26,6 +26,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category="Teleport")
 	class UNiagaraComponent* TeleportSkyBeam;
+
+	UPROPERTY(EditDefaultsOnly, Category="Teleport")
+	class UNiagaraComponent* TeleportCircles;
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -33,7 +36,7 @@ public:
 	UFUNCTION()
 	void ChangeTexture();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category="Teleport")
 	void Teleport();
 
 protected:
@@ -43,11 +46,20 @@ protected:
 	UPROPERTY(EditAnywhere)
 	class UStaticMeshComponent* CubeMeshComponent;
 
+	UPROPERTY(EditDefaultsOnly)
+	class UBoxComponent* TeleportTriggerVolume;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Teleport")
+	TSubclassOf<UUserWidget> TeleportWidgetClass;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
 	class UMaterialInterface* WaveMaterial;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
 	UMaterialInterface* GracePeriodMaterial;
+
+	UFUNCTION()
+	void OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
 private:
 	UPROPERTY()

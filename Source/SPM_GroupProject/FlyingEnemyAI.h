@@ -16,7 +16,7 @@ public:
 
 	void Tick(float DeltaTime);
 
-	void DrawFlyableZRange();
+	void DrawFlyableZRange() const;
 
 	void SetMaxAltitude(float Altitude); // Kallas från wave manager, i spawnd enemy funktionen
 
@@ -29,7 +29,23 @@ public:
 	void TryLateralUnstick();
 
 	void SetCurrentTargetLocation(const FVector& NewTarget);
+	
 	FVector GetCurrentTargetLocation() const;
+
+	bool CanShoot() const;
+	
+	void NotifyTeleported();
+
+	UFUNCTION()
+	void TeleportToValidLocationNearPlayer();
+
+	bool IsFireCooldownElapsed() const;
+	
+	void NotifyFired();
+
+	void IsMoving();
+
+	bool IsVisibleToPlayer() const;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float FlySpeed = 1.0f;
@@ -57,24 +73,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float PostTeleportFireDelay = 2.0f;
 
-	bool CanShoot() const; 
-	void NotifyTeleported();
-
-	void SetNewMoveTarget(const FVector& NewTarget);
-
-	UFUNCTION()
-	void TeleportToValidLocationNearPlayer();
-
-	bool IsFireCooldownElapsed() const; 
-	void NotifyFired();
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float FireCooldown = 2.0f; // Sekunder mellan skot som fienden skjuter
 
-	void IsMoving();
-
-	bool IsVisibleToPlayer() const;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float PlayerInRange = 1500.f; // Distansen innan spelaren är "in range"
 	
 	// För UBTTask_FlyToPlayerLocation task
 	UPROPERTY(EditAnywhere, Category = "Flight")
@@ -94,8 +97,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	
-	//float ShootingRange = 600.f;
 	
 	bool bHasRecentlyShot = false;
 
