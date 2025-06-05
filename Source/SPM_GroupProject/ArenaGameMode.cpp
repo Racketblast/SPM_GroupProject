@@ -9,6 +9,7 @@
 #include "LevelSequencePlayer.h"
 #include "PlayerGameInstance.h"
 #include "GameFramework/Character.h"
+#include "Kismet/KismetMathLibrary.h"
 
 void AArenaGameMode::FadeIn(const AActor* PlayingActor)
 {
@@ -53,18 +54,39 @@ void AArenaGameMode::PlayerDeath()
 {
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
-		FName DeathDialogue = "SoldierDied1";
+		FName RandomDeathDialogue;
+		switch (UKismetMathLibrary::RandomIntegerInRange(0,0))
+		{
+		case 0:
+			RandomDeathDialogue = "SoldierDied1";
+			break;
+		default:
+			break;
+		}
+
+		FName RandomRespawnDialogue;
+		switch (UKismetMathLibrary::RandomIntegerInRange(0,0))
+		{
+		case 0:
+			RandomRespawnDialogue = "ReturnDeath1";
+			break;
+		default:
+			break;
+		}
+		
 		float TimeUntilDone = 0.f;
-		if (FDialogueInfo* Row = GI->EventDialogueInfo->FindRow<FDialogueInfo>(DeathDialogue, TEXT("")))
+		if (FDialogueInfo* Row = GI->EventDialogueInfo->FindRow<FDialogueInfo>(RandomDeathDialogue, TEXT("")))
 		{
 			if (GI->bCanPlayDialogue)
 			{
 				TimeUntilDone = Row->DialogueSound->Duration;
 			}
 		}
-		GI->StartDialogueRowName = DeathDialogue;
+		
+		GI->StartDialogueRowName = RandomDeathDialogue;
 		GI->StartDialogue();
-		GI->StartDialogueRowName = "ReturnDeath1";
+		
+		GI->StartDialogueRowName = RandomRespawnDialogue;
 
 		if (TimeUntilDone != 0.f)
 		{
