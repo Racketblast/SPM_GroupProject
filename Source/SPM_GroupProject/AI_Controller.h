@@ -7,15 +7,7 @@
 //    • Perception – uses a UAIPerceptionComponent with sight to update the
 //      Blackboard key "CanSeePlayerCharacter" whenever the player is (un)seen.
 //    • Navigation – enables CrowdFollowing for flock‑like obstacle avoidance.
-//
-//  File contains BOTH the header and source so you can read it in one place.
-//  Unreal prefers separate .h / .cpp files, but combining them here makes the
-//  explanatory comments easier to follow.
-//
-//  NOTE: The real project should still keep AI_Controller.h / .cpp separate –
-//  this document is only for reference.
 // ───────────────────────────────────────────────────────────────────────────── //
-
 
 #pragma once
 

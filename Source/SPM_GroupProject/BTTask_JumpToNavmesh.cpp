@@ -1,30 +1,4 @@
 
-//  Purpose
-//  -------
-//    •  When the AI pawn finds itself **off the NavMesh** – usually because it
-//       was launched by physics, rag‑doll, or pushed over an edge – this task
-//       makes the character **jump** toward the nearest reachable NavMesh
-//       point instead of doing an instantaneous teleport.
-//    •  The jump vector is calculated so the pawn travels horizontally toward
-//       the projected NavMesh location with a configurable vertical boost.
-//    •  The task returns **InProgress** immediately after launching and
-//       finishes once the pawn lands near the target *or* times out.
-//
-//  Safety & Edge‑cases
-//  -------------------
-//     •  All pointer fetches (`GetAIOwner`, `GetPawn`, nav‑sys, etc.) are
-//       wrapped in null‑checks – any failure falls back to `Failed` so the BT
-//       can recover.
-//    •  A `MaxWaitTime` timeout prevents the task from hanging forever if the
-//       pawn is stuck falling or the jump didn’t cover enough distance.
-//    •  Blackboard key **"TeleportToNavmesh"** is reset (`false`) on success or
-//       failure so follow‑up nodes don’t loop.
-//
-//  NOTE
-//  ----
-//     •  ONLY comments have been added; no executable code changed.
-// ============================================================================
-
 #include "BTTask_JumpToNavMesh.h"                 // header for this task node
 #include "AIController.h"                         // AAIController
 #include "NavigationSystem.h"                     // UNavigationSystemV1 helpers
@@ -32,7 +6,6 @@
 #include "GameFramework/CharacterMovementComponent.h" // movement state checks
 #include "BehaviorTree/BlackboardComponent.h"     // Blackboard accessors
 #include "DrawDebugHelpers.h"                     // Debug line/sphere
-
 // ────────────────────────────────────────────────
 //  Constructor – set defaults that affect the BT
 // ────────────────────────────────────────────────
@@ -57,30 +30,31 @@ EBTNodeResult::Type UBTTask_JumpToNavMesh::ExecuteTask(
     CachedCharacter = Cast<ACharacter>(AICon->GetPawn());
     if (!CachedCharacter) return EBTNodeResult::Failed;
 
-    // 2) Find the nearest NavMesh point -------------------------------------------
+    // 2) Get ActorLocation -------------------------------------------
     const FVector CurrentLocation = CachedCharacter->GetActorLocation();
-    FNavLocation  NearestPoint;                   // OUT param for projection
+    FNavLocation  NearestPoint; // param för projection, sets senare
 
+    //Hämtar navsystem
     UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
     if (!NavSys) return EBTNodeResult::Failed;
-
-    // ProjectPointToNavigation returns true if within the extents (500³ box)
+    
+    //Letar närmaste punkten på navmeshen inom en 500³ box
     if (NavSys->ProjectPointToNavigation(CurrentLocation,
                                          NearestPoint,
                                          FVector(500, 500, 500)))
     {
         // 3) Build a launch vector toward the nav point ---------------------------
-        const FVector JumpDirection =
-            (NearestPoint.Location - CurrentLocation).GetSafeNormal();
+        const FVector JumpDirection = (NearestPoint.Location - CurrentLocation).GetSafeNormal();
 
         FVector LaunchVelocity = JumpDirection * 600.f; // horizontal speed
         LaunchVelocity.Z = 500.f;                       // vertical boost
 
+        //Kör Unreals launch
         CachedCharacter->LaunchCharacter(LaunchVelocity,
                                         /*bXYOverride=*/true,
                                         /*bZOverride=*/true);
 
-        /* DEBUG: uncomment to see path & target ------------------------------------
+        /* DEBUG: ------------------------------------
         DrawDebugLine(GetWorld(), CurrentLocation, NearestPoint.Location,
                       FColor::Green, false, 2.0f, 0, 5.0f);
         DrawDebugSphere(GetWorld(), NearestPoint.Location, 30.f, 12,
@@ -102,13 +76,14 @@ EBTNodeResult::Type UBTTask_JumpToNavMesh::ExecuteTask(
 //  TickTask – called every frame while node is InProgress
 // ────────────────────────────────────────────────
 void UBTTask_JumpToNavMesh::TickTask(UBehaviorTreeComponent& OwnerComp,
-                                     uint8* /*NodeMemory*/, float DeltaSeconds)
+                                     uint8*, float DeltaSeconds)
 {
     if (!CachedCharacter || !CachedOwnerComp) return; // sanity guard
 
+    //Update elapsed time
     ElapsedTime += DeltaSeconds;
 
-    // 1) Check if we have landed ---------------------------------------------------
+    // 1) Check if landed ---------------------------------------------------
     if (!CachedCharacter->GetCharacterMovement()->IsFalling())
     {
         // Optional proximity test so we don’t mark success mid‑air.
@@ -119,6 +94,7 @@ void UBTTask_JumpToNavMesh::TickTask(UBehaviorTreeComponent& OwnerComp,
         {
             if (UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent())
             {
+                //reset blackboard flag
                 BlackboardComp->SetValueAsBool("TeleportToNavmesh", false);
             }
 
@@ -127,13 +103,14 @@ void UBTTask_JumpToNavMesh::TickTask(UBehaviorTreeComponent& OwnerComp,
         }
     }
 
-    // 2) Timeout safeguard ---------------------------------------------------------
+    // 2) Timeout safeguard, antar fail om elapsed time för långt---------------------------------------------------------
     if (ElapsedTime > MaxWaitTime)
     {
         UE_LOG(LogTemp, Warning, TEXT("JumpToNavMesh timed out."));
 
         if (UBlackboardComponent* BlackboardComp = OwnerComp.GetBlackboardComponent())
         {
+            //reset blackboard flag
             BlackboardComp->SetValueAsBool("TeleportToNavmesh", false);
         }
 

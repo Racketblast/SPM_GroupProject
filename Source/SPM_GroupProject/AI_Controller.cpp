@@ -22,6 +22,7 @@ void AAI_Controller::OnPossess(APawn* InPawn)
     // 1) Make sure we actually possess our expected pawn class.
     if (AAI_Main* AI = Cast<AAI_Main>(InPawn))
     {
+        
         /* -------------------------------------------------- Behaviour Tree */
         if (UBehaviorTree*  BT = AI->GetBehaviorTree())
         {
@@ -50,25 +51,17 @@ void AAI_Controller::OnPossess(APawn* InPawn)
  */
 void AAI_Controller::SetupPerceptionSystem()
 {
-    // 1) Create the sense config object. Needs a *stable* pointer for UObjects,
-    //    so we store it as a member (engine deletes it with the controller).
+    // 1) Create the sense config object. Needs a *stable* pointer for UObjects, (engine deletes it with the controller).
     SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
 
-    // 2) Create the perception component itself and declare that sight is
-    //    its dominant (primary) sense.
+    // 2) Create the perception component itself and declare that sight is, its dominant (primary) sense.
     UAIPerceptionComponent* Perception =
         CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComponent"));
     SetPerceptionComponent(*Perception);
 
     /* -------------------- Tune vision parameters ------------------------ */
     SightConfig->SightRadius                 = 15000.0f;  // max range
-    //SightConfig->LoseSightRadius             = SightConfig->SightRadius + 25.f; // hysteresis
     SightConfig->PeripheralVisionAngleDegrees = 90.f;     // 180° total FOV
-    
-    // SightConfig->SetMaxAge(5.f);                     // time to forget
-    // SightConfig->AutoSuccessRangeFromLastSeenLocation = 520.f;
-
-    // Detect everyone (enemies, friendlies, neutrals)
     SightConfig->DetectionByAffiliation.bDetectEnemies   = true;
     SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
     SightConfig->DetectionByAffiliation.bDetectNeutrals  = true;
@@ -83,14 +76,8 @@ void AAI_Controller::SetupPerceptionSystem()
 }
 
 // ───────────────────────────────────────────────────── OnTargetDetected ─── //
-/**
- * Called whenever the perception component registers that an actor was either
- * successfully sensed or lost.
- *
- * We only care if the actor is *the* player character. The Blackboard key
- * "CanSeePlayerCharacter" becomes true when the player is visible and false
- * when out of sight. The Behaviour Tree can then react (shoot, chase, etc.).
- */
+// Called whenever the perception component registers that an actor was either successfully sensed or lost.
+
 void AAI_Controller::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 {
     if (const APlayerCharacter* Player = Cast<APlayerCharacter>(Actor))

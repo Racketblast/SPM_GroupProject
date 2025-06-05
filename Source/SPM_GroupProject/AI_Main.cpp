@@ -204,8 +204,7 @@ void AAI_Main::Tick(float DeltaTime)
 
 	/* stuck-detection */
 	const FVector Curr = GetActorLocation();
-	if (FVector::DistSquared(Curr, LastKnownLocation) >
-	    MinMoveDistance * MinMoveDistance)
+	if (FVector::DistSquared(Curr, LastKnownLocation) > MinMoveDistance * MinMoveDistance)
 	{
 		LastKnownLocation     = Curr;
 		TimeSinceLastMovement = 0.f;

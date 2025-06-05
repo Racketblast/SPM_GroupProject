@@ -47,9 +47,7 @@ UBTTask_ChasePlayer::UBTTask_ChasePlayer(const FObjectInitializer& ObjectInitial
 //  @NodeMemory  – opaque memory block if the task chose to use one (unused).
 //  @return      – Succeeded if a move request was issued, Failed otherwise.
 // ───────────────────────────────────────────────────────────────────────────── //
-EBTNodeResult::Type UBTTask_ChasePlayer::ExecuteTask(
-    UBehaviorTreeComponent& OwnerComp,
-    uint8* /*NodeMemory*/)
+EBTNodeResult::Type UBTTask_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,uint8* )
 {
     // 1) Validate we have an AI controller; without it we cannot move.
     AAI_Controller* const AICont = Cast<AAI_Controller>(OwnerComp.GetAIOwner());
@@ -58,14 +56,14 @@ EBTNodeResult::Type UBTTask_ChasePlayer::ExecuteTask(
         return EBTNodeResult::Failed;   // Controller missing – cannot proceed.
     }
 
-    // 2) Grab the player’s location from the blackboard.
+    // 2) Grab the blackboard component and checks if retrieved
     UBlackboardComponent* const BB = OwnerComp.GetBlackboardComponent();
     if (!BB)
     {
         return EBTNodeResult::Failed;   // Should never happen – BT guarantees BB.
     }
 
-    const FVector PlayerLocation = BB->GetValueAsVector(GetSelectedBlackboardKey());
+    const FVector PlayerLocation = BB->GetValueAsVector(GetSelectedBlackboardKey()); //Grabs players location
     if (!PlayerLocation.IsNearlyZero()) // Zero vector = key not set / invalid. Annars kutar AIn mot world origin
     {
         // 3) Issue a simple move request toward that location.

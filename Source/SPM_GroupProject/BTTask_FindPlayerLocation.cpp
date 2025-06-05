@@ -42,9 +42,7 @@ UBTTask_FindPlayerLocation::UBTTask_FindPlayerLocation(
 
 // ────────────────────────────────────────────────────────────────
 // ExecuteTask – called each time the BT reaches this node
-EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(
-    UBehaviorTreeComponent& OwnerComp,
-    uint8* /*NodeMemory*/)
+EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp,uint8* )
 {
     // 1) Fetch the lone player pawn (index 0 is safe in single‑player titles)
     if (ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))
@@ -62,16 +60,12 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(
             if (SearchRandom)
             {
                 // 2a) Pick a random reachable point around the player
-                if (NavSys->GetRandomPointInNavigableRadius(
-                        PlayerLocation,      // centre
-                        SearchRadius,        // metres
-                        ProjectedLocation))  // OUT
+                if (NavSys->GetRandomPointInNavigableRadius(PlayerLocation,SearchRadius,ProjectedLocation))  
                 {
                     // 3) Write result to BB and exit early with success
-                    OwnerComp.GetBlackboardComponent()
-                             ->SetValueAsVector(GetSelectedBlackboardKey(),
-                                                ProjectedLocation.Location);
-
+                    OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(),
+                                                        ProjectedLocation.Location);
+                    
                     FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
                     return EBTNodeResult::Succeeded;
                 }
@@ -81,11 +75,9 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(
             {
                 // 2b) Snap the exact player point to the nearest NavMesh polygon
                 //     Extent box loosely based on character half‑width / height
-                static const FVector Extent(100.f, 100.f, 700.f);
+                static const FVector Extent(100.f, 100.f, 1500.f);
 
-                if (NavSys->ProjectPointToNavigation(PlayerLocation,
-                                                    ProjectedLocation,
-                                                    Extent))
+                if (NavSys->ProjectPointToNavigation(PlayerLocation,ProjectedLocation,Extent))
                 {
                     OwnerComp.GetBlackboardComponent()
                              ->SetValueAsVector(GetSelectedBlackboardKey(),
