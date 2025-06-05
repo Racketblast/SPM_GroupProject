@@ -108,8 +108,8 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 						}
 					}else if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
 					{
-						Player->bEnemyHit = true;
-						Player->EnemyHitFalse();
+						//Player->bEnemyHit = true;
+					//	Player->EnemyHitFalse();
 					}
 			
 
