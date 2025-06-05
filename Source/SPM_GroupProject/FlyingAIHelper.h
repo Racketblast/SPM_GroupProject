@@ -33,5 +33,8 @@ public:
 	static bool IsPathClear(UWorld* World,
 	const FVector& FromLocation,
 	const FVector& ToLocation,
-	AFlyingEnemyAI* FlyingEnemy); 
+	AFlyingEnemyAI* FlyingEnemy);
+
+	// För flying enemy 2
+	static FVector GetSmartTargetLocation(ACharacter* Player, AFlyingEnemyAI* FlyingEnemy, const FVector& FromLocation); 
 };

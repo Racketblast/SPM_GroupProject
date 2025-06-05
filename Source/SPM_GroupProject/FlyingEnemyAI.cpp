@@ -5,6 +5,7 @@
 #include "EnemyAIUtils.h"
 #include "EngineUtils.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/FloatingPawnMovement.h"
 #include "Kismet/GameplayStatics.h"
 
 
@@ -15,6 +16,8 @@ AFlyingEnemyAI::AFlyingEnemyAI()
 	PrimaryActorTick.bCanEverTick = true;
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	AIControllerClass = AFlyingAI_Controller::StaticClass();
+	UFloatingPawnMovement* FloatingMovementComponent = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("FloatingMovement"));
+	FloatingMovementComponent->UpdatedComponent = RootComponent; // För flying enemy 2
 }
 
 // Sätter fienden till flying mode för unreals CharacterMovementcomponent, sätter även PlayerInRange variablen för AFlyingAI_Controller. 
