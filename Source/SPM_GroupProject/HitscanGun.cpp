@@ -108,15 +108,22 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
             {
                 if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
                 {
-                    Player->bEnemyHit = true;
-                    UE_LOG(LogTemp, Error, TEXT("hit activated (from gun)"));
-                    Player->EnemyHitFalse();
+                
                     // Apply damage if no custom function is found
                     float ActualDamage = WeaponDamage;
                     if (Hit.BoneName != NAME_None && Hit.BoneName.ToString().ToLower().Contains(TEXT("head")))
                     {
                         ActualDamage *= 2.0f;
                         UE_LOG(LogTemp, Warning, TEXT(" HEADSHOT! Applying double damage: %f"), ActualDamage);
+                        Player->bEnemyHeadHit = true;
+                        Player->EnemyHeadHitFalse();
+                        UE_LOG(LogTemp, Error, TEXT("HEADSHOT CALLED"));
+                    }
+                    else
+                    {
+                        Player->bEnemyHit = true;
+                        UE_LOG(LogTemp, Error, TEXT("hit activated (from gun)"));
+                        Player->EnemyHitFalse();
                     }
                   
 

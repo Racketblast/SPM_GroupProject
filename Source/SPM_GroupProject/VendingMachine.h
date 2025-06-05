@@ -11,10 +11,10 @@ UENUM(BlueprintType)
 enum class EVendingMachineSpewOut : uint8
 {
 	None        UMETA(DisplayName = "None"),
-	Health        UMETA(DisplayName = "Health"),
-	AmmoRifle	UMETA(DisplayName = "Ammo Rifle"),
-	AmmoShotgun	UMETA(DisplayName = "Ammo Shotgun"),
-	AmmoRocketLauncher	UMETA(DisplayName = "Ammo RocketLauncher"),
+	Health        UMETA(DisplayName = "health"),
+	AmmoRifle	UMETA(DisplayName = "rifle ammo"),
+	AmmoShotgun	UMETA(DisplayName = "shotgun ammo"),
+	AmmoRocketLauncher	UMETA(DisplayName = "rocketLauncher ammo"),
 	// Add more as needed
 };
 UCLASS()
@@ -28,6 +28,8 @@ public:
 	virtual void Use_Implementation(APlayerCharacter* Player) override;
 	
 	virtual void ShowInteractable_Implementation(bool bShow) override;
+
+	virtual void BeginPlay() override;
 	
 	void UseVendingMachine();
 protected:
