@@ -14,8 +14,8 @@
 // Sets default values
 AStoreBox::AStoreBox()
 {
-	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
-	RootComponent = StaticMeshComponent;
+	SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("StaticMeshComponent"));
+	RootComponent = SkeletalMeshComponent;
 	InteractText = TEXT("open store");
 }
 
@@ -26,7 +26,17 @@ void AStoreBox::Use_Implementation(APlayerCharacter* Player)
 
 void AStoreBox::ShowInteractable_Implementation(bool bShow)
 {
-	StaticMeshComponent->SetRenderCustomDepth(bShow);
+	UE_LOG(LogTemp, Display, TEXT("ShowInteractable"));
+	SkeletalMeshComponent->SetRenderCustomDepth(bShow);
+	TArray<USceneComponent*> Components;
+	SkeletalMeshComponent->GetChildrenComponents(true, Components);
+	for (USceneComponent* Component : Components)
+	{
+		if (UStaticMeshComponent* Mesh = Cast<UStaticMeshComponent>(Component))
+		{
+			Mesh->SetRenderCustomDepth(bShow);
+		}
+	}
 
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
