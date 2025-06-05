@@ -74,11 +74,13 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(UBehaviorTreeCompone
             else
             {
                 // 2b) Snap the exact player point to the nearest NavMesh polygon
-                //     Extent box loosely based on character half‑width / height
+                //     create box around playerlocation with 100,100,1500
                 static const FVector Extent(100.f, 100.f, 1500.f);
 
+                //Hitta närmaste navmesh punkt inom boxen och storea det i projectedlocation
                 if (NavSys->ProjectPointToNavigation(PlayerLocation,ProjectedLocation,Extent))
                 {
+                    //Skriver den nya valid projectedlocation till blackboarden så den kan användas i nästa Moveto i chase
                     OwnerComp.GetBlackboardComponent()
                              ->SetValueAsVector(GetSelectedBlackboardKey(),
                                                 ProjectedLocation.Location);

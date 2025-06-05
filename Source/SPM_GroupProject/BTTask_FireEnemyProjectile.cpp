@@ -81,7 +81,7 @@ EBTNodeResult::Type UBTTask_FireEnemyProjectile::ExecuteTask(UBehaviorTreeCompon
 
 	FActorSpawnParameters Params;
 	Params.Owner      = AI;//Vem äger projectile(för damage logik etc)
-	Params.Instigator = AI;//Vilken pawn som spawnar(AI)
+	Params.Instigator = AI;//Vilken pawn som spawnar den(AI)
 
 	//Spawna projektilen
 	AProjectile* Proj = AI->GetWorld()->SpawnActor<AProjectile>(
