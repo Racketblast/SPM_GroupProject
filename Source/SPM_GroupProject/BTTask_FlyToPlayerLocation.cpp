@@ -102,7 +102,7 @@ void UBTTask_FlyToPlayerLocation::TickTask(UBehaviorTreeComponent& OwnerComp, ui
 
 	if (ProgressCheckTimeAccumulator >= StuckCheckInterval)
 	{
-		if (TotalProgressTowardTarget < MinimumTotalProgressThreshold && !(bPlayerInRange && bPlayerVisible))
+		if (TotalProgressTowardTarget < MinimumTotalProgressThreshold && Distance > StuckMovementThreshold && !(bPlayerInRange && bPlayerVisible))
 		{
 			CheckIfStuck(OwnerComp, Pawn, TargetLocation);
 		}
@@ -308,9 +308,9 @@ void UBTTask_FlyToPlayerLocation::HandleFallbackManeuver(UBehaviorTreeComponent&
 	bool bBlockedRight   = World->LineTraceSingleByChannel(HitRight,   CurrentLocation, CurrentLocation + RightDir * TraceLength,   ECC_Visibility, TraceParams);
 
 	// Draw debug lines
-	DrawDebugLine(World, CurrentLocation, CurrentLocation + ForwardDir * TraceLength, FColor::Red, false, 1.f, 0, 2.f);
+	/*DrawDebugLine(World, CurrentLocation, CurrentLocation + ForwardDir * TraceLength, FColor::Red, false, 1.f, 0, 2.f);
 	DrawDebugLine(World, CurrentLocation, CurrentLocation + LeftDir * TraceLength, FColor::Green, false, 1.f, 0, 2.f);
-	DrawDebugLine(World, CurrentLocation, CurrentLocation + RightDir * TraceLength, FColor::Blue, false, 1.f, 0, 2.f);
+	DrawDebugLine(World, CurrentLocation, CurrentLocation + RightDir * TraceLength, FColor::Blue, false, 1.f, 0, 2.f);*/
 
 	FVector NewDirection = -ForwardDir; // Default backoff direction
 
@@ -348,10 +348,10 @@ void UBTTask_FlyToPlayerLocation::HandleFallbackManeuver(UBehaviorTreeComponent&
 		// Else: stay with default backoff
 	}
 
-	FVector NewTargetLocation = CurrentLocation + NewDirection * BackoffDistance;
+	const FVector NewTargetLocation = CurrentLocation + NewDirection * BackoffDistance;
 	Blackboard->SetValueAsVector(MoveToLocationKey.SelectedKeyName, NewTargetLocation);
 
-	UE_LOG(LogTemp, Warning, TEXT("Flying AI is stuck, using fallback maneuver"));
-	DrawDebugSphere(World, NewTargetLocation, 50.f, 12, FColor::Purple, false, 1.f);
+	//UE_LOG(LogTemp, Warning, TEXT("Flying AI is stuck, using fallback maneuver"));
+	//DrawDebugSphere(World, NewTargetLocation, 50.f, 12, FColor::Purple, false, 1.f);
 }
 
