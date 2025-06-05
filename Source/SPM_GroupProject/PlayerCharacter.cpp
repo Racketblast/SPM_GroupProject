@@ -330,7 +330,23 @@ void APlayerCharacter::EnemyHitFalse()
 		);
 	});
 }
-
+void APlayerCharacter::EnemyHeadHitFalse()
+{
+	// Schedule the actual reset after 0.2 seconds
+	GetWorldTimerManager().SetTimerForNextTick([this]()
+	{
+		GetWorldTimerManager().SetTimer(
+			EnemyHitResetTimerHandle,
+			[this]()
+			{
+				bEnemyHeadHit = false;
+				UE_LOG(LogTemp, Error, TEXT("headhit false (player)"));
+			},
+			0.01f,
+			false
+		);
+	});
+}
 
 
 void APlayerCharacter::Shoot()
