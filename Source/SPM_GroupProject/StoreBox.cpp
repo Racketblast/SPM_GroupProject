@@ -15,6 +15,7 @@
 AStoreBox::AStoreBox()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
+	RootComponent = StaticMeshComponent;
 	InteractText = TEXT("open store");
 }
 

@@ -9,6 +9,7 @@
 ACrazyBox::ACrazyBox()
 {
 	CubeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("CubeMesh");
+	RootComponent = CubeMeshComponent;
 	InteractText = TEXT("be crazy");
 }
 

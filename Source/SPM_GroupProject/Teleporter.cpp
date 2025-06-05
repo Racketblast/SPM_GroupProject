@@ -19,6 +19,7 @@ ATeleporter::ATeleporter()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	CubeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CubeMeshComponent"));
+	RootComponent = CubeMeshComponent;
 	TeleportTriggerVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("PortalDistanceTriggerVolume"));
 	TeleportTriggerVolume->SetupAttachment(CubeMeshComponent);
 
