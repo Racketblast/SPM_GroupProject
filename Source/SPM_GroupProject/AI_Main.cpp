@@ -226,7 +226,7 @@ void AAI_Main::Tick(float DeltaTime)
 	}
 }
 
-/* ─────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────── Bara kvar ifall vi vill göra ai player controllable*/
 void AAI_Main::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
