@@ -49,14 +49,14 @@ UBTTask_ChasePlayer::UBTTask_ChasePlayer(const FObjectInitializer& ObjectInitial
 // ───────────────────────────────────────────────────────────────────────────── //
 EBTNodeResult::Type UBTTask_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,uint8* )
 {
-    // 1) Validate we have an AI controller; without it we cannot move.
+    // 1) grab and Validate we have an AI controller; without it we cannot move.
     AAI_Controller* const AICont = Cast<AAI_Controller>(OwnerComp.GetAIOwner());
     if (!AICont)
     {
         return EBTNodeResult::Failed;   // Controller missing – cannot proceed.
     }
 
-    // 2) Grab the blackboard component and checks if retrieved
+    // 2) grab the blackboard component and checks if retrieved
     UBlackboardComponent* const BB = OwnerComp.GetBlackboardComponent();
     if (!BB)
     {

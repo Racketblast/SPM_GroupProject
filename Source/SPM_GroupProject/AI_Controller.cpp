@@ -10,7 +10,7 @@
 AAI_Controller::AAI_Controller(const FObjectInitializer& FObjectInitializer)
     : Super(FObjectInitializer)            // base‑class init list
 {
-    // Build perception as early as possible so it exists before possession.
+    // bygger perception tidigt så den finns innan possession.
     SetupPerceptionSystem();
 }
 
@@ -45,21 +45,17 @@ void AAI_Controller::OnPossess(APawn* InPawn)
 }
 
 // ───────────────────────────────────────────────────── SetupPerceptionSystem ─── //
-/**
- * Builds a UAIPerceptionComponent + a sight sense configuration, then wires
- * them together so we receive OnTargetPerceptionUpdated events.
- */
+//bygger UAIPerceptionComponent + en sight sense configuration, kopplar sen ihop dom så vi får OnTargetPerceptionUpdated events.
 void AAI_Controller::SetupPerceptionSystem()
 {
     // 1) Create the sense config object. Needs a *stable* pointer for UObjects, (engine deletes it with the controller).
     SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
 
-    // 2) Create the perception component itself and declare that sight is, its dominant (primary) sense.
-    UAIPerceptionComponent* Perception =
-        CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComponent"));
+    // 2) Create the perception component itself
+    UAIPerceptionComponent* Perception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComponent"));
     SetPerceptionComponent(*Perception);
 
-    /* -------------------- Tune vision parameters ------------------------ */
+    /* -------------------- vision parameters ------------------------ */
     SightConfig->SightRadius                 = 15000.0f;  // max range
     SightConfig->PeripheralVisionAngleDegrees = 90.f;     // 180° total FOV
     SightConfig->DetectionByAffiliation.bDetectEnemies   = true;
@@ -71,8 +67,7 @@ void AAI_Controller::SetupPerceptionSystem()
     Perception->SetDominantSense(*SightConfig->GetSenseImplementation());
 
     // Bind C++ callback for when perception state changes.
-    Perception->OnTargetPerceptionUpdated.AddDynamic(
-        this, &AAI_Controller::OnTargetDetected);
+    Perception->OnTargetPerceptionUpdated.AddDynamic(this, &AAI_Controller::OnTargetDetected);
 }
 
 // ───────────────────────────────────────────────────── OnTargetDetected ─── //
