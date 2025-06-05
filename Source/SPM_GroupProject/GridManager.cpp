@@ -101,16 +101,36 @@ void AGridManager::UpdateNodeWalkability(const FIntVector& Index)
 
 TArray<FVector> AGridManager::FindPath(const FVector& StartLocation, const FVector& EndLocation)
 {
+	for (auto& Elem : Grid)
+	{
+		Elem.Value->GCost = FLT_MAX;
+		Elem.Value->HCost = 0.f;
+		Elem.Value->Parent = nullptr;
+	}
+	
     FIntVector StartIndex = GetIndexFromWorldLocation(StartLocation);
     FIntVector EndIndex = GetIndexFromWorldLocation(EndLocation);
 
     auto StartNode = GetNodeAt(StartIndex);
     auto EndNode = GetNodeAt(EndIndex);
 
-    if (!StartNode.IsValid() || !EndNode.IsValid() || !EndNode->bIsWalkable)
+	if (!StartNode.IsValid() || !EndNode.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Start or End node is invalid."));
+		return TArray<FVector>();
+	}
+
+	/*if (!StartNode->bIsWalkable || !EndNode->bIsWalkable)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Start or End node is unwalkable! Start: %s, End: %s"),
+			StartNode->bIsWalkable ? TEXT("true") : TEXT("false"),
+			EndNode->bIsWalkable ? TEXT("true") : TEXT("false"));
+	}*/
+
+    /*if (!StartNode.IsValid() || !EndNode.IsValid() || !EndNode->bIsWalkable)
     {
         return {};
-    }
+    }*/
 
     TArray<TSharedPtr<FGridNode>> OpenSet;
     TSet<FIntVector> ClosedSet;
@@ -183,6 +203,29 @@ TArray<FVector> AGridManager::FindPath(const FVector& StartLocation, const FVect
     return {};
 }
 
+
+TSharedPtr<FGridNode> AGridManager::FindNearestWalkableNode(const FVector& FromLocation, float MaxSearchDistance)
+{
+	float ClosestDistance = MaxSearchDistance;
+	TSharedPtr<FGridNode> ClosestNode = nullptr;
+
+	for (const auto& Pair : Grid)
+	{
+		const TSharedPtr<FGridNode>& Node = Pair.Value;
+
+		if (Node->bIsWalkable)
+		{
+			float Dist = FVector::Dist(FromLocation, Node->WorldLocation);
+			if (Dist < ClosestDistance)
+			{
+				ClosestDistance = Dist;
+				ClosestNode = Node;
+			}
+		}
+	}
+
+	return ClosestNode;
+}
 
 
 
