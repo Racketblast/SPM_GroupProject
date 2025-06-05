@@ -117,6 +117,9 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
                     {
                         ActualDamage *= 2.0f;
                         UE_LOG(LogTemp, Warning, TEXT(" HEADSHOT! Applying double damage: %f"), ActualDamage);
+                        Player->bEnemyHeadHit = true;
+                        Player->EnemyHeadHitFalse();
+                        UE_LOG(LogTemp, Error, TEXT("HEADSHOT CALLED"));
                     }
                   
 
