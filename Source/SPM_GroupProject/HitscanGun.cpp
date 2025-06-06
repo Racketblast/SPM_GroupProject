@@ -150,9 +150,9 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
                      
                     ApplyBloodDecal(Hit);
                 
-                } else {BulletHoleDecal(Hit);}
+                } 
 
-            }
+            }else {BulletHoleDecal(Hit);}
                 }
                 
               }
