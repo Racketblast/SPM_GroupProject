@@ -787,6 +787,11 @@ float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 	}
 	if (PlayerHealth <= 0)
 	{
+		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+		{
+			GI->Money += PickedUpMoney * 0.1;
+		}
+		
 		PlayerHealth = 0;
 		bIsDead = true;
 		DisableInput(nullptr);
