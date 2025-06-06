@@ -12,6 +12,7 @@ class SPM_GROUPPROJECT_API AShotgun : public AHitscanGun
 	GENERATED_BODY()
 
 public:
+	AShotgun();
 	virtual void Fire(FVector FireLocation, FRotator FireRotation) override;
 
 
@@ -29,9 +30,21 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	float SpreadAngle = 5.0f;
 
+	//For pump sound
+	FTimerHandle PumpTimer;
+	UFUNCTION()
+	void PumpSoundDelay();
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Sound")
+	USoundBase* PumpSound;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sound")
+	UAudioComponent* PumpAudioComponent;
 
 
 	
 
 
 };
+
+

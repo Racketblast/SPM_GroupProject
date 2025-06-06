@@ -11,6 +11,13 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
+AShotgun::AShotgun()
+{
+	//Sound setup
+	PumpAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("PumpAudioComponent"));
+	PumpAudioComponent->SetupAttachment(WeaponMeshComponent);
+}
+
 void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 {
 	if (bIsReloading)
@@ -34,6 +41,12 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 	{
 		FireAudioComponent->SetSound(FireSound);
 		FireAudioComponent->Play();
+	}
+
+	if (PumpSound && PumpAudioComponent)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Pump %f"), PumpSound->Duration);
+		GetWorld()->GetTimerManager().SetTimer(PumpTimer, this, &AShotgun::PumpSoundDelay, TimeBetweenShots * 0.2, false);
 	}
 
 	if (MuzzleFlash && WeaponSkeletalMesh)
@@ -167,4 +180,17 @@ void AShotgun::EnemyHitFalse()
 {
 	bEnemyHit = false;
 	UE_LOG(LogTemp, Error, TEXT("hit false"));
+}
+
+void AShotgun::PumpSoundDelay()
+{
+	if (PumpSound && PumpAudioComponent)
+	{
+		float TimeBetweenShots = 1/RoundsPerSecond;
+		float PitchMultiplier = PumpSound->Duration * TimeBetweenShots * 0.2;
+		PumpAudioComponent->SetPitchMultiplier(1/PitchMultiplier);
+		PumpAudioComponent->SetSound(PumpSound);
+		PumpAudioComponent->Play();
+		UE_LOG(LogTemp, Error, TEXT("Pump it%f"), 1/PitchMultiplier);
+	}
 }
