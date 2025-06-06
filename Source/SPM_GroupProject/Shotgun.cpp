@@ -187,7 +187,7 @@ void AShotgun::PumpSoundDelay()
 	if (PumpSound && PumpAudioComponent)
 	{
 		float TimeBetweenShots = 1/RoundsPerSecond;
-		float PitchMultiplier = PumpSound->Duration * TimeBetweenShots * 0.2;
+		float PitchMultiplier = TimeBetweenShots/PumpSound->Duration;
 		PumpAudioComponent->SetPitchMultiplier(1/PitchMultiplier);
 		PumpAudioComponent->SetSound(PumpSound);
 		PumpAudioComponent->Play();
