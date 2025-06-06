@@ -128,6 +128,7 @@ protected:
 	UMaterialInterface* BulletDecalMaterial;
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	float decalSize = 20.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	float bdecalSize = 10.f;
 	// For interpolation
 	bool bIsRecoveringFromRecoil = false;
