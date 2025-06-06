@@ -23,18 +23,9 @@ ATeleporter::ATeleporter()
 	TeleportTriggerVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("PortalDistanceTriggerVolume"));
 	TeleportTriggerVolume->SetupAttachment(CubeMeshComponent);
 
-	TeleportSkyBeam = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TeleportSkyBeam"));
-	TeleportSkyBeam->SetupAttachment(CubeMeshComponent);
-	TeleportSkyBeam->bAutoActivate = false;
-
 	TeleportCircles = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TeleportCircles"));
 	TeleportCircles->SetupAttachment(CubeMeshComponent);
 	TeleportCircles->bAutoActivate = false;
-	
-	if (TeleportTriggerVolume)
-	{
-		TeleportTriggerVolume->OnComponentBeginOverlap.AddDynamic(this, &ATeleporter::OnTriggerBeginOverlap);
-	}
 
 	InteractText = TEXT("teleport");
 }
@@ -45,11 +36,7 @@ void ATeleporter::Use_Implementation(APlayerCharacter* Player)
 }
 
 void ATeleporter::ShowInteractable_Implementation(bool bShow)
-{
-	if (!CachedGameInstance->bIsWave)
-		CubeMeshComponent->SetRenderCustomDepth(bShow);
-
-	
+{	
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
 		if (bShow)
@@ -82,21 +69,6 @@ void ATeleporter::BeginPlay()
 	ChangeTexture();
 }
 
-void ATeleporter::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (OtherActor == UGameplayStatics::GetPlayerCharacter(GetWorld(),0))
-	{
-		if (TeleportWidgetClass && !CachedGameInstance->bIsWave && CachedGameInstance->UnlockedLevels.Contains(TargetLevelName))
-		{
-			if (UUserWidget* TeleportWidget = CreateWidget<UUserWidget>(GetWorld(), TeleportWidgetClass))
-			{
-				TeleportWidget->AddToViewport();
-			}
-		}
-	}
-}
-
 void ATeleporter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -127,11 +99,7 @@ void ATeleporter::ChangeTexture()
 		}
 
 		// Turn off effect if access denied
-		if (TeleportSkyBeam && UGameplayStatics::GetCurrentLevelName(this,true) != TEXT("Hub"))
-		{
-			TeleportSkyBeam->Deactivate();
-		}
-		if (TeleportCircles && UGameplayStatics::GetCurrentLevelName(this,true) != TEXT("Hub"))
+		if (TeleportCircles)
 		{
 			TeleportCircles->Deactivate();
 		}
@@ -147,12 +115,8 @@ void ATeleporter::ChangeTexture()
 			CubeMeshComponent->SetRenderCustomDepth(true);
 		}
 		
-		// Turn on effect if access denied
-		if (TeleportSkyBeam && UGameplayStatics::GetCurrentLevelName(this,true) != TEXT("Hub"))
-		{
-			TeleportSkyBeam->Activate();
-		}
-		if (TeleportCircles && UGameplayStatics::GetCurrentLevelName(this,true) != TEXT("Hub"))
+		// Turn off effect if access denied
+		if (TeleportCircles)
 		{
 			TeleportCircles->Activate();
 		}
@@ -175,7 +139,8 @@ void ATeleporter::Teleport()
 			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 			{
 				//Plays the mission incomplete dialogue for return
-				if ( TargetLevelName == "Hub")
+				if ( TargetLevelName == "Hub" && GI->CurrentGameFlag < 3 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3") ||
+					TargetLevelName == "Hub" && GI->CurrentGameFlag < 4 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("MetroV3"))
 				{
 					GI->StartDialogueRowName = "ReturnMissionIncomplete";
 				}
@@ -193,7 +158,7 @@ void ATeleporter::Teleport()
 					if (MissionSub->IsMissionCompleted())
 					{
 						//Plays the mission complete dialogue for return if mission is complete and updates the game flag
-						if (UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3"))
+						if (GI->CurrentGameFlag < 3 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3"))
 						{
 							if (GI->CurrentGameFlag < 3)
 							{
@@ -201,7 +166,7 @@ void ATeleporter::Teleport()
 							}
 							GI->StartDialogueRowName = "ReturnMissionComplete";
 						}
-						else if (UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("MetroV3"))
+						else if (GI->CurrentGameFlag < 3 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("MetroV3"))
 						{
 							if (GI->CurrentGameFlag < 4)
 							{
