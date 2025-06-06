@@ -45,7 +45,6 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 
 	if (PumpSound && PumpAudioComponent)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Pump %f"), PumpSound->Duration);
 		GetWorld()->GetTimerManager().SetTimer(PumpTimer, this, &AShotgun::PumpSoundDelay, TimeBetweenShots * 0.2, false);
 	}
 
@@ -191,6 +190,5 @@ void AShotgun::PumpSoundDelay()
 		PumpAudioComponent->SetPitchMultiplier(1/PitchMultiplier);
 		PumpAudioComponent->SetSound(PumpSound);
 		PumpAudioComponent->Play();
-		UE_LOG(LogTemp, Error, TEXT("Pump it%f"), 1/PitchMultiplier);
 	}
 }
