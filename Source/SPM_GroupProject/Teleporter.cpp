@@ -157,11 +157,13 @@ void ATeleporter::Teleport()
 				if (UMissionSubsystem* MissionSub = CachedGameInstance->GetSubsystem<UMissionSubsystem>())
 				{
 					MissionSub->TryUnlockLevel();
-					if (MissionSub->WavesSurvived >= 2 && GI->CurrentGameFlag < 2 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3"))
+
+					//Talk so that player goes back instead of dying 
+					/*if (MissionSub->WavesSurvived >= 2 && GI->CurrentGameFlag < 2 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3"))
 					{
 						GI->CurrentGameFlag = 2;
 						GI->StartDialogueRowName = "ReturnMissionComplete";
-					}
+					}*/
 					
 					if (MissionSub->IsMissionCompleted())
 					{

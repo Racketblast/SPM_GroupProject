@@ -44,7 +44,8 @@ void UMissionSubsystem::OnWaveCompleted(int32 WaveIndex)
 
 	//UE_LOG(LogTemp, Warning, TEXT("RequiredWaveToComplete %i"), RequiredWaveToComplete);
 
-	if (WavesSurvived == 2)
+	//Talk so that player goes back instead of dying 
+	/*if (WavesSurvived == 2)
 	{
 		//Plays the mission complete dialogue
 		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
@@ -55,7 +56,7 @@ void UMissionSubsystem::OnWaveCompleted(int32 WaveIndex)
 				GI->StartDialogue();
 			}
 		}
-	}
+	}*/
 
 	// Anropar CompleteMission() om man överlevt tillräckligt många waves
 	if (WavesSurvived >= RequiredWaveToComplete)
