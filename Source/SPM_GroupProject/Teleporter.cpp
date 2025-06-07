@@ -103,6 +103,10 @@ void ATeleporter::ChangeTexture()
 		{
 			TeleportCircles->Deactivate();
 		}
+		if (TeleportTriggerVolume)
+		{
+			TeleportTriggerVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+		}
 	}
 	else
 	{
@@ -119,6 +123,10 @@ void ATeleporter::ChangeTexture()
 		if (TeleportCircles)
 		{
 			TeleportCircles->Activate();
+		}
+		if (TeleportTriggerVolume)
+		{
+			TeleportTriggerVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 		}
 	}
 }
