@@ -35,11 +35,10 @@ EBTNodeResult::Type UBTTask_FlyToTarget::ExecuteTask(UBehaviorTreeComponent& Own
     
     FVector TargetLocation = OwnerComp.GetBlackboardComponent()->GetValueAsVector(TargetLocationKey.SelectedKeyName);
    // UE_LOG(LogTemp, Warning, TEXT("Flying enemy TargetLocation from BB: %s"), *TargetLocation.ToString());
-
-    // Only recalculate if path is empty or target has moved significantly
+    
     if (CurrentPath.Num() > 0 && FVector::Dist(TargetLocation, CurrentPath.Last()) < 100.f)
     {
-        return EBTNodeResult::InProgress; // Keep going on current path
+        return EBTNodeResult::InProgress; //Fortsätte på den nuvarande pathen 
     }
 
     AGridManager* GridManager = Cast<AGridManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AGridManager::StaticClass()));
@@ -123,9 +122,6 @@ void UBTTask_FlyToTarget::MoveToward(UBehaviorTreeComponent& OwnerComp, float De
     FVector Direction = (CurrentPoint - AIPawn->GetActorLocation()).GetSafeNormal();
     
     AIPawn->AddMovementInput(Direction, 1.0f, false);
-
-    //FVector NewLocation = FMath::VInterpTo(AIPawn->GetActorLocation(), CurrentPoint, DeltaSeconds, 1.5f);
-    //AIPawn->SetActorLocation(NewLocation);
 
     if (FVector::Dist(AIPawn->GetActorLocation(), CurrentPoint) < AcceptanceRadius)
     {
