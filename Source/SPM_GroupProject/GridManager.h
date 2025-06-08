@@ -62,7 +62,9 @@ public:
 
 	void UpdateNodeWalkability(const FIntVector& Index);
 	
-	TArray<FVector> FindPath(const FVector& StartLocation, const FVector& EndLocation); 
+	TArray<FVector> FindPath(const FVector& StartLocation, const FVector& EndLocation);
+
+	TSharedPtr<FGridNode> FindNearestWalkableNode(const FVector& FromLocation, float MaxSearchDistance);
 
 protected:
 	virtual void BeginPlay() override;

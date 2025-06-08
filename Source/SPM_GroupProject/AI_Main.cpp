@@ -6,6 +6,7 @@
 #include "Components/AudioComponent.h"
 #include "WaveManager.h"
 #include "AI_Controller.h"
+#include "ChallengeSubsystem.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
 #include "NavigationSystem.h"
@@ -14,8 +15,10 @@
 #include "Navigation/PathFollowingComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "EngineUtils.h"
+#include "Explosive.h"
 #include "FlyingEnemyAI.h"
 #include "MeleeDamageType.h"
+#include "PlayerCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/DamageEvents.h"
 
@@ -54,6 +57,18 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 			AIHealth = 0;
             bIsDead = true;
         	OnEnemyDied.Broadcast(this);
+        	
+        	// Notify challenge, Kollar om det var en granat som dödade fienden
+        	if (DamageCauser && DamageCauser->IsA<AExplosive>())
+        	{
+        		if (APlayerCharacter* Player = Cast<APlayerCharacter>(EventInstigator->GetPawn()))
+        		{
+        			if (UChallengeSubsystem* ChallengeSystem = Player->GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
+        			{
+        				ChallengeSystem->OnEnemyKilledWithGrenade();
+        			}
+        		}
+        	}
         	
             // Notify wave manager
             for (TActorIterator<AWaveManager> It(GetWorld()); It; ++It)

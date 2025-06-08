@@ -41,10 +41,6 @@ void AProjectileGun::Fire(FVector FireLocation, FRotator FireRotation)
 
 		if (FireSound && FireAudioComponent)
 		{
-			if (FireAudioComponent->IsPlaying())
-			{
-				FireAudioComponent->Stop();
-			}
 			FireAudioComponent->SetSound(FireSound);
 			FireAudioComponent->Play();
 		}

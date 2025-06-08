@@ -25,7 +25,7 @@ public:
 	USoundBase* CantTeleportSound;
 
 	UPROPERTY(EditDefaultsOnly, Category="Teleport")
-	class UNiagaraComponent* TeleportSkyBeam;
+	class UNiagaraComponent* TeleportCircles;
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -33,7 +33,7 @@ public:
 	UFUNCTION()
 	void ChangeTexture();
 
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable, Category="Teleport")
 	void Teleport();
 
 protected:
@@ -42,6 +42,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere)
 	class UStaticMeshComponent* CubeMeshComponent;
+
+	UPROPERTY(EditDefaultsOnly)
+	class UBoxComponent* TeleportTriggerVolume;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
 	class UMaterialInterface* WaveMaterial;

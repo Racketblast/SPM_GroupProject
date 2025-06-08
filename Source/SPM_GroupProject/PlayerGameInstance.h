@@ -27,6 +27,8 @@ public:
 	bool bGameEnded = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bUsingGamepad = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bWeirdMode = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 Money;
@@ -41,6 +43,8 @@ public:
 	TArray<int32> CurrentWeaponSkins = {0,0,0,0};
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bSwapMaterials = false;
+	UPROPERTY(BlueprintReadOnly)
+	FString CurrentInteractText;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bCanPlayDialogue = false;

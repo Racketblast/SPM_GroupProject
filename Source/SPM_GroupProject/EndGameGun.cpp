@@ -20,30 +20,25 @@ void AEndGameGun::Fire(FVector FireLocation, FRotator FireRotation)
         {
             if (GI->bDialogueIsPlaying)
                 return;
-            FName RandomDialogue;
-            switch (UKismetMathLibrary::RandomIntegerInRange(0,4))
-            {
-                case 0:
-                    RandomDialogue = "DontShootThat";
-                    break;
-                case 1:
-                    RandomDialogue = "Stop";
-                    break;
-                case 2:
-                    RandomDialogue = "Stooop";
-                    break;
-                case 3:
-                    RandomDialogue = "StopIt";
-                    break;
-                case 4:
-                    RandomDialogue = "StopThat";
-                    break;
-                default:
-                    break;
-            }
+
+            FName PossibleDialogues[] = {
+                "DontShootThat",
+                "Stop",
+                "Stooop",
+                "StopIt",
+                "StopThat"
+            };
             
-            GI->StartDialogueRowName = RandomDialogue;
+            GI->StartDialogueRowName = PlayNextDialogue;
             GI->StartDialogue();
+            
+            FName RandomDialogue;
+            do {
+                int32 Index = UKismetMathLibrary::RandomIntegerInRange(0, 4);
+                RandomDialogue = PossibleDialogues[Index];
+            } while (RandomDialogue == PlayNextDialogue);
+
+            PlayNextDialogue = RandomDialogue;
         }
         return;
     }

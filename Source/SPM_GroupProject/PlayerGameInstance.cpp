@@ -381,7 +381,14 @@ void UPlayerGameInstance::UpgradeGunSkin(APlayerCharacter* Player, AGun* Weapon,
 		}
 		if (Weapon->DifferentSkinMat.IsValidIndex(CurrentWeaponSkins[WeaponSkinIndex]))
 		{
-			Weapon->WeaponSkeletalMesh->SetMaterial(0,Weapon->DifferentSkinMat[CurrentWeaponSkins[WeaponSkinIndex]]);
+			if (Weapon == Player->GetWeaponInstance("Rifle"))
+			{
+				Weapon->WeaponSkeletalMesh->SetMaterial(1,Weapon->DifferentSkinMat[CurrentWeaponSkins[WeaponSkinIndex]]);
+			}
+			else
+			{
+				Weapon->WeaponSkeletalMesh->SetMaterial(0,Weapon->DifferentSkinMat[CurrentWeaponSkins[WeaponSkinIndex]]);
+			}
 		}
 		Player->CurrentGun->bIsUpgraded = true;
 	}

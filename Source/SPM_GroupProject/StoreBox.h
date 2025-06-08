@@ -31,6 +31,6 @@ protected:
 	class USoundBase* OpenBuyMenuSound;
 
 	UPROPERTY(EditDefaultsOnly)
-	class UStaticMeshComponent* StaticMeshComponent;
+	class USkeletalMeshComponent* SkeletalMeshComponent;
 
 };

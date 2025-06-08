@@ -10,6 +10,8 @@
 #include "MissionSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraComponent.h"
+#include "Blueprint/UserWidget.h"
+#include "Components/BoxComponent.h"
 
 // Sets default values
 ATeleporter::ATeleporter()
@@ -17,78 +19,35 @@ ATeleporter::ATeleporter()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	CubeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("CubeMeshComponent"));
+	RootComponent = CubeMeshComponent;
+	TeleportTriggerVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("PortalDistanceTriggerVolume"));
+	TeleportTriggerVolume->SetupAttachment(CubeMeshComponent);
 
-	TeleportSkyBeam = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TeleportSkyBeam"));
-	TeleportSkyBeam->SetupAttachment(CubeMeshComponent);
-	TeleportSkyBeam->bAutoActivate = false;
+	TeleportCircles = CreateDefaultSubobject<UNiagaraComponent>(TEXT("TeleportCircles"));
+	TeleportCircles->SetupAttachment(CubeMeshComponent);
+	TeleportCircles->bAutoActivate = false;
+
+	InteractText = TEXT("teleport");
 }
 
 void ATeleporter::Use_Implementation(APlayerCharacter* Player)
 {
-		if (!CachedGameInstance)
-		return;
-		// If you can teleport
-		// Checks if in wave and if you have level unlocked
-		if (!CachedGameInstance->bIsWave && CachedGameInstance->UnlockedLevels.Contains(TargetLevelName))
-		{
-			CachedGameInstance->Money += Player->PickedUpMoney;
-			
-			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
-			{
-				//Plays the mission incomplete dialogue for return
-				if ( TargetLevelName == "Hub")
-				{
-					GI->StartDialogueRowName = "ReturnMissionIncomplete";
-				}
-				
-				// För level unlock 
-				if (UMissionSubsystem* MissionSub = CachedGameInstance->GetSubsystem<UMissionSubsystem>())
-				{
-					MissionSub->TryUnlockLevel();
-					if (MissionSub->WavesSurvived >= 2 && GI->CurrentGameFlag < 2 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3"))
-					{
-						GI->CurrentGameFlag = 2;
-						GI->StartDialogueRowName = "ReturnMissionComplete";
-					}
-					
-					if (MissionSub->IsMissionCompleted())
-					{
-						//Plays the mission complete dialogue for return if mission is complete and updates the game flag
-						if (UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3"))
-						{
-							if (GI->CurrentGameFlag < 3)
-							{
-								GI->CurrentGameFlag = 3;
-							}
-							GI->StartDialogueRowName = "ReturnMissionComplete";
-						}
-						else if (UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("MetroV3"))
-						{
-							if (GI->CurrentGameFlag < 4)
-							{
-								GI->CurrentGameFlag = 4;
-							}
-							GI->StartDialogueRowName = "EndGameGun1";
-						}
-					}
-				}
-			}
-			
-			Teleport();
-		}
-		else
-		{
-			if (CantTeleportSound)
-			{
-				UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantTeleportSound, GetActorLocation());
-			}
-		}
+	Teleport();
 }
 
 void ATeleporter::ShowInteractable_Implementation(bool bShow)
-{
-	if (!CachedGameInstance->bIsWave)
-		CubeMeshComponent->SetRenderCustomDepth(bShow);
+{	
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (bShow)
+		{
+			GI->CurrentInteractText = InteractText;
+		}
+		else
+		{
+			GI->CurrentInteractText = "";
+		}
+	}
 }
 
 
@@ -132,38 +91,113 @@ void ATeleporter::ChangeTexture()
 	{
 		if (WaveMaterial)
 		{
-			CubeMeshComponent->SetMaterial(0, WaveMaterial);
+			if (CubeMeshComponent->GetMaterial(1))
+			{
+				CubeMeshComponent->SetMaterial(1, WaveMaterial);
+			}
 			CubeMeshComponent->SetRenderCustomDepth(false);
 		}
-		if (TeleportSkyBeam && UGameplayStatics::GetCurrentLevelName(this,true) != TEXT("Hub"))
+
+		// Turn off effect if access denied
+		if (TeleportCircles)
 		{
-			TeleportSkyBeam->Deactivate(); // Turn off effect if access denied
+			TeleportCircles->Deactivate();
+		}
+		if (TeleportTriggerVolume)
+		{
+			TeleportTriggerVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
 		}
 	}
 	else
 	{
 		if (GracePeriodMaterial)
 		{
-			CubeMeshComponent->SetMaterial(0, GracePeriodMaterial);
+			if (CubeMeshComponent->GetMaterial(1))
+			{
+				CubeMeshComponent->SetMaterial(1, GracePeriodMaterial);
+			}
 			CubeMeshComponent->SetRenderCustomDepth(true);
 		}
-		if (TeleportSkyBeam && UGameplayStatics::GetCurrentLevelName(this,true) != TEXT("Hub"))
+		
+		// Turn off effect if access denied
+		if (TeleportCircles)
 		{
-			TeleportSkyBeam->Activate(); // Turn on effect if access granted
+			TeleportCircles->Activate();
+		}
+		if (TeleportTriggerVolume)
+		{
+			TeleportTriggerVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 		}
 	}
 }
 
 void ATeleporter::Teleport()
 {
-	if (AArenaGameMode* GameMode = Cast<AArenaGameMode>(UGameplayStatics::GetGameMode(this)))
-	{
-		GameMode->FadeOut(this);
-		if (GameMode->SequencePlayer)
+	if (!CachedGameInstance)
+		return;
+		// If you can teleport
+		// Checks if in wave and if you have level unlocked
+		if (!CachedGameInstance->bIsWave && CachedGameInstance->UnlockedLevels.Contains(TargetLevelName))
 		{
-			GameMode->SequencePlayer->OnFinished.AddDynamic(this, &ATeleporter::ChangeLevel);
+			if (APlayerCharacter* Player = Cast<APlayerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)))
+			{
+				CachedGameInstance->Money += Player->PickedUpMoney;
+			}
+			
+			if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+			{
+				//Plays the mission incomplete dialogue for return
+				if ( TargetLevelName == "Hub" && GI->CurrentGameFlag < 3 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3") ||
+					TargetLevelName == "Hub" && GI->CurrentGameFlag < 4 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("MetroV3"))
+				{
+					GI->StartDialogueRowName = "ReturnMissionIncomplete";
+				}
+				
+				// För level unlock 
+				if (UMissionSubsystem* MissionSub = CachedGameInstance->GetSubsystem<UMissionSubsystem>())
+				{
+					MissionSub->TryUnlockLevel();
+
+					//Talk so that player goes back instead of dying 
+					/*if (MissionSub->WavesSurvived >= 2 && GI->CurrentGameFlag < 2 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3"))
+					{
+						GI->CurrentGameFlag = 2;
+						GI->StartDialogueRowName = "ReturnMissionComplete";
+					}*/
+					
+					if (MissionSub->IsMissionCompleted())
+					{
+						//Plays the mission complete dialogue for return if mission is complete and updates the game flag
+						if (GI->CurrentGameFlag < 3 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3"))
+						{
+							GI->CurrentGameFlag = 3;
+							GI->StartDialogueRowName = "ReturnMissionComplete";
+						}
+						else if (GI->CurrentGameFlag < 4 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("MetroV3"))
+						{
+							GI->CurrentGameFlag = 4;
+							GI->StartDialogueRowName = "EndGameGun1";
+						}
+					}
+				}
+			}
+			
+			if (AArenaGameMode* GameMode = Cast<AArenaGameMode>(UGameplayStatics::GetGameMode(this)))
+			{
+				GameMode->FadeOut(this);
+				if (GameMode->SequencePlayer)
+				{
+					GameMode->SequencePlayer->OnFinished.AddDynamic(this, &ATeleporter::ChangeLevel);
+				}
+			}
 		}
-	}
+		else
+		{
+			if (CantTeleportSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), CantTeleportSound, GetActorLocation());
+			}
+		}
 }
 
 void ATeleporter::ChangeLevel()

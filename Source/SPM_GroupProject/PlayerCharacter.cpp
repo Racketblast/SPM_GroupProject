@@ -330,7 +330,23 @@ void APlayerCharacter::EnemyHitFalse()
 		);
 	});
 }
-
+void APlayerCharacter::EnemyHeadHitFalse()
+{
+	// Schedule the actual reset after 0.2 seconds
+	GetWorldTimerManager().SetTimerForNextTick([this]()
+	{
+		GetWorldTimerManager().SetTimer(
+			EnemyHeadHitResetTimerHandle,
+			[this]()
+			{
+				bEnemyHeadHit = false;
+				UE_LOG(LogTemp, Error, TEXT("headhit false (player)"));
+			},
+			0.01f,
+			false
+		);
+	});
+}
 
 
 void APlayerCharacter::Shoot()
@@ -342,7 +358,7 @@ void APlayerCharacter::Shoot()
 	USceneComponent* Muzzle = CurrentGun->GetMuzzlePoint();
 	if (!Muzzle) return;
 
-	if (CurrentGun == Weapon4Instance)
+	if (CurrentGun == Weapon4Instance || CurrentGun == Weapon5Instance)
 	{
 		CurrentGun->Fire(Muzzle->GetComponentLocation(), PlayerCamera->GetComponentRotation());
 	}
@@ -771,10 +787,14 @@ float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 	}
 	if (PlayerHealth <= 0)
 	{
+		if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+		{
+			GI->Money += PickedUpMoney * 0.1;
+		}
+		
 		PlayerHealth = 0;
 		bIsDead = true;
 		DisableInput(nullptr);
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		
 		if (AArenaGameMode* GameMode = Cast<AArenaGameMode>(UGameplayStatics::GetGameMode(this)))
 		{

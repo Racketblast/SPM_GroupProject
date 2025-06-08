@@ -27,10 +27,13 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bEnemyHit = false;
-
+	UPROPERTY(BlueprintReadOnly)
+bool bEnemyHeadHit = false;
+	
 	UFUNCTION(BlueprintCallable)
 	void EnemyHitFalse();
-
+	UFUNCTION(BlueprintCallable)
+	void EnemyHeadHitFalse();
 	void AddRecoilImpulse(FRotator Impulse);
 	UPROPERTY(EditAnywhere)
 	USceneComponent* Hand;
@@ -174,6 +177,7 @@ private:
 	class UAIPerceptionStimuliSourceComponent* StimulusSource;
 	void SetupStimulusSource();
 	FTimerHandle EnemyHitResetTimerHandle;
+	FTimerHandle EnemyHeadHitResetTimerHandle;
 	UPROPERTY(EditAnywhere, Category = "Sway")
 	float SwayAmount = 2.0f;
 
@@ -210,10 +214,12 @@ private:
 
 	//Melee handlers for delay
 	FTimerHandle MeleeTimerHandle;
-	UFUNCTION(Category = "Melee")
+	UFUNCTION()
 	void PerformMelee();
-	UFUNCTION(Category = "Melee")
+	UFUNCTION()
 	void EndMelee();
+
+	//For scroll weapon switching
 	void NextWeapon();
 	void PreviousWeapon();
 	UFUNCTION()

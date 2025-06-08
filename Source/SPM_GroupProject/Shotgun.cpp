@@ -11,6 +11,13 @@
 #include "NiagaraFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 
+AShotgun::AShotgun()
+{
+	//Sound setup
+	PumpAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("PumpAudioComponent"));
+	PumpAudioComponent->SetupAttachment(WeaponMeshComponent);
+}
+
 void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 {
 	if (bIsReloading)
@@ -32,11 +39,13 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 
 	if (FireSound && FireAudioComponent)
 	{
-		if (FireAudioComponent->IsPlaying())
-			FireAudioComponent->Stop();
-
 		FireAudioComponent->SetSound(FireSound);
 		FireAudioComponent->Play();
+	}
+
+	if (PumpSound && PumpAudioComponent)
+	{
+		GetWorld()->GetTimerManager().SetTimer(PumpTimer, this, &AShotgun::PumpSoundDelay, TimeBetweenShots * 0.2, false);
 	}
 
 	if (MuzzleFlash && WeaponSkeletalMesh)
@@ -92,11 +101,7 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 
 				if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
 				{
-					if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
-					{
-						Player->bEnemyHit = true;
-						Player->EnemyHitFalse();
-					}
+					
 
 					//  Headshot check
 					float FinalDamage = WeaponDamage / NumPellets;
@@ -104,7 +109,18 @@ void AShotgun::Fire(FVector FireLocation, FRotator FireRotation)
 					{
 						FinalDamage *= 2.0f;
 						UE_LOG(LogTemp, Warning, TEXT("Headshot! Double damage applied."));
+						if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
+						{
+							Player->bEnemyHeadHit = true;
+							UE_LOG(LogTemp, Error, TEXT("hit HEAD activated (from gun)"));
+							Player->EnemyHeadHitFalse();
+						}
+					}else if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))
+					{
+						//Player->bEnemyHit = true;
+					//	Player->EnemyHitFalse();
 					}
+			
 
 					UGameplayStatics::ApplyPointDamage(
 						HitActor,
@@ -163,4 +179,16 @@ void AShotgun::EnemyHitFalse()
 {
 	bEnemyHit = false;
 	UE_LOG(LogTemp, Error, TEXT("hit false"));
+}
+
+void AShotgun::PumpSoundDelay()
+{
+	if (PumpSound && PumpAudioComponent)
+	{
+		float TimeBetweenShots = 1/RoundsPerSecond;
+		float PitchMultiplier = TimeBetweenShots/PumpSound->Duration;
+		PumpAudioComponent->SetPitchMultiplier(1/PitchMultiplier);
+		PumpAudioComponent->SetSound(PumpSound);
+		PumpAudioComponent->Play();
+	}
 }

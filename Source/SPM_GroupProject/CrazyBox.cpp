@@ -9,6 +9,8 @@
 ACrazyBox::ACrazyBox()
 {
 	CubeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("CubeMesh");
+	RootComponent = CubeMeshComponent;
+	InteractText = TEXT("be crazy");
 }
 
 void ACrazyBox::Use_Implementation(APlayerCharacter* Player)
@@ -32,5 +34,17 @@ void ACrazyBox::Use_Implementation(APlayerCharacter* Player)
 void ACrazyBox::ShowInteractable_Implementation(bool bShow)
 {
 	CubeMeshComponent->SetRenderCustomDepth(bShow);
+	
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (bShow)
+		{
+			GI->CurrentInteractText = InteractText;
+		}
+		else
+		{
+			GI->CurrentInteractText = "";
+		}
+	}
 }
 

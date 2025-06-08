@@ -43,10 +43,18 @@ protected:
 
 	void CheckIfStuck(UBehaviorTreeComponent& OwnerComp, APawn* Pawn, const FVector& TargetLocation);
 
+	//void FollowPlayerTrail(UBehaviorTreeComponent& OwnerComp, APawn* Pawn);
+
+	void HandleFallbackManeuver(UBehaviorTreeComponent& OwnerComp, const FVector& CurrentLocation, const FVector& TargetLocation);
+
 private:
 	FVector LastLocation;
 	float TimeSinceLastMove = 0.0f;
 	bool bBackingOff = false;
 	float BackoffElapsed = 0.0f;
 	float TimeSinceLastTargetUpdate = 0.0f;
+
+	float TotalProgressTowardTarget = 0.f;
+	float ProgressCheckTimeAccumulator = 0.f;
+	float MinimumTotalProgressThreshold = 10.f;
 };

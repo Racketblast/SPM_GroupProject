@@ -266,3 +266,30 @@ bool FlyingAIHelper::IsPathClear(
 	
 	return !bHit;
 }
+
+
+FVector FlyingAIHelper::GetSmartTargetLocation(ACharacter* Player, AFlyingEnemyAI* FlyingEnemy, const FVector& FromLocation)
+{
+	if (!Player || !FlyingEnemy)
+	{
+		return FromLocation;
+	}
+
+	UWorld* World = FlyingEnemy->GetWorld();
+	if (!World)
+	{
+		return FromLocation;
+	}
+
+	return CalculateTargetLocation(
+		World,
+		Player,
+		FlyingEnemy,
+		FromLocation,
+		FlyingEnemy->ZOffset,
+		FlyingEnemy->bAddRandomOffset,
+		FlyingEnemy->RandomRadius,
+		FlyingEnemy->ObstacleCheckDistance,
+		FlyingEnemy->ObstacleClearance
+	);
+}

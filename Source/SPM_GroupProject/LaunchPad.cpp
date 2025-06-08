@@ -12,6 +12,7 @@
 ALaunchPad::ALaunchPad()
 {
 	LaunchPadMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LaunchPadMesh"));
+	RootComponent = LaunchPadMesh;
 	
 	LaunchPadTriggerVolume = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerVolume"));
 	LaunchPadTriggerVolume->SetupAttachment(LaunchPadMesh);

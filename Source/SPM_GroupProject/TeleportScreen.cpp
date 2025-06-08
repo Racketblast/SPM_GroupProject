@@ -3,6 +3,7 @@
 
 #include "TeleportScreen.h"
 
+#include "PlayerGameInstance.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -11,48 +12,63 @@
 ATeleportScreen::ATeleportScreen()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
+	RootComponent = StaticMeshComponent;
+	InteractText = TEXT("open teleport screen");
 }
 
 void ATeleportScreen::Use_Implementation(APlayerCharacter* Player)
-{if (TeleportWidgetClass)
 {
-	if (UUserWidget* BuyBoxWidget = CreateWidget<UUserWidget>(GetWorld(), TeleportWidgetClass))
+	if (TeleportWidgetClass)
 	{
-		BuyBoxWidget->AddToViewport();
-		TArray<UUserWidget*> FoundWidgets;
-		UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UUserWidget::StaticClass(), false);
-
-		for (UUserWidget* Widget : FoundWidgets)
+		if (UUserWidget* BuyBoxWidget = CreateWidget<UUserWidget>(GetWorld(), TeleportWidgetClass))
 		{
-			if (Widget && Widget->IsInViewport() && Widget->GetClass() == HudWidgetClass)
+			BuyBoxWidget->AddToViewport();
+			TArray<UUserWidget*> FoundWidgets;
+			UWidgetBlueprintLibrary::GetAllWidgetsOfClass(GetWorld(), FoundWidgets, UUserWidget::StaticClass(), false);
+
+			for (UUserWidget* Widget : FoundWidgets)
 			{
-				Widget->RemoveFromParent();
-				break;
+				if (Widget && Widget->IsInViewport() && Widget->GetClass() == HudWidgetClass)
+				{
+					Widget->RemoveFromParent();
+					break;
+				}
+			}
+				
+			if (OpenTeleportMenuSound)
+			{
+				UGameplayStatics::PlaySoundAtLocation(GetWorld(), OpenTeleportMenuSound, GetActorLocation());
+			}
+				
+			if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+			{
+				PlayerController->SetIgnoreMoveInput(true);
+				PlayerController->SetIgnoreLookInput(true);
+					
+				PlayerController->bShowMouseCursor = true;
+				int32 ViewportX, ViewportY;
+				PlayerController->GetViewportSize(ViewportX, ViewportY);
+				PlayerController->SetMouseLocation(ViewportX/2, ViewportY/2);
+				PlayerController->SetInputMode(FInputModeUIOnly());
 			}
 		}
-			
-		if (OpenTeleportMenuSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), OpenTeleportMenuSound, GetActorLocation());
-		}
-			
-		if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
-		{
-			PlayerController->SetIgnoreMoveInput(true);
-			PlayerController->SetIgnoreLookInput(true);
-				
-			PlayerController->bShowMouseCursor = true;
-			int32 ViewportX, ViewportY;
-			PlayerController->GetViewportSize(ViewportX, ViewportY);
-			PlayerController->SetMouseLocation(ViewportX/2, ViewportY/2);
-			PlayerController->SetInputMode(FInputModeUIOnly());
-		}
 	}
-}
 }
 
 void ATeleportScreen::ShowInteractable_Implementation(bool bShow)
 {
 	StaticMeshComponent->SetRenderCustomDepth(bShow);
+	
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (bShow)
+		{
+			GI->CurrentInteractText = InteractText;
+		}
+		else
+		{
+			GI->CurrentInteractText = "";
+		}
+	}
 }
 

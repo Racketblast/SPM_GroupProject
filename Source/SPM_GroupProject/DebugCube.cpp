@@ -10,10 +10,9 @@
 // Sets default values
 ADebugCube::ADebugCube()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
-
+	RootComponent = StaticMeshComponent;
+	InteractText = TEXT("");
 }
 
 void ADebugCube::Use_Implementation(APlayerCharacter* Player)
@@ -24,6 +23,14 @@ void ADebugCube::Use_Implementation(APlayerCharacter* Player)
 void ADebugCube::ShowInteractable_Implementation(bool bShow)
 {
 	StaticMeshComponent->SetRenderCustomDepth(bShow);
+
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (bShow)
+		{
+			GI->CurrentInteractText = InteractText;
+		}
+	}
 }
 
 void ADebugCube::DoAllFunctions()
