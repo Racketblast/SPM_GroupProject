@@ -41,25 +41,25 @@ EBTNodeResult::Type UBTTask_JumpToNavMesh::ExecuteTask(
     //Letar närmaste punkten på navmeshen inom en 500³ box
     if (NavSys->ProjectPointToNavigation(CurrentLocation,
                                          NearestPoint,
-                                         FVector(500, 500, 500)))
+                                         FVector(500, 500, 100)))
     {
         // 3) Build a launch vector toward the nav point ---------------------------
         const FVector JumpDirection = (NearestPoint.Location - CurrentLocation).GetSafeNormal();
 
         FVector LaunchVelocity = JumpDirection * 600.f; // horizontal speed
-        LaunchVelocity.Z = 500.f;                       // vertical boost
+        LaunchVelocity.Z = 100.f;                       // vertical boost
 
         //Kör Unreals launch
         CachedCharacter->LaunchCharacter(LaunchVelocity,
                                         /*bXYOverride=*/true,
                                         /*bZOverride=*/true);
 
-        /* DEBUG: ------------------------------------
+         /*DEBUG: ------------------------------------*/
         DrawDebugLine(GetWorld(), CurrentLocation, NearestPoint.Location,
                       FColor::Green, false, 2.0f, 0, 5.0f);
         DrawDebugSphere(GetWorld(), NearestPoint.Location, 30.f, 12,
                         FColor::Green, false, 2.0f);
-        */
+        /**/
 
         // 4) Cache state for TickTask ---------------------------------------------
         TargetLocation  = NearestPoint.Location;  // where we want to land
