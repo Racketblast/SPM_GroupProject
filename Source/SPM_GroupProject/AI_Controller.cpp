@@ -57,7 +57,7 @@ void AAI_Controller::SetupPerceptionSystem()
 
     /* -------------------- vision parameters ------------------------ */
     SightConfig->SightRadius                 = 15000.0f;  // max range
-    SightConfig->PeripheralVisionAngleDegrees = 90.f;     // 180° total FOV
+    SightConfig->PeripheralVisionAngleDegrees = 360.f;     // 180° total FOV
     SightConfig->DetectionByAffiliation.bDetectEnemies   = true;
     SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
     SightConfig->DetectionByAffiliation.bDetectNeutrals  = true;
