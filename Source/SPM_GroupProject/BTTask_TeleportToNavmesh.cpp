@@ -5,7 +5,7 @@
 #include "GameFramework/Character.h"      // So we can safely teleport characters
 
 // ---------------------------------------------------------------------------
-// Constructor – give the BT node a nice label.
+// Constructor
 // ---------------------------------------------------------------------------
 UBTTask_TeleportToNavmesh::UBTTask_TeleportToNavmesh()
 {
@@ -18,7 +18,7 @@ UBTTask_TeleportToNavmesh::UBTTask_TeleportToNavmesh()
 EBTNodeResult::Type UBTTask_TeleportToNavmesh::ExecuteTask(
     UBehaviorTreeComponent& OwnerComp, uint8*)
 {
-    // ─── 1. Get AI controller och pawn, och validate båda  ───────────────────────────────────
+    // ─── 1. Hämtar AI controller och pawn, och validate båda  ───────────────────────────────────
     AAIController* AIController = OwnerComp.GetAIOwner();
     if (!AIController) return EBTNodeResult::Failed;
 
@@ -34,19 +34,17 @@ EBTNodeResult::Type UBTTask_TeleportToNavmesh::ExecuteTask(
     if (NavSys->GetRandomPointInNavigableRadius(AIPawn->GetActorLocation(),SearchRadius,NavLocation))
     {
         // TeleportPhysics preserves existing velocity when possible.
-        AIPawn->SetActorLocation(NavLocation.Location,/*bSweep=*/false,/*HitResult=*/nullptr,
+        AIPawn->SetActorLocation(NavLocation.Location,false,nullptr,
             ETeleportType::TeleportPhysics);
 
-        // ─── 4. Clear BT flag so other tasks can proceed. ──────────────────
+        // ─── 4. Clear BT flag ──────────────────
         if (UBlackboardComponent* Blackboard = AIController->GetBlackboardComponent())
         {
-            //reset blackboard flag
+            //reset blackboard
             Blackboard->SetValueAsBool(FName("TeleportToNavmesh"), false);
         }
 
         return EBTNodeResult::Succeeded;
     }
-
-    // Couldn’t find a spot – fail so BT can decide what to do next.
     return EBTNodeResult::Failed;
 }
