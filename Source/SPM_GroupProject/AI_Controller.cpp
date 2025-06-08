@@ -10,7 +10,7 @@
 AAI_Controller::AAI_Controller(const FObjectInitializer& FObjectInitializer)
     : Super(FObjectInitializer)            // base‑class init list
 {
-    // Build perception as early as possible so it exists before possession.
+    // bygger perception tidigt så den finns innan possession.
     SetupPerceptionSystem();
 }
 
@@ -22,6 +22,7 @@ void AAI_Controller::OnPossess(APawn* InPawn)
     // 1) Make sure we actually possess our expected pawn class.
     if (AAI_Main* AI = Cast<AAI_Main>(InPawn))
     {
+        
         /* -------------------------------------------------- Behaviour Tree */
         if (UBehaviorTree*  BT = AI->GetBehaviorTree())
         {
@@ -44,31 +45,19 @@ void AAI_Controller::OnPossess(APawn* InPawn)
 }
 
 // ───────────────────────────────────────────────────── SetupPerceptionSystem ─── //
-/**
- * Builds a UAIPerceptionComponent + a sight sense configuration, then wires
- * them together so we receive OnTargetPerceptionUpdated events.
- */
+//bygger UAIPerceptionComponent + en sight sense configuration, kopplar sen ihop dom så vi får OnTargetPerceptionUpdated events.
 void AAI_Controller::SetupPerceptionSystem()
 {
-    // 1) Create the sense config object. Needs a *stable* pointer for UObjects,
-    //    so we store it as a member (engine deletes it with the controller).
+    // 1) Create the sense config object. Needs a *stable* pointer for UObjects, (engine deletes it with the controller).
     SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
 
-    // 2) Create the perception component itself and declare that sight is
-    //    its dominant (primary) sense.
-    UAIPerceptionComponent* Perception =
-        CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComponent"));
+    // 2) Create the perception component itself
+    UAIPerceptionComponent* Perception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComponent"));
     SetPerceptionComponent(*Perception);
 
-    /* -------------------- Tune vision parameters ------------------------ */
+    /* -------------------- vision parameters ------------------------ */
     SightConfig->SightRadius                 = 15000.0f;  // max range
-    //SightConfig->LoseSightRadius             = SightConfig->SightRadius + 25.f; // hysteresis
-    SightConfig->PeripheralVisionAngleDegrees = 90.f;     // 180° total FOV
-    
-    // SightConfig->SetMaxAge(5.f);                     // time to forget
-    // SightConfig->AutoSuccessRangeFromLastSeenLocation = 520.f;
-
-    // Detect everyone (enemies, friendlies, neutrals)
+    SightConfig->PeripheralVisionAngleDegrees = 360.f;     // 180° total FOV
     SightConfig->DetectionByAffiliation.bDetectEnemies   = true;
     SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
     SightConfig->DetectionByAffiliation.bDetectNeutrals  = true;
@@ -78,19 +67,12 @@ void AAI_Controller::SetupPerceptionSystem()
     Perception->SetDominantSense(*SightConfig->GetSenseImplementation());
 
     // Bind C++ callback for when perception state changes.
-    Perception->OnTargetPerceptionUpdated.AddDynamic(
-        this, &AAI_Controller::OnTargetDetected);
+    Perception->OnTargetPerceptionUpdated.AddDynamic(this, &AAI_Controller::OnTargetDetected);
 }
 
 // ───────────────────────────────────────────────────── OnTargetDetected ─── //
-/**
- * Called whenever the perception component registers that an actor was either
- * successfully sensed or lost.
- *
- * We only care if the actor is *the* player character. The Blackboard key
- * "CanSeePlayerCharacter" becomes true when the player is visible and false
- * when out of sight. The Behaviour Tree can then react (shoot, chase, etc.).
- */
+// Called whenever the perception component registers that an actor was either successfully sensed or lost.
+
 void AAI_Controller::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 {
     if (const APlayerCharacter* Player = Cast<APlayerCharacter>(Actor))
