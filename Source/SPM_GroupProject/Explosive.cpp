@@ -148,11 +148,33 @@ void AExplosive::Explode()
             }
         }
         else
+        {if (UPrimitiveComponent* PrimComp = HitComponent)
         {
-            if (HitComponent->IsSimulatingPhysics())
+            // Wake up the component (important when gravity is off)
+            PrimComp->WakeAllRigidBodies();
+
+            // Apply standard impulse to anything simulating physics
+            if (PrimComp->IsSimulatingPhysics())
             {
-                HitComponent->AddImpulse(LaunchVelocity, NAME_None, true);
+                PrimComp->AddImpulse(LaunchVelocity, NAME_None, true);
             }
+
+            // Special handling for Geometry Collection (fractured mesh)
+            if (PrimComp->GetClass()->GetName().Contains("GeometryCollectionComponent"))
+            {
+                // Wake up and push fractured pieces
+                PrimComp->SetAllPhysicsLinearVelocity(FVector(1, 0, 0)); // Small nudge to ensure it's "awake"
+                PrimComp->AddRadialImpulse(
+                    ExplosionCenter,
+                    ExplosionRadius,
+                    ExplosionPushForce,
+                    ERadialImpulseFalloff::RIF_Linear,
+                    true // bVelChange
+                );
+            }
+        }
+
+
 
             if (HitActor->FindFunction("OnLineTraceHit"))
             {
