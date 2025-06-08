@@ -12,7 +12,7 @@ ADebugCube::ADebugCube()
 {
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
 	RootComponent = StaticMeshComponent;
-
+	InteractText = TEXT("");
 }
 
 void ADebugCube::Use_Implementation(APlayerCharacter* Player)
@@ -23,6 +23,14 @@ void ADebugCube::Use_Implementation(APlayerCharacter* Player)
 void ADebugCube::ShowInteractable_Implementation(bool bShow)
 {
 	StaticMeshComponent->SetRenderCustomDepth(bShow);
+
+	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
+	{
+		if (bShow)
+		{
+			GI->CurrentInteractText = InteractText;
+		}
+	}
 }
 
 void ADebugCube::DoAllFunctions()

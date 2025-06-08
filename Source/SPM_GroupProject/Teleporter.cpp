@@ -103,6 +103,10 @@ void ATeleporter::ChangeTexture()
 		{
 			TeleportCircles->Deactivate();
 		}
+		if (TeleportTriggerVolume)
+		{
+			TeleportTriggerVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+		}
 	}
 	else
 	{
@@ -119,6 +123,10 @@ void ATeleporter::ChangeTexture()
 		if (TeleportCircles)
 		{
 			TeleportCircles->Activate();
+		}
+		if (TeleportTriggerVolume)
+		{
+			TeleportTriggerVolume->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 		}
 	}
 }
@@ -149,29 +157,25 @@ void ATeleporter::Teleport()
 				if (UMissionSubsystem* MissionSub = CachedGameInstance->GetSubsystem<UMissionSubsystem>())
 				{
 					MissionSub->TryUnlockLevel();
-					if (MissionSub->WavesSurvived >= 2 && GI->CurrentGameFlag < 2 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3"))
+
+					//Talk so that player goes back instead of dying 
+					/*if (MissionSub->WavesSurvived >= 2 && GI->CurrentGameFlag < 2 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3"))
 					{
 						GI->CurrentGameFlag = 2;
 						GI->StartDialogueRowName = "ReturnMissionComplete";
-					}
+					}*/
 					
 					if (MissionSub->IsMissionCompleted())
 					{
 						//Plays the mission complete dialogue for return if mission is complete and updates the game flag
 						if (GI->CurrentGameFlag < 3 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("V3"))
 						{
-							if (GI->CurrentGameFlag < 3)
-							{
-								GI->CurrentGameFlag = 3;
-							}
+							GI->CurrentGameFlag = 3;
 							GI->StartDialogueRowName = "ReturnMissionComplete";
 						}
-						else if (GI->CurrentGameFlag < 3 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("MetroV3"))
+						else if (GI->CurrentGameFlag < 4 && UGameplayStatics::GetCurrentLevelName(GetWorld(),true) == TEXT("MetroV3"))
 						{
-							if (GI->CurrentGameFlag < 4)
-							{
-								GI->CurrentGameFlag = 4;
-							}
+							GI->CurrentGameFlag = 4;
 							GI->StartDialogueRowName = "EndGameGun1";
 						}
 					}
