@@ -383,7 +383,17 @@ void UPlayerGameInstance::UpgradeGunSkin(APlayerCharacter* Player, AGun* Weapon,
 		{
 			if (Weapon == Player->GetWeaponInstance("Rifle"))
 			{
+				Weapon->WeaponSkeletalMesh->SetMaterial(0,Weapon->DifferentSkinMat[CurrentWeaponSkins[WeaponSkinIndex]]);
 				Weapon->WeaponSkeletalMesh->SetMaterial(1,Weapon->DifferentSkinMat[CurrentWeaponSkins[WeaponSkinIndex]]);
+				Weapon->WeaponSkeletalMesh->SetMaterial(3,Weapon->DifferentSkinMat[CurrentWeaponSkins[WeaponSkinIndex]]);
+			}
+			else if (Weapon == Player->GetWeaponInstance("Shotgun"))
+			{
+				Weapon->WeaponSkeletalMesh->SetMaterial(0,Weapon->DifferentSkinMat[CurrentWeaponSkins[WeaponSkinIndex]]);
+				Weapon->WeaponSkeletalMesh->SetMaterial(1,Weapon->DifferentSkinMat[CurrentWeaponSkins[WeaponSkinIndex]]);
+				Weapon->WeaponSkeletalMesh->SetMaterial(3,Weapon->DifferentSkinMat[CurrentWeaponSkins[WeaponSkinIndex]]);
+				Weapon->WeaponSkeletalMesh->SetMaterial(4,Weapon->DifferentSkinMat[CurrentWeaponSkins[WeaponSkinIndex]]);
+				Weapon->WeaponSkeletalMesh->SetMaterial(5,Weapon->DifferentSkinMat[CurrentWeaponSkins[WeaponSkinIndex]]);
 			}
 			else
 			{

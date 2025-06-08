@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "AI_Main.h"
 
 #include "MoneyBox.h"
@@ -180,13 +178,14 @@ void AAI_Main::BeginPlay()
 {
 	Super::BeginPlay();
 	AIHealth = MaxAIHealth;
+	
 
 	if (UCharacterMovementComponent* Move = GetCharacterMovement())
 	{
 		Move->bUseRVOAvoidance             = true;
-		Move->AvoidanceConsiderationRadius = 500.f;
+		Move->AvoidanceConsiderationRadius = 300.f;
 		Move->AvoidanceWeight              = 0.7f;
-	}	//AI Crowd avoidance attempt
+	}	//AI Crowd avoidance försök
 
 	LastKnownLocation = GetActorLocation();
 }
@@ -195,15 +194,16 @@ void AAI_Main::BeginPlay()
 void AAI_Main::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
 
-	/*  Skip when jumping or flying */
+	/*  Skippar om den är i luften */
 	if (UCharacterMovementComponent* Move = GetCharacterMovement();
 	    Move && (Move->IsFalling() || Move->IsFlying()))
 	{
 		return;
 	}
 
-	/*  Skip “stuck” while AI is firing */
+	/*  Skippar “stuck” vid isfiring */
 	if (AAI_Controller* AIC = Cast<AAI_Controller>(GetController()))
 	{
 		if (UBlackboardComponent* BB = AIC->GetBlackboardComponent())
@@ -239,12 +239,6 @@ void AAI_Main::Tick(float DeltaTime)
 			}
 		}
 	}
-}
-
-/* ─────────────────────────────────────────────── Bara kvar ifall vi vill göra ai player controllable*/
-void AAI_Main::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
 /* ─────────────────────────────────────────────── */

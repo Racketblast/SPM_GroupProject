@@ -179,5 +179,5 @@ void AArenaGameMode::ReturnToHub()
 
 void AArenaGameMode::GoToEnding()
 {
-	UGameplayStatics::OpenLevel(this, "CinematicHub");
+	UGameplayStatics::OpenLevel(this, "CinematicHubFinal");
 }

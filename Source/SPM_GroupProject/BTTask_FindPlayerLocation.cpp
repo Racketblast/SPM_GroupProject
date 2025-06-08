@@ -32,7 +32,7 @@
 #include "Kismet/GameplayStatics.h"                 // GetPlayerCharacter helper
 
 // ────────────────────────────────────────────────────────────────
-// Constructor – set the display name that appears in the BT editor
+// Constructor
 UBTTask_FindPlayerLocation::UBTTask_FindPlayerLocation(
     const FObjectInitializer& ObjectInitializer) :
     Super(ObjectInitializer)
@@ -41,18 +41,18 @@ UBTTask_FindPlayerLocation::UBTTask_FindPlayerLocation(
 }
 
 // ────────────────────────────────────────────────────────────────
-// ExecuteTask – called each time the BT reaches this node
+// ExecuteTask
 EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp,uint8* )
 {
-    // 1) Fetch the lone player pawn (index 0 is safe in single‑player titles)
+    // 1) Fetch the player pawn
     if (ACharacter* Player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0))
     {
         const FVector PlayerLocation = Player->GetActorLocation();
 
-        // 2) Ask the navigation system for a point the agent can actually walk to
+        // 2) be navsystem om en plats den faktiskt kan gå till
         if (UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld()))
         {
-            FNavLocation ProjectedLocation; // reusable OUT param
+            FNavLocation ProjectedLocation; 
 
 
             //Hittils oanvänd logik för att få en fiende att sprida ut sig lite mer så inte alla springer i en kö
@@ -62,7 +62,6 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(UBehaviorTreeCompone
                 // 2a) Pick a random reachable point around the player
                 if (NavSys->GetRandomPointInNavigableRadius(PlayerLocation,SearchRadius,ProjectedLocation))  
                 {
-                    // 3) Write result to BB and exit early with success
                     OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(),
                                                         ProjectedLocation.Location);
                     
@@ -73,8 +72,8 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(UBehaviorTreeCompone
             //Logiken för närmaste navmesh punkt
             else
             {
-                // 2b) Snap the exact player point to the nearest NavMesh polygon
-                //     create box around playerlocation with 100,100,1500
+                // 2b) Snappa spelarens location till närmaste navmesh punkt
+                //     skapa box runt spelaren med 100,100,1500
                 static const FVector Extent(100.f, 100.f, 1500.f);
 
                 //Hitta närmaste navmesh punkt inom boxen och storea det i projectedlocation
@@ -91,7 +90,5 @@ EBTNodeResult::Type UBTTask_FindPlayerLocation::ExecuteTask(UBehaviorTreeCompone
             }
         }
     }
-
-    // Couldn’t find player, nav‑system, or a valid nav point → fail gracefully
     return EBTNodeResult::Failed;
 }
