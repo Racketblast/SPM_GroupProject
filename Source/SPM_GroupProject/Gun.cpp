@@ -175,38 +175,92 @@ void AGun::ApplyBloodDecal(const FHitResult& Hit)
 	if (!BloodDecalMaterial) return;
 
 	AActor* HitActor = Hit.GetActor();
-	if (!HitActor) return;
-	if (HitActor->IsA(AFlyingEnemyAI::StaticClass()))
-	{
-		return;
-	}
+	if (!HitActor || HitActor->IsA(AFlyingEnemyAI::StaticClass())) return;
+
 	USkeletalMeshComponent* SkeletalMesh = HitActor->FindComponentByClass<USkeletalMeshComponent>();
 	if (!SkeletalMesh) return;
 
-	FVector DecalSize = FVector(decalSize, decalSize, decalSize);
-	FRotator DecalRotation = Hit.Normal.Rotation();
+	// === Bone-attached blood decal cluster ===
+	const int32 ClusterCount = 4;
+	const float ClusterRadius = 3.0f;
+	const float ClusterDecalScale = decalSize * 0.5f;
 
-	// Get bone name only if valid
+	FRotator DecalRotation = Hit.Normal.Rotation();
 	FName BoneName = Hit.BoneName != NAME_None ? Hit.BoneName : NAME_None;
 
-	// Attach decal to the skeletal mesh, to a bone if available
-	UDecalComponent* BloodDecal = UGameplayStatics::SpawnDecalAttached(
-		BloodDecalMaterial,
-		DecalSize,
-		SkeletalMesh,
-		BoneName,
-		Hit.ImpactPoint,
-		DecalRotation,
-		EAttachLocation::KeepWorldPosition,
-		60.0f 
-		
-	);
-
-	if (BloodDecal)
+	for (int32 i = 0; i < ClusterCount; ++i)
 	{
-		BloodDecal->SetFadeScreenSize(0.001f);
+		FVector RandomOffset = FMath::VRand() * ClusterRadius;
+		FVector Location = Hit.ImpactPoint + RandomOffset;
+		FRotator Rotation = DecalRotation;
+		Rotation.Yaw += FMath::RandRange(-20.f, 20.f);
+
+		UDecalComponent* BloodDecal = UGameplayStatics::SpawnDecalAttached(
+			BloodDecalMaterial,
+			FVector(ClusterDecalScale),
+			SkeletalMesh,
+			BoneName,
+			Location,
+			Rotation,
+			EAttachLocation::KeepWorldPosition,
+			20.0f
+		);
+
+		if (BloodDecal)
+		{
+			BloodDecal->SetFadeScreenSize(0.001f);
+		}
+	}
+
+	// === Spawn Nearby Blood Splatter on Environment ===
+	const int32 NumSplatterDecals = 2;
+	const float MaxDistance = 125.f;
+	const float SurfaceOffset = 0.5f;
+
+	for (int32 i = 0; i < NumSplatterDecals; ++i)
+	{
+		FVector RandomDirection = FMath::VRand();
+		FVector Start = Hit.ImpactPoint + RandomDirection * 20.f;
+		FVector End = Start + RandomDirection * MaxDistance;
+
+		FHitResult SurfaceHit;
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActor(this);
+		QueryParams.AddIgnoredActor(HitActor);
+		QueryParams.bReturnPhysicalMaterial = false;
+		QueryParams.bTraceComplex = true;
+
+		if (GetWorld()->LineTraceSingleByChannel(SurfaceHit, Start, End, ECC_Visibility, QueryParams))
+		{
+			// Avoid splatter hitting the character
+			if (SurfaceHit.GetActor() == HitActor) continue;
+
+			FRotator SurfaceRotation = SurfaceHit.Normal.Rotation();
+			SurfaceRotation.Yaw += FMath::RandRange(-180.f, 180.f);
+
+			FVector AdjustedLocation = SurfaceHit.ImpactPoint + SurfaceHit.Normal * SurfaceOffset;
+
+			UDecalComponent* Splatter = UGameplayStatics::SpawnDecalAtLocation(
+				GetWorld(),
+				BloodDecalMaterial,
+				FVector(decalSize * 1.5f),
+				AdjustedLocation,
+				SurfaceRotation,
+				20.0f
+			);
+
+			if (Splatter)
+			{
+				Splatter->SetFadeScreenSize(0.001f);
+			}
+		}
 	}
 }
+
+
+
+
+
 
 void AGun::BulletHoleDecal(const FHitResult& Hit)
 {

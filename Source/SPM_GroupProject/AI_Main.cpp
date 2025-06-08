@@ -165,7 +165,7 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 		    }
         	
         	// Optional: Destroy after some delay
-        	SetLifeSpan(10.0f); // Character will be auto-destroyed after 10 seconds
+        	SetLifeSpan(15.0f); // Character will be auto-destroyed after 10 seconds
 			}
         }
     
