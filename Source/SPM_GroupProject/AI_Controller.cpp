@@ -18,6 +18,8 @@ AAI_Controller::AAI_Controller(const FObjectInitializer& FObjectInitializer)
 void AAI_Controller::OnPossess(APawn* InPawn)
 {
     Super::OnPossess(InPawn);
+
+    SetMoveBlockDetection(true);
     
     if (AAI_Main* AI = Cast<AAI_Main>(InPawn))
     {
