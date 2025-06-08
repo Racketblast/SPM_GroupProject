@@ -11,7 +11,6 @@ enum class EChallengeRewardType : uint8
 {
 	None UMETA(DisplayName = "None"),
 	Money UMETA(DisplayName = "Money"),
-	// Lägg till fler reward typer senare, som ammo 
 };
 
 UENUM(BlueprintType)
@@ -26,7 +25,6 @@ enum class EChallengeType : uint8
 	ShotgunOnly UMETA(DisplayName = "Only Use Shotgun"),
 	RocketlauncherOnly UMETA(DisplayName = "Only Use Rocketlauncher"),
 	KillWithAGrenade UMETA(DisplayName = "Kill a enemy with a Grenade"),
-	// Lägg till flera challenges här
 };
 
 USTRUCT(BlueprintType)
@@ -104,8 +102,7 @@ public:
 	void LoadChallengeDataFromManager();
 
 	// för animationer
-	FTimerHandle ResetChallengeStatusTimerHandle; // för animationer
-	
+	FTimerHandle ResetChallengeStatusTimerHandle; 
 	float SuccessAnimationTimer = 1;
 	float FailedAnimationTimer = 1;
 
@@ -119,6 +116,7 @@ public:
 	bool GetJustStartedChallenge() const; 
 	void ResetJustStartedChallenge();
 
+	// För att få rewarden för den specefika challengen
 	UFUNCTION(BlueprintCallable, Category = "Challenge") 
 	int32 GetCurrentChallengeRewardAmount() const; 
 	
