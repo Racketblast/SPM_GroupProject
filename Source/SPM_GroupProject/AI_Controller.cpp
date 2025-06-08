@@ -8,7 +8,7 @@
 
 // ───────────────────────────────────────────────────────────── Constructor ─── //
 AAI_Controller::AAI_Controller(const FObjectInitializer& FObjectInitializer)
-    : Super(FObjectInitializer)            // base‑class init list
+    : Super(FObjectInitializer)            
 {
     // bygger perception tidigt så den finns innan possession.
     SetupPerceptionSystem();
@@ -18,24 +18,19 @@ AAI_Controller::AAI_Controller(const FObjectInitializer& FObjectInitializer)
 void AAI_Controller::OnPossess(APawn* InPawn)
 {
     Super::OnPossess(InPawn);
-
-    // 1) Make sure we actually possess our expected pawn class.
+    
     if (AAI_Main* AI = Cast<AAI_Main>(InPawn))
     {
         
         /* -------------------------------------------------- Behaviour Tree */
         if (UBehaviorTree*  BT = AI->GetBehaviorTree())
         {
-            // UseBlackboard returns true/false *and* gives you the component.
             UBlackboardComponent* NewBB = nullptr;
             UseBlackboard(BT->BlackboardAsset, NewBB);
-            Blackboard = NewBB;               // cache for quick access
-            RunBehaviorTree(BT);              // fire it up!
+            Blackboard = NewBB;               
+            RunBehaviorTree(BT);              
         }
-
-        /* ------------------------------------------------------ Navigation */
-        // Enable CrowdFollowing if the PathFollowingComponent supports it.
-        // (Crowd steering lets multiple AI avoid each other smoothly.)
+        
         if (UCrowdFollowingComponent* Crowd =
                 Cast<UCrowdFollowingComponent>(GetPathFollowingComponent()))
         {
@@ -48,16 +43,14 @@ void AAI_Controller::OnPossess(APawn* InPawn)
 //bygger UAIPerceptionComponent + en sight sense configuration, kopplar sen ihop dom så vi får OnTargetPerceptionUpdated events.
 void AAI_Controller::SetupPerceptionSystem()
 {
-    // 1) Create the sense config object. Needs a *stable* pointer for UObjects, (engine deletes it with the controller).
     SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
-
-    // 2) Create the perception component itself
+    
     UAIPerceptionComponent* Perception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComponent"));
     SetPerceptionComponent(*Perception);
 
     /* -------------------- vision parameters ------------------------ */
-    SightConfig->SightRadius                 = 15000.0f;  // max range
-    SightConfig->PeripheralVisionAngleDegrees = 360.f;     // 180° total FOV
+    SightConfig->SightRadius                 = 15000.0f;  
+    SightConfig->PeripheralVisionAngleDegrees = 360.f;     
     SightConfig->DetectionByAffiliation.bDetectEnemies   = true;
     SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
     SightConfig->DetectionByAffiliation.bDetectNeutrals  = true;
@@ -71,13 +64,12 @@ void AAI_Controller::SetupPerceptionSystem()
 }
 
 // ───────────────────────────────────────────────────── OnTargetDetected ─── //
-// Called whenever the perception component registers that an actor was either successfully sensed or lost.
+// Kallad vid sensed or lost.
 
 void AAI_Controller::OnTargetDetected(AActor* Actor, FAIStimulus Stimulus)
 {
     if (const APlayerCharacter* Player = Cast<APlayerCharacter>(Actor))
     {
-        // Blackboard key name is hard‑coded here; consider making it a const.
         Blackboard->SetValueAsBool("CanSeePlayerCharacter", Stimulus.WasSuccessfullySensed()); // true on sight-gained, false on lost
     }
 }

@@ -27,10 +27,10 @@ EBTNodeResult::Type UBTTask_FireEnemyProjectile::ExecuteTask(UBehaviorTreeCompon
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 	//Get the AI character
 	AAI_Main* AI = Cast<AAI_Main>(Controller->GetPawn());
-	//Validate required references
+	//Validate
 	if (!AI || !ProjectileClass || !BB) return EBTNodeResult::Failed;
 
-	/*  “IsFiring” true for given duration second */
+	/*  “IsFiring” true*/
 	BB->SetValueAsBool(FName("IsFiring"), true);
 	
 	if (!AI->GetWorldTimerManager().IsTimerActive(ResetFireHandle))
@@ -87,33 +87,15 @@ EBTNodeResult::Type UBTTask_FireEnemyProjectile::ExecuteTask(UBehaviorTreeCompon
 	AProjectile* Proj = AI->GetWorld()->SpawnActor<AProjectile>(
 	    ProjectileClass, MuzzleLoc, ShotRot, Params);
 
-	//Skada och velocity
+	//velocity
 	if (Proj)
 	{
-		//Proj->ProjectileDamage = AI->AIDamage;
 		if (UProjectileMovementComponent* Move = Proj->ProjectileComponent) //valid "UProjectileMovementComponent"?, "Movement component" som finns i "Projectile component" i blueprinten
 		{
 			Move->Velocity = Dir * Move->InitialSpeed; //Initial speed finns i "Projectile component" i blueprinten
 		}
 		return EBTNodeResult::Succeeded;
 	}
-	//Om proj in kan spawnas
+	//Om proj inte kan spawnas
 	return EBTNodeResult::Failed;
 }
-
-
-
-// Erics Lambda grej
-/*FTimerHandle TmpHandle;
-	TWeakObjectPtr<UBlackboardComponent> WeakBB = BB;
-
-	AI->GetWorldTimerManager().SetTimer(
-		TmpHandle,
-		FTimerDelegate::CreateLambda([WeakBB]()
-		{
-			if (WeakBB.IsValid())
-			{
-				WeakBB->SetValueAsBool(FName("IsFiring"), false);
-			}
-		}),
-		5.0f, false);*/

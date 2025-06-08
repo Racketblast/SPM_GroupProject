@@ -1,24 +1,22 @@
-#include "BTTask_StrafeStep.h"  // own header first
-
-// Engine / gameplay helpers --------------------------------------------------
-#include "AIController.h"                                  // path following
-#include "BehaviorTree/BlackboardComponent.h"              // BT data store
-#include "Kismet/GameplayStatics.h"                        // player lookup
-#include "NavigationSystem.h"                              // NavMesh queries
-#include "Navigation/PathFollowingComponent.h"             // move status
-#include "GameFramework/Character.h"                       // pawn type
-#include "GameFramework/CharacterMovementComponent.h"      // movement flags
+#include "BTTask_StrafeStep.h"  
+#include "AIController.h"                                  
+#include "BehaviorTree/BlackboardComponent.h"              
+#include "Kismet/GameplayStatics.h"                        
+#include "NavigationSystem.h"                              
+#include "Navigation/PathFollowingComponent.h"            
+#include "GameFramework/Character.h"                       
+#include "GameFramework/CharacterMovementComponent.h"      
 
 /* ───────────────────────────────────────────── */
 UBTTask_StrafeStep::UBTTask_StrafeStep()
 {
-    NodeName    = TEXT("Strafe Step (Face Player)");  // designer‑visible label
-    bNotifyTick = true;                               // we need TickTask()
+    NodeName    = TEXT("Strafe Step (Face Player)");  
+    bNotifyTick = true;                               
 }
 
 /* ───────────────────────────────────────────── */
 EBTNodeResult::Type UBTTask_StrafeStep::ExecuteTask(
-    UBehaviorTreeComponent& OwnerComp, uint8* /*NodeMemory*/ )
+    UBehaviorTreeComponent& OwnerComp, uint8* )
 {
     // Cache controller + pawn for fast access throughout the task ------------
     CachedController = Cast<AAIController>(OwnerComp.GetAIOwner());

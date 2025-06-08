@@ -31,7 +31,7 @@
 #include "Blueprint/AIBlueprintHelperLibrary.h" // SimpleMoveToLocation helper.
 
 // ───────────────────────────────────────────────────────────────────────────── //
-//  Constructor – sets the display name seen in the Behavior‑Tree editor.
+//  Constructor
 // ───────────────────────────────────────────────────────────────────────────── //
 UBTTask_ChasePlayer::UBTTask_ChasePlayer(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -40,41 +40,32 @@ UBTTask_ChasePlayer::UBTTask_ChasePlayer(const FObjectInitializer& ObjectInitial
     NodeName = TEXT("Chase Player");
 }
 
-// ───────────────────────────────────────────────────────────────────────────── //
-//  ExecuteTask – called by the Behavior‑Tree when this node becomes active.
-//
-//  @OwnerComp   – BehaviorTreeComponent running the tree.
-//  @NodeMemory  – opaque memory block if the task chose to use one (unused).
-//  @return      – Succeeded if a move request was issued, Failed otherwise.
-// ───────────────────────────────────────────────────────────────────────────── //
 EBTNodeResult::Type UBTTask_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp,uint8* )
 {
-    // 1) grab and Validate we have an AI controller; without it we cannot move.
+    // 1) grab and Validate AI controller
     AAI_Controller* const AICont = Cast<AAI_Controller>(OwnerComp.GetAIOwner());
     if (!AICont)
     {
-        return EBTNodeResult::Failed;   // Controller missing – cannot proceed.
+        return EBTNodeResult::Failed;   // Controller saknas
     }
 
     // 2) grab the blackboard component and checks if retrieved
     UBlackboardComponent* const BB = OwnerComp.GetBlackboardComponent();
     if (!BB)
     {
-        return EBTNodeResult::Failed;   // Should never happen – BT guarantees BB.
+        return EBTNodeResult::Failed;   
     }
 
     const FVector PlayerLocation = BB->GetValueAsVector(GetSelectedBlackboardKey()); //Grabs players location
     if (!PlayerLocation.IsNearlyZero()) // Zero vector = key not set / invalid. Annars kutar AIn mot world origin
     {
-        // 3) Issue a simple move request toward that location.
+        // 3) simple move request mot playerlocation
         UAIBlueprintHelperLibrary::SimpleMoveToLocation(AICont, PlayerLocation);
 
-        // 4) Mark the task complete immediately – movement continues in the
-        //    background; other tasks can still interrupt this one.
+        // 4) Mark the task complete
         FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
         return EBTNodeResult::Succeeded;
     }
-
-    // PlayerLocation was invalid – fail so the BT can pick another branch.
+    
     return EBTNodeResult::Failed;
 }
