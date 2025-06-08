@@ -9,7 +9,7 @@
 #include "WaveManager.generated.h"
 
 
-//Struct för en fiende typ, här kan man ställa in hur många av just denna typ av fiende som ska spawnas under en wave.
+//Struct för en fiende typ, med denna kan man ställa in hur många av just denna typ av fiende som ska spawnas under en wave.
 USTRUCT(BlueprintType)
 struct FEnemyTypeData
 {
@@ -24,7 +24,6 @@ struct FEnemyTypeData
 
 // Detta är en struct som har data över hur en wave ser ut, man kan fylla i denna data i Unreal eller bara låta default waven ta hand om det.
 //Då denna strcut låtter en customize en wave, kan man göra waves manuelt, med egna siffror upp till kanske wave 10, och sedan låta default waven ta hand om resten.
-// Default waven SKA fyllas i! Annars blir spelet inte endless.
 USTRUCT(BlueprintType)
 struct FWaveData
 {
@@ -40,6 +39,7 @@ struct FWaveData
 	int32 MaxExtraCount = 0;
 };
 
+// Denna struct används för att se till att fienderna spawnar i en batch, där jag parar ihop en enemy med en spawnlocation. 
 USTRUCT()
 struct FPendingEnemySpawnData
 {
@@ -54,7 +54,6 @@ struct FPendingEnemySpawnData
 };
 
 // Det finns viss data som måste fyllas i för att wave managern ska fungera. Detta kan du göra i unreal egine, där du behöver lägga till spawn points för fienderna att spawna på, samt se till att enemy class är i fylld med klassen som ska spawnas in.
-// Default waven behöver också fyllas i. 
 UCLASS()
 class SPM_GROUPPROJECT_API AWaveManager : public AActor
 {
@@ -72,7 +71,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
 	void StartNextWave();
 	void SpawnEnemy();
 	void TickGracePeriod();
@@ -132,8 +130,7 @@ protected:
 
 	UPROPERTY()
 	TArray<TSubclassOf<AActor>> SpawnQueue;
-
-
+	
 	// Grace perioden för innan den första waven börjar.  
 	FTimerHandle FirstWaveGraceTimer;
 
@@ -152,7 +149,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Wave")
 	bool IsFirstGracePeriod() const { return bIsFirstGracePeriod; }
 
-	// Settingsen för Grace period 
+	// För Grace perioden
 	UPROPERTY(EditAnywhere, Category = "Wave Config")
 	float GracePeriodDuration = 60.0f; // i sekunder
 
@@ -162,14 +159,14 @@ protected:
 
 	bool bIsGracePeriod = false;
 
-	// for the Flying enemy
+	// För den flygande fienden
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FlyingEnemy")
 	float MaxAltitude = 1000.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="FlyingEnemy")
 	float MinAltitude = 100.0f;
 
-	// Upcoming enemies
+	// För att se hur många fiender som kommer nästa wave
 	int32 UpcomingEnemyCount = 0;
 
 	//För vfx

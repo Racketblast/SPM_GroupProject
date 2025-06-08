@@ -24,5 +24,5 @@ protected:
 	virtual void OnPossess(APawn* InPawn) override;
 
 private:
-	float PlayerRangeThreshold = 800.f; // Distansen innan spelaren är "in range", sätts i AFlyingEnemyAI
+	float PlayerRangeThreshold = 800.f; // Distansen innan spelaren är "in range", sätts i AFlyingEnemyAI. Hur nära spelaren måste vara innan fienden kan attackera spelaren
 };

@@ -91,7 +91,7 @@ void UChallengeSubsystem::PreviewNextChallenge()
 
 void UChallengeSubsystem::ActivateCurrentChallenge()
 {
-	bIsChallengeActive = true; // väldigt viktig, startar faktiskt logiken för challenges.
+	bIsChallengeActive = true; // väldigt viktig, tillåter den faktiskt logiken för challenges att användas.
 }
 
 void UChallengeSubsystem::CompleteCurrentChallenge()
