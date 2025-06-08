@@ -55,20 +55,44 @@ void AArenaGameMode::PlayerDeath()
 	if (UPlayerGameInstance* GI = Cast<UPlayerGameInstance>(GetGameInstance()))
 	{
 		FName RandomDeathDialogue;
-		switch (UKismetMathLibrary::RandomIntegerInRange(0,0))
+		switch (UKismetMathLibrary::RandomIntegerInRange(0,4))
 		{
 		case 0:
 			RandomDeathDialogue = "SoldierDied1";
+			break;
+		case 1:
+			RandomDeathDialogue = "SoldierDied2";
+			break;
+		case 2:
+			RandomDeathDialogue = "SoldierDied3";
+			break;
+		case 3:
+			RandomDeathDialogue = "SoldierDied4";
+			break;
+		case 4:
+			RandomDeathDialogue = "SoldierDied5";
 			break;
 		default:
 			break;
 		}
 
 		FName RandomRespawnDialogue;
-		switch (UKismetMathLibrary::RandomIntegerInRange(0,0))
+		switch (UKismetMathLibrary::RandomIntegerInRange(0,4))
 		{
 		case 0:
 			RandomRespawnDialogue = "ReturnDeath1";
+			break;
+		case 1:
+			RandomRespawnDialogue = "ReturnDeath2";
+			break;
+		case 2:
+			RandomRespawnDialogue = "ReturnDeath3";
+			break;
+		case 3:
+			RandomRespawnDialogue = "ReturnDeath4";
+			break;
+		case 4:
+			RandomRespawnDialogue = "ReturnDeath5";
 			break;
 		default:
 			break;
