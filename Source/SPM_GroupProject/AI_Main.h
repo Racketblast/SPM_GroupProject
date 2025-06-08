@@ -24,7 +24,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	int32 AIHealth;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 MaxAIHealth = 100;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	float AIDamage = 20;
