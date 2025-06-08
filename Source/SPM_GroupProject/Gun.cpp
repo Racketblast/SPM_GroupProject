@@ -1,4 +1,6 @@
 #include "Gun.h"
+
+#include "FlyingEnemyAI.h"
 #include "PlayerCharacter.h"
 #include "PlayerGameInstance.h"
 #include "Components/AudioComponent.h"
@@ -174,7 +176,10 @@ void AGun::ApplyBloodDecal(const FHitResult& Hit)
 
 	AActor* HitActor = Hit.GetActor();
 	if (!HitActor) return;
-
+	if (HitActor->IsA(AFlyingEnemyAI::StaticClass()))
+	{
+		return;
+	}
 	USkeletalMeshComponent* SkeletalMesh = HitActor->FindComponentByClass<USkeletalMeshComponent>();
 	if (!SkeletalMesh) return;
 
