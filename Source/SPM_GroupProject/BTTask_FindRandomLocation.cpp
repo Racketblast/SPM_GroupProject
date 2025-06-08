@@ -6,7 +6,7 @@
 #include "NavigationPath.h"                          // only needed for future expansion (e.g. path debug draw)
 
 // ---------------------------------------------------------------------------
-// Constructor – give the node a readable name for the BT editor
+// Constructor
 // ---------------------------------------------------------------------------
 UBTTask_FindRandomLocation::UBTTask_FindRandomLocation(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -15,7 +15,7 @@ UBTTask_FindRandomLocation::UBTTask_FindRandomLocation(const FObjectInitializer&
 }
 
 // ---------------------------------------------------------------------------
-// ExecuteTask – main work happens here
+// ExecuteTask
 // ---------------------------------------------------------------------------
 EBTNodeResult::Type UBTTask_FindRandomLocation::ExecuteTask(UBehaviorTreeComponent& OwnerComp,
                                                            uint8* /*NodeMemory*/)
@@ -61,7 +61,6 @@ EBTNodeResult::Type UBTTask_FindRandomLocation::ExecuteTask(UBehaviorTreeCompone
         FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
         return EBTNodeResult::Succeeded;
     }
-
-    // 7) Could not find a point – let BT know we failed so it can pick another branch.
+    
     return EBTNodeResult::Failed;
 }

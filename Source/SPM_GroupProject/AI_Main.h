@@ -17,7 +17,6 @@ class SPM_GROUPPROJECT_API AAI_Main : public ACharacter
 	GENERATED_BODY()
 
 public:
-	// default values for properties
 	AAI_Main();
 
 	UBehaviorTree* GetBehaviorTree() const;
@@ -56,8 +55,6 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 	
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsDead = false;
 

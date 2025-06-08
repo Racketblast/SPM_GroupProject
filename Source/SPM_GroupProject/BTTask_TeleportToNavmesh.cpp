@@ -5,7 +5,7 @@
 #include "GameFramework/Character.h"      // So we can safely teleport characters
 
 // ---------------------------------------------------------------------------
-// Constructor – give the BT node a nice label.
+// Constructor
 // ---------------------------------------------------------------------------
 UBTTask_TeleportToNavmesh::UBTTask_TeleportToNavmesh()
 {
@@ -13,53 +13,38 @@ UBTTask_TeleportToNavmesh::UBTTask_TeleportToNavmesh()
 }
 
 // ---------------------------------------------------------------------------
-// ExecuteTask – single‑frame operation.
-// ---------------------------------------------------------------------------
-//  1. Validate controller and pawn.
-//  2. Ask the nav‑system for a random reachable point within SearchRadius.
-//  3. If found, teleport the pawn there using TeleportPhysics to maintain
-//     velocity if needed.
-//  4. Clear the "TeleportToNavmesh" Blackboard flag so this task doesn’t loop.
+// ExecuteTask 
 // ---------------------------------------------------------------------------
 EBTNodeResult::Type UBTTask_TeleportToNavmesh::ExecuteTask(
-    UBehaviorTreeComponent& OwnerComp,
-    uint8* /*NodeMemory – unused because task is non‑latent*/)
+    UBehaviorTreeComponent& OwnerComp, uint8*)
 {
-    // ─── 1. Validate AIController → Pawn  ───────────────────────────────────
+    // ─── 1. Hämtar AI controller och pawn, och validate båda  ───────────────────────────────────
     AAIController* AIController = OwnerComp.GetAIOwner();
     if (!AIController) return EBTNodeResult::Failed;
 
     APawn* AIPawn = AIController->GetPawn();
     if (!AIPawn) return EBTNodeResult::Failed;
 
-    // ─── 2. Get NavSystem – may be null in title screen / non‑nav worlds. ────
-    const UNavigationSystemV1* NavSys =
-        FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+    // ─── 2. Get NavSystem  ────
+    const UNavigationSystemV1* NavSys =FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
     if (!NavSys) return EBTNodeResult::Failed;
 
-    // ─── 3. Query random point on the NavMesh within SearchRadius. ──────────
+    // ─── 3. Find a random nearby NavMesh location within SearchRadius. ──────────
     FNavLocation NavLocation;
-    if (NavSys->GetRandomPointInNavigableRadius(
-            AIPawn->GetActorLocation(),
-            SearchRadius,
-            NavLocation))
+    if (NavSys->GetRandomPointInNavigableRadius(AIPawn->GetActorLocation(),SearchRadius,NavLocation))
     {
         // TeleportPhysics preserves existing velocity when possible.
-        AIPawn->SetActorLocation(
-            NavLocation.Location,
-            /*bSweep=*/false,
-            /*HitResult=*/nullptr,
+        AIPawn->SetActorLocation(NavLocation.Location,false,nullptr,
             ETeleportType::TeleportPhysics);
 
-        // ─── 4. Clear BT flag so other tasks can proceed. ──────────────────
+        // ─── 4. Clear BT flag ──────────────────
         if (UBlackboardComponent* Blackboard = AIController->GetBlackboardComponent())
         {
+            //reset blackboard
             Blackboard->SetValueAsBool(FName("TeleportToNavmesh"), false);
         }
 
         return EBTNodeResult::Succeeded;
     }
-
-    // Couldn’t find a spot – fail so BT can decide what to do next.
     return EBTNodeResult::Failed;
 }

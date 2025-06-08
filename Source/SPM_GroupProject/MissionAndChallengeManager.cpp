@@ -6,7 +6,6 @@
 #include "ChallengeSubsystem.h"
 #include "Engine/World.h"
 
-
 AMissionAndChallengeManager::AMissionAndChallengeManager()
 {
 	PrimaryActorTick.bCanEverTick = false;

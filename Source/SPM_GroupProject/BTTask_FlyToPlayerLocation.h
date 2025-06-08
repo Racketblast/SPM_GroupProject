@@ -39,13 +39,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Targeting")
 	float TargetUpdateInterval = 2.0f;
 
-	void MoveTowardTarget(APawn* Pawn, const FVector& TargetLocation);
+	void MoveTowardTarget(APawn* Pawn, const FVector& TargetLocation) const;
 
 	void CheckIfStuck(UBehaviorTreeComponent& OwnerComp, APawn* Pawn, const FVector& TargetLocation);
 
-	//void FollowPlayerTrail(UBehaviorTreeComponent& OwnerComp, APawn* Pawn);
-
-	void HandleFallbackManeuver(UBehaviorTreeComponent& OwnerComp, const FVector& CurrentLocation, const FVector& TargetLocation);
+	void HandleFallbackManeuver(UBehaviorTreeComponent& OwnerComp, const FVector& CurrentLocation, const FVector& TargetLocation) const;
 
 private:
 	FVector LastLocation;

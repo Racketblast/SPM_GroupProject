@@ -20,30 +20,24 @@ class SPM_GROUPPROJECT_API UBTTask_FireEnemyProjectile : public UBTTaskNode
 
 public:
 	UBTTask_FireEnemyProjectile();
-
-	/** Seconds before IsFiring is automatically reset to false. */
+	
 	UPROPERTY(EditAnywhere, Category="Firing")
 	float FiringCooldown = 5.f;
-
-	/** Forward offset from pawn origin to muzzle (cm). */
+	
 	UPROPERTY(EditAnywhere, Category="Firing")
 	float MuzzleForwardOffset = 100.f;
 
-	/** Vertical offset from pawn origin to muzzle (cm). */
 	UPROPERTY(EditAnywhere, Category="Firing")
 	float MuzzleUpOffset = 50.f;
-
-	/** Projectile Blueprint/Class to spawn. Must derive from AProjectile. */
+	
 	UPROPERTY(EditAnywhere, Category="Firing")
 	TSubclassOf<class AProjectile> ProjectileClass;
 
 protected:
-	/** Handle for the cool‑down timer so only one is ever active. */
 	UPROPERTY()
 	FTimerHandle ResetFireHandle;
 
 private:
-	/** Main execution entry point called by the behavior tree. */
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp,
 											uint8* NodeMemory) override;
 };

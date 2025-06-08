@@ -17,83 +17,85 @@ UBTTask_FireEnemyProjectile::UBTTask_FireEnemyProjectile()
 }
 
 /* ─────────────────────────────────────────────── */
-EBTNodeResult::Type UBTTask_FireEnemyProjectile::ExecuteTask(
-	UBehaviorTreeComponent& OwnerComp, uint8* )
+EBTNodeResult::Type UBTTask_FireEnemyProjectile::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* )
 {
+	//Get the AI controller
 	AAI_Controller* Controller = Cast<AAI_Controller>(OwnerComp.GetAIOwner());
 	if (!Controller) return EBTNodeResult::Failed;
 
+	//Get the blackboard
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
-	AAI_Main*             AI = Cast<AAI_Main>(Controller->GetPawn());
+	//Get the AI character
+	AAI_Main* AI = Cast<AAI_Main>(Controller->GetPawn());
+	//Validate
 	if (!AI || !ProjectileClass || !BB) return EBTNodeResult::Failed;
 
-	/*  “IsFiring” true for given duration second */
+	/*  “IsFiring” true*/
 	BB->SetValueAsBool(FName("IsFiring"), true);
-
-	/*FTimerHandle TmpHandle;
-	TWeakObjectPtr<UBlackboardComponent> WeakBB = BB;
-
-	AI->GetWorldTimerManager().SetTimer(
-		TmpHandle,
-		FTimerDelegate::CreateLambda([WeakBB]()
-		{
-			if (WeakBB.IsValid())
-			{
-				WeakBB->SetValueAsBool(FName("IsFiring"), false);
-			}
-		}),
-		5.0f, false);*/
+	
 	if (!AI->GetWorldTimerManager().IsTimerActive(ResetFireHandle))
 	{
 		// Capture the BB weakly so the delegate won't extend its lifetime.
 		TWeakObjectPtr<UBlackboardComponent> WeakBB(BB);
-		// Timer delegate executed after FiringCooldown seconds
-		FTimerDelegate ResetDel = FTimerDelegate::CreateWeakLambda(AI /*owner tracked weakly by the delegate*/, [WeakBB]()
+
+		//Skapa timer delegate som senare ska kallas från timern
+		FTimerDelegate ResetDel = FTimerDelegate::CreateWeakLambda(AI /*owner tracked "weakly" by delegate, Motvärkar memory leaks*/, [WeakBB]()
 			{
-				if (WeakBB.IsValid())
+				if (WeakBB.IsValid())//Dubbelkollar att den finns kvar
 				{
 					WeakBB->SetValueAsBool(TEXT("IsFiring"), false);
 				}
 			});
-		AI->GetWorldTimerManager().SetTimer(/*out*/ResetFireHandle,ResetDel,FiringCooldown,/*bLoop=*/false);
+		//Starta timer
+		AI->GetWorldTimerManager().SetTimer(ResetFireHandle,ResetDel,FiringCooldown,false);
 	}
 
 	/*  Rotate toward player */
+	// Hämta player character
 	ACharacter* Player = UGameplayStatics::GetPlayerCharacter(AI, 0);
 	if (!Player) return EBTNodeResult::Failed;
 
+	//Hämta world locations(AI och spelaren)
 	const FVector AILoc     = AI->GetActorLocation();
 	const FVector PlayerLoc = Player->GetActorLocation();
 
-	FRotator YawOnly = (PlayerLoc - AILoc).Rotation();
-	YawOnly.Pitch = 0.f;
-	YawOnly.Roll  = 0.f;
-	AI->SetActorRotation(YawOnly);
-	Controller->SetControlRotation(YawOnly);
-	
-	const FVector MuzzleLoc =
-	    AILoc + AI->GetActorForwardVector() * MuzzleForwardOffset +
-	    FVector(0.f, 0.f, MuzzleUpOffset);
+	//Räkna ut rotationen mot spelaren
+	FRotator YawRot = (PlayerLoc - AILoc).Rotation();
+	//Undvik pitch och roll
+	YawRot.Pitch = 0.f;
+	YawRot.Roll  = 0.f;
+	//Kör rotation
+	AI->SetActorRotation(YawRot);
+	Controller->SetControlRotation(YawRot);
 
-	const FVector Dir = (PlayerLoc - MuzzleLoc).GetSafeNormal();
-	const FRotator ShotRot = Dir.Rotation();
+	
+	
+	//Räkna ut Muzzle location
+	const FVector MuzzleLoc =
+			AILoc + AI->GetActorForwardVector() * MuzzleForwardOffset +
+			FVector(0.f, 0.f, MuzzleUpOffset);
+
+	//Räkna ut riktning och rotation
+	const FVector Dir = (PlayerLoc - MuzzleLoc).GetSafeNormal();//Normaliserad vector riktad mot spelaren
+	const FRotator ShotRot = Dir.Rotation();//Converterar dir till en rotator för siktning
 
 	FActorSpawnParameters Params;
-	Params.Owner      = AI;
-	Params.Instigator = AI;
+	Params.Owner      = AI;//Vem äger projectile(för damage logik etc)
+	Params.Instigator = AI;//Vilken pawn som spawnar den(AI)
 
+	//Spawna projektilen
 	AProjectile* Proj = AI->GetWorld()->SpawnActor<AProjectile>(
 	    ProjectileClass, MuzzleLoc, ShotRot, Params);
 
+	//velocity
 	if (Proj)
 	{
-		Proj->ProjectileDamage = AI->AIDamage;
-		if (UProjectileMovementComponent* Move = Proj->ProjectileComponent)
+		if (UProjectileMovementComponent* Move = Proj->ProjectileComponent) //valid "UProjectileMovementComponent"?, "Movement component" som finns i "Projectile component" i blueprinten
 		{
-			Move->Velocity = Dir * Move->InitialSpeed;
+			Move->Velocity = Dir * Move->InitialSpeed; //Initial speed finns i "Projectile component" i blueprinten
 		}
 		return EBTNodeResult::Succeeded;
 	}
-
+	//Om proj inte kan spawnas
 	return EBTNodeResult::Failed;
 }
