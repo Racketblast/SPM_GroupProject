@@ -1,20 +1,3 @@
-// ───────────────────────────────────────────────────────────────────────────── //
-//  AI_Controller – Custom AIController class (FULLY ANNOTATED)
-//  ---------------------------------------------------------------------------
-//  This controller glues together three core systems for an enemy pawn:
-//    • Behaviour Tree (BT) / Blackboard – sets up and runs the tree supplied by
-//      the pawn.
-//    • Perception – uses a UAIPerceptionComponent with sight to update the
-//      Blackboard key "CanSeePlayerCharacter" whenever the player is (un)seen.
-//    • Navigation – enables CrowdFollowing for flock‑like obstacle avoidance.
-//
-//  File contains BOTH the header and source so you can read it in one place.
-//  Unreal prefers separate .h / .cpp files, but combining them here makes the
-//  explanatory comments easier to follow.
-//
-//  NOTE: The real project should still keep AI_Controller.h / .cpp separate –
-//  this document is only for reference.
-// ───────────────────────────────────────────────────────────────────────────── //
 
 
 #pragma once
@@ -27,11 +10,7 @@
 
 #include "AI_Controller.generated.h"          // UHT‑generated boilerplate
 
-/**
- *  AAI_Controller – drives a single enemy pawn.
- *  Spawned automatically when the pawn is placed in the level (Auto Possess AI)
- *  or when you spawn the pawn at runtime.
- */
+
 UCLASS()
 class SPM_GROUPPROJECT_API AAI_Controller : public AAIController
 {
