@@ -82,12 +82,10 @@ FWaveData AWaveManager::GenerateWaveData(int32 WaveIndex) const
 		{
 			Type.MinCount += (WaveIndex + 1) * DefaultWaveDifficultyMultiplier;
 		}
-		//ResultWave.MaxExtraCount += (WaveIndex + 1);
 	}
 
 	return ResultWave;
 }
-
 
 // Funktionen som startar waven. 
 void AWaveManager::StartNextWave()
@@ -259,6 +257,7 @@ void AWaveManager::HandleNextSpawnInQueue()
 	}
 }
 
+// Lägger ut en vfx innan den fortsätter med att spawna den faktiska fienden genom att kalla på OnSpawnVFXFinished när vfx är klar
 void AWaveManager::PlaySpawnVFXAndThenSpawnEnemy(TSubclassOf<AActor> EnemyType, const FVector& SpawnLocation)
 {
 	if (!SpawnEffect) 
@@ -308,15 +307,17 @@ void AWaveManager::OnSpawnVFXFinished(UNiagaraComponent* PSystem)
 	HandleNextSpawnInQueue();
 }
 
+// Funktionen som faktiskt spawnar fienden
 void AWaveManager::SpawnEnemyAtLocation(TSubclassOf<AActor> EnemyType, const FVector& SpawnLocation)
 {
 	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn; // Försöker tänka på kollisioner när den spawnar en fiende, men ser till att den alltid spawnar fienden, även fast något är i vägen på spawn location.
 
 	AActor* SpawnedEnemy = GetWorld()->SpawnActor<AActor>(EnemyType, SpawnLocation, FRotator::ZeroRotator, SpawnParams); // Det som faktiskt spawnar fienden
 	
 	if (SpawnedEnemy)
 	{
+		// Sätter max och min altitude för de flygande fienderna. 
 		if (AFlyingEnemyAI* FlyingEnemy = Cast<AFlyingEnemyAI>(SpawnedEnemy))
 		{
 			FlyingEnemy->SetMaxAltitude(MaxAltitude);
@@ -324,7 +325,6 @@ void AWaveManager::SpawnEnemyAtLocation(TSubclassOf<AActor> EnemyType, const FVe
 			//UE_LOG(LogTemp, Warning, TEXT("FlyingEnemy MaxAltitude: %f"), MaxAltitude);
 			//UE_LOG(LogTemp, Warning, TEXT("FlyingEnemy MinAltitude: %f"), MinAltitude);
 		}
-
 		UE_LOG(LogTemp, Warning, TEXT("Spawned enemy after VFX: %i"), EnemiesSpawnedInCurrentWave);
 	}
 	else
@@ -333,7 +333,7 @@ void AWaveManager::SpawnEnemyAtLocation(TSubclassOf<AActor> EnemyType, const FVe
 	}
 }
 
-// denna funktion kallas när fienden dör, vilket ska ske från enemy scriptet
+// denna funktion kallas när fienden dör, så att wave managern vet hur många fiender som är kvar.
 void AWaveManager::OnEnemyKilled()
 {
 	EnemiesKilledThisWave++;
@@ -361,22 +361,10 @@ void AWaveManager::TickGracePeriod()
 		CurrentWaveIndex++;
 
 		UE_LOG(LogTemp, Warning, TEXT("Grace period ended. Starting next wave..."));
-		// Challenges debuging
-		/*if (UChallengeSubsystem* ChallengeSub = GetGameInstance()->GetSubsystem<UChallengeSubsystem>())
-		{
-			int32 f = ChallengeSub->GetCurrentChallengeRewardAmount();
-		}*/
+		
 		StartNextWave();
 		return;
 	}
-
-	// Debuging: Skriv ut GraceSecondsRemaining direkt till skärmen. 
-	/*GEngine->AddOnScreenDebugMessage(
-		-1,
-		1.1f,
-		FColor::Green,
-		FString::Printf(TEXT("Next wave in: %d seconds"), GraceSecondsRemaining)
-	);*/
 
 	GraceSecondsRemaining--;
 }
@@ -408,7 +396,8 @@ void AWaveManager::EndWave()
 			}
 		}
 	}
-	
+
+	//Kallar på TickGracePeriod
 	GetWorldTimerManager().SetTimer(
 		GracePeriodTimer,
 		this,
@@ -440,15 +429,9 @@ void AWaveManager::EndWave()
 	}
 }
 
-
+// Funktion för att kolla hur många fiender som kommer att spawna nästa wave, så att det kan vissas på skärmen för spelaren
 void AWaveManager::PreviewNextWaveEnemyCount()
 {
-	/*if (!Waves.IsValidIndex(CurrentWaveIndex + 1) && !DefaultWave.EnemyTypes.Num())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No valid wave data to preview."));
-		return;
-	}*/
-	
 	int32 PreviewWaveIndex = bIsFirstGracePeriod ? 0 : CurrentWaveIndex + 1;
 
 	//UE_LOG(LogTemp, Warning, TEXT("PreviewNextWaveEnemyCount WaveIndex: %i"), PreviewWaveIndex);
@@ -468,10 +451,10 @@ void AWaveManager::PreviewNextWaveEnemyCount()
 	UpcomingEnemyCount = TotalEnemies;
 }
 
-
+// Används för widgetS
 int32 AWaveManager::GetCurrentWaveNumber() const
 {
-	// Lägger till 1 eftersom att index börjar på 0, då CurrentWaveIndex är för en array
+	// Lägger till 1 eftersom att index börjar på 0, då CurrentWaveIndex används för en array
 	return CurrentWaveIndex + 1;
 }
 

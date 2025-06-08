@@ -14,11 +14,10 @@ class SPM_GROUPPROJECT_API AEnemySpawnPoint : public AActor
 public:	
 	AEnemySpawnPoint();
 
-	// De fiender som får spawna från denna spawn point
+	// De fiender som får spawna från denna spawn point, ifall ingen fiende typ är vald, så kan alla fiender typer spawna där.
 	UPROPERTY(EditAnywhere, Category = "Spawn Restriction")
 	TArray<TSubclassOf<AActor>> AllowedEnemyTypes;
 
 	// Retunerar true ifall denna spawn point kan spawna den givna fiende typen. 
 	bool CanSpawn(TSubclassOf<AActor> EnemyType) const;
-
 };

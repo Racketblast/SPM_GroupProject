@@ -217,16 +217,10 @@ void UBTTask_FlyToPlayerLocation::CheckIfStuck(UBehaviorTreeComponent& OwnerComp
 			{
 				// Backoff fallback, ifall teleportering inte tillåts 
 
-				// Beräkna en punkt bakom fienden och Uppdatera blackboarden med den nya positionen som nytt mål.
-				/*FVector Backward = -(TargetLocation - CurrentLocation).GetSafeNormal() * BackoffDistance;
-				FVector NewTargetLocation = CurrentLocation + Backward;
-				OwnerComp.GetBlackboardComponent()->SetValueAsVector(MoveToLocationKey.SelectedKeyName, NewTargetLocation);*/
 				HandleFallbackManeuver(OwnerComp, CurrentLocation, TargetLocation);
 				
 				UE_LOG(LogTemp, Warning, TEXT("Flying AI is stuck, backing off"));
 				//DrawDebugSphere(GetWorld(), CurrentLocation, 50.f, 12, FColor::Red, false, 1.f);
-
-				//FollowPlayerTrail(OwnerComp, Pawn);
 			}
 		}
 	}
@@ -240,7 +234,7 @@ void UBTTask_FlyToPlayerLocation::CheckIfStuck(UBehaviorTreeComponent& OwnerComp
 }
 
 // Den faktiska movementen funktionen, gör själva flygningen mot målet.
-void UBTTask_FlyToPlayerLocation::MoveTowardTarget(APawn* Pawn, const FVector& TargetLocation)
+void UBTTask_FlyToPlayerLocation::MoveTowardTarget(APawn* Pawn, const FVector& TargetLocation) const
 {
 	//  Beräknar en riktning mot målet.
 	const FVector Direction = (TargetLocation - Pawn->GetActorLocation()).GetSafeNormal();
@@ -253,44 +247,8 @@ void UBTTask_FlyToPlayerLocation::MoveTowardTarget(APawn* Pawn, const FVector& T
 	}
 }
 
-
-/*void UBTTask_FlyToPlayerLocation::FollowPlayerTrail(UBehaviorTreeComponent& OwnerComp, APawn* Pawn)
-{
-	if (!Pawn)
-	{
-		return;
-	}
-
-	UWorld* World = GetWorld();
-	ACharacter* Player = World ? UGameplayStatics::GetPlayerCharacter(World, 0) : nullptr;
-	if (!Player)
-	{
-		return;
-	}
-
-	// Make sure the player has a trail
-	if (Player->GetClass()->ImplementsInterface(UPlayerTrailInterface::StaticClass()))
-	{
-		IPlayerTrailInterface* TrailInterface = Cast<IPlayerTrailInterface>(Player); 
-		if (TrailInterface)
-		{
-			const TArray<FVector>& Trail = TrailInterface->GetPlayerMovementTrail();
-
-			if (Trail.Num() > 0)
-			{
-				// Choose the oldest point, or customize this logic to target closer/more recent ones
-				FVector TargetTrailPoint = Trail[0];
-
-				// Optionally remove it if "consumed"
-				// Trail.RemoveAt(0); // Only do this if it should no longer be followed after one use
-
-				OwnerComp.GetBlackboardComponent()->SetValueAsVector(MoveToLocationKey.SelectedKeyName, TargetTrailPoint);
-			}
-		}
-	}
-}*/
-
-void UBTTask_FlyToPlayerLocation::HandleFallbackManeuver(UBehaviorTreeComponent& OwnerComp, const FVector& CurrentLocation, const FVector& TargetLocation)
+// En fallback som kallas när fienden fastnar.
+void UBTTask_FlyToPlayerLocation::HandleFallbackManeuver(UBehaviorTreeComponent& OwnerComp, const FVector& CurrentLocation, const FVector& TargetLocation) const
 {
 	UWorld* World = GetWorld();
 	if (!World) return;
@@ -312,14 +270,14 @@ void UBTTask_FlyToPlayerLocation::HandleFallbackManeuver(UBehaviorTreeComponent&
 	DrawDebugLine(World, CurrentLocation, CurrentLocation + LeftDir * TraceLength, FColor::Green, false, 1.f, 0, 2.f);
 	DrawDebugLine(World, CurrentLocation, CurrentLocation + RightDir * TraceLength, FColor::Blue, false, 1.f, 0, 2.f);*/
 
-	FVector NewDirection = -ForwardDir; // Default backoff direction
+	FVector NewDirection = -ForwardDir; // Standard backoff riktningen
 
 	UBlackboardComponent* Blackboard = OwnerComp.GetBlackboardComponent();
 	bool bLastStrafeRight = Blackboard->GetValueAsBool("LastStrafeRight");
 
 	if (bBlockedForward)
 	{
-		// Try last used direction first
+		// Försöker med den senaste slumpade riktningen först. 
 		if (bLastStrafeRight && !bBlockedRight)
 		{
 			NewDirection = RightDir;
@@ -330,7 +288,7 @@ void UBTTask_FlyToPlayerLocation::HandleFallbackManeuver(UBehaviorTreeComponent&
 		}
 		else if (!bBlockedLeft && !bBlockedRight)
 		{
-			// Randomly pick and update the remembered direction
+			// Slumpar mellan höger och vänster och väljer en riktining mellan dessa, och sedan sparrar den riktningen. 
 			bool bGoRight = FMath::RandBool();
 			NewDirection = bGoRight ? RightDir : LeftDir;
 			Blackboard->SetValueAsBool("LastStrafeRight", bGoRight);
@@ -345,7 +303,6 @@ void UBTTask_FlyToPlayerLocation::HandleFallbackManeuver(UBehaviorTreeComponent&
 			NewDirection = RightDir;
 			Blackboard->SetValueAsBool("LastStrafeRight", true);
 		}
-		// Else: stay with default backoff
 	}
 
 	const FVector NewTargetLocation = CurrentLocation + NewDirection * BackoffDistance;
