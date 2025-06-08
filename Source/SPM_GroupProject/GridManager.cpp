@@ -143,7 +143,6 @@ TArray<FVector> AGridManager::FindPath(const FVector& StartLocation, const FVect
 
     while (OpenSet.Num() > 0)
     {
-        // Get node with lowest FCost
         OpenSet.Sort([](const TSharedPtr<FGridNode>& A, const TSharedPtr<FGridNode>& B) {
             return A->FCost() < B->FCost();
         });
@@ -154,7 +153,6 @@ TArray<FVector> AGridManager::FindPath(const FVector& StartLocation, const FVect
 
         if (CurrentNode->GridIndex == EndIndex)
         {
-            // Reconstruct path
             TArray<FVector> Path;
             while (CurrentNode.IsValid())
             {
@@ -164,8 +162,7 @@ TArray<FVector> AGridManager::FindPath(const FVector& StartLocation, const FVect
             Algo::Reverse(Path);
             return Path;
         }
-
-        // Get neighbors
+    	
         for (int32 dx = -1; dx <= 1; ++dx)
         {
             for (int32 dy = -1; dy <= 1; ++dy)
