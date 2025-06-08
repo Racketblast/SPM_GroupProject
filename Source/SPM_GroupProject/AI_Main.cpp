@@ -178,11 +178,12 @@ void AAI_Main::BeginPlay()
 {
 	Super::BeginPlay();
 	AIHealth = MaxAIHealth;
+	
 
 	if (UCharacterMovementComponent* Move = GetCharacterMovement())
 	{
 		Move->bUseRVOAvoidance             = true;
-		Move->AvoidanceConsiderationRadius = 500.f;
+		Move->AvoidanceConsiderationRadius = 300.f;
 		Move->AvoidanceWeight              = 0.7f;
 	}	//AI Crowd avoidance försök
 
@@ -193,6 +194,7 @@ void AAI_Main::BeginPlay()
 void AAI_Main::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
 
 	/*  Skippar om den är i luften */
 	if (UCharacterMovementComponent* Move = GetCharacterMovement();
