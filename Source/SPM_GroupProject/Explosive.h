@@ -38,6 +38,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Grenade")
 	float ExplosionRadius = 600.0f;
+	UPROPERTY(EditDefaultsOnly, Category = "Grenade")
 
 	float ExplosionPushForce = 600.0f;
 	FTimerHandle ExplosionTimer;
