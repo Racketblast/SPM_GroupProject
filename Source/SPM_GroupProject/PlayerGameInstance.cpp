@@ -506,6 +506,7 @@ void UPlayerGameInstance::RestartGame()
 	UnlockedLevels.Add(LevelOrder[2]);
 	UnlockedLevels.Add(LevelOrder[3]);
 	CurrentGameFlag = 0;
+	CurrentWeaponSkins = {0, 0, 0, 0};
 }
 
 bool UPlayerGameInstance::HasGameChanged()

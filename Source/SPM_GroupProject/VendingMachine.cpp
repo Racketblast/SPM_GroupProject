@@ -42,7 +42,23 @@ void AVendingMachine::BeginPlay()
 	Super::BeginPlay();
 	
 	InteractText = TEXT("buy ");
-	InteractText.Append(StaticEnum<EVendingMachineSpewOut>()->GetDisplayNameTextByValue(static_cast<int64>(SpewOut)).ToString());
+	switch (SpewOut)
+	{
+	case EVendingMachineSpewOut::Health:
+		InteractText.Append("Health");
+		break;
+	case EVendingMachineSpewOut::AmmoRifle:
+		InteractText.Append("Rifle ammo");
+		break;
+	case EVendingMachineSpewOut::AmmoRocketLauncher:
+		InteractText.Append("Rocket launcher ammo");
+		break;
+	case EVendingMachineSpewOut::AmmoShotgun:
+		InteractText.Append("Shotgun ammo");
+		break;
+	default:
+		break;
+	}
 	InteractText.Append(TEXT(" for $"));
 	InteractText.AppendInt(SpewOutCost);
 }
