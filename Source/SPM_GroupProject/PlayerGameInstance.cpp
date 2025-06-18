@@ -12,6 +12,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Containers/Map.h"
+#include "GameFramework/GameUserSettings.h"
 
 bool UPlayerGameInstance::HasBought(const EUpgradeType Upgrade) const
 {
@@ -492,6 +493,11 @@ void UPlayerGameInstance::LoadGame()
 			SFXVolumeScale = Save->SavedSFXVolumeScale;
 			MusicVolumeScale = Save->SavedMusicVolumeScale;
 		}
+	}
+	else
+	{
+		UGameUserSettings::GetGameUserSettings()->RunHardwareBenchmark();
+		UGameUserSettings::GetGameUserSettings()->ApplySettings(true);
 	}
 }
 
