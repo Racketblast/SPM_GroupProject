@@ -5,6 +5,7 @@
 #include "Perception/AIPerceptionComponent.h"   // UAIPerceptionComponent class
 #include "Navigation/CrowdFollowingComponent.h" // Crowd steering behaviour
 #include "Navigation/PathFollowingComponent.h"  // Base path following
+#include "BehaviorTree/BehaviorTree.h"
 
 // ───────────────────────────────────────────────────────────── Constructor ─── //
 AAI_Controller::AAI_Controller(const FObjectInitializer& FObjectInitializer)

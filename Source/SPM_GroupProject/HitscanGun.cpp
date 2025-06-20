@@ -13,10 +13,11 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "AI_Main.h"
+#include "ZombieCharacter.h"
 #include "GameFramework/DamageType.h"
 #include "Engine/EngineTypes.h"
 #include "Components/DecalComponent.h"
-
+#include "AI_MAIN.h"
 
 
 
@@ -100,6 +101,20 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
             {
                 HitActor->ProcessEvent(HitActor->FindFunction("OnLineTraceHit"), nullptr);
             }
+      
+            {
+                if (AAI_Main* AIEnemy = Cast<AAI_Main>(HitActor))
+
+
+                {
+                    FName BoneHit = Hit.BoneName;
+                    FVector ImpactPoint = Hit.ImpactPoint;
+                    AIEnemy->HandleBoneHit(BoneHit, ImpactPoint, WeaponDamage);
+                }
+
+
+            }
+
             if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
             {
                 if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))

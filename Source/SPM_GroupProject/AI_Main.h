@@ -18,6 +18,8 @@ class SPM_GROUPPROJECT_API AAI_Main : public ACharacter
 
 public:
 	AAI_Main();
+	// Handles limb damage and removal while ragdolled
+	void HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float DamageAmount);
 
 	UBehaviorTree* GetBehaviorTree() const;
 
@@ -31,6 +33,20 @@ public:
 	TArray<TSubclassOf<class ACollectableBox>>AIDrop;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+	// Limb health per bone
+	UPROPERTY(EditDefaultsOnly, Category = "Limb Health")
+	TMap<FName, float> LimbHealth;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Limb Health")
+	float DefaultLimbHealth = 50.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Fracture")
+	TSubclassOf<class AFracturedLimbActor> FracturedLimbClass;
+
+	UPROPERTY()
+	TSet<FName> DestroyedBones;
+	void InitializeLimbHealth();
+	void HandleBoneHit(FName BoneName, FVector HitLocation, float DamageAmount);
 
 protected:
 	virtual void BeginPlay() override;
@@ -40,7 +56,7 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite)
 	bool bIsAttacking = false;
-
+	TMap<FName, AFracturedLimbActor*> AttachedFracturedLimbs;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Sound")
 	class UAudioComponent* AudioComponent;
 
@@ -54,7 +70,7 @@ protected:
 	FAIDeathEvent OnEnemyDied;
 public:	
 	virtual void Tick(float DeltaTime) override;
-	
+	bool IsProtectedBone(FName BoneName) const;
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsDead = false;
 
