@@ -282,6 +282,35 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
     return DamageAmount;
 }
 // Minor tweak in HandleRagdollBoneHit for physics blend weight:
+void AAI_Main::SetInvisibleMaterialOnBoneSections(USkeletalMeshComponent* MeshComp, FName HitBoneName, UMaterialInterface* MaterialToSet)
+{
+	if (!MeshComp || !MaterialToSet) return;
+
+	int32 HitBoneIndex = MeshComp->GetBoneIndex(HitBoneName);
+	if (HitBoneIndex == INDEX_NONE) return;
+
+	const FSkeletalMeshRenderData* RenderData = MeshComp->GetSkeletalMeshRenderData();
+	if (!RenderData || RenderData->LODRenderData.Num() == 0) return;
+
+	const FSkeletalMeshLODRenderData& LODData = RenderData->LODRenderData[0]; // LOD 0
+
+	for (int32 SectionIndex = 0; SectionIndex < LODData.RenderSections.Num(); ++SectionIndex)
+	{
+		const FSkelMeshRenderSection& Section = LODData.RenderSections[SectionIndex];
+
+		if (Section.BoneMap.Contains(static_cast<uint16>(HitBoneIndex)))
+		{
+			MeshComp->SetMaterial(SectionIndex, MaterialToSet);
+		}
+		else
+		{
+			// Optionally reset other sections to default material if you want only the hit bone section to have the invisible material.
+			// MeshComp->SetMaterial(SectionIndex, DefaultMaterial);
+		}
+	}
+}
+
+
 void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float DamageAmount)
 {
     if (IsProtectedBone(BoneName)) return;
@@ -291,21 +320,15 @@ void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float D
     if (!MeshComp || !MeshComp->DoesSocketExist(BoneName)) return;
 
     const float DismemberThreshold = 30.0f;
-    const FName HeadBoneName = TEXT("head"); // Replace with your actual head bone name
+    const FName HeadBoneName = TEXT("head");
 
     if (DamageAmount >= DismemberThreshold)
     {
-        // Check if fractured limb for this bone already exists
-        if (AttachedFracturedLimbs.Contains(BoneName))
-        {
-            // Already spawned fractured limb for this bone, skip
-            return;
-        }
+        if (AttachedFracturedLimbs.Contains(BoneName)) return;
 
         int32 BoneIndex = MeshComp->GetBoneIndex(BoneName);
         if (BoneIndex == INDEX_NONE) return;
 
-        // Prevent dismembering head or its parents if alive
         if (AIHealth > 0.f)
         {
             int32 HeadIndex = MeshComp->GetBoneIndex(HeadBoneName);
@@ -315,81 +338,120 @@ void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float D
             }
         }
 
-        // Spawn ragdoll fragment actor at the bone location
         FTransform BoneTransform = MeshComp->GetBoneTransform(BoneIndex);
-
         FActorSpawnParameters SpawnParams;
         SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-        AFracturedLimbActor* RagdollFragment = GetWorld()->SpawnActor<AFracturedLimbActor>(AFracturedLimbActor::StaticClass(), BoneTransform, SpawnParams);
+
+        AFracturedLimbActor* RagdollFragment = GetWorld()->SpawnActor<AFracturedLimbActor>(
+            AFracturedLimbActor::StaticClass(), BoneTransform, SpawnParams);
+
         if (RagdollFragment)
         {
-            // Setup skeletal mesh on the fragment
             USkeletalMeshComponent* SkeletalComp = RagdollFragment->FindComponentByClass<USkeletalMeshComponent>();
             if (!SkeletalComp)
             {
-                // If the AFracturedLimbActor doesn’t already have one, add dynamically
                 SkeletalComp = NewObject<USkeletalMeshComponent>(RagdollFragment);
                 SkeletalComp->RegisterComponent();
-                SkeletalComp->AttachToComponent(RagdollFragment->GetRootComponent(), FAttachmentTransformRules::KeepWorldTransform);
+                RagdollFragment->SetRootComponent(SkeletalComp);
             }
 
-            SkeletalComp->SetSkeletalMesh(MeshComp->SkeletalMesh);
+            SkeletalComp->SetSkeletalMeshAsset(MeshComp->GetSkeletalMeshAsset());
             SkeletalComp->SetWorldTransform(BoneTransform);
 
-            // Hide all bones except the fractured bone and its children
-            int32 NumBones = SkeletalComp->GetNumBones();
-            for (int32 i = 0; i < NumBones; ++i)
+        	
+            // Hide hit bone sections with invisible material
+            SetInvisibleMaterialOnBoneSections(SkeletalComp, BoneName, InvisibleMaterial);
+
+            // Your existing bone collection and visibility logic (unchanged)
+            const USkeletalMesh* SkelMesh = SkeletalComp->GetSkeletalMeshAsset();
+            const USkeleton* Skeleton = SkelMesh ? SkelMesh->GetSkeleton() : nullptr;
+            if (!Skeleton)
             {
-                FName CurrentBone = SkeletalComp->GetBoneName(i);
+                UE_LOG(LogTemp, Warning, TEXT("No valid Skeleton found for fractured limb"));
+                return;
+            }
 
-                bool bKeepVisible = (CurrentBone == BoneName) || SkeletalComp->BoneIsChildOf(CurrentBone, BoneName);
+            TSet<FName> BonesToKeep;
+            FName CurrentBone = BoneName;
+            while (true)
+            {
+                BonesToKeep.Add(CurrentBone);
 
-                if (!bKeepVisible)
+                int32 CurrIndex = Skeleton->GetReferenceSkeleton().FindBoneIndex(CurrentBone);
+                int32 ParentIndex = Skeleton->GetReferenceSkeleton().GetParentIndex(CurrIndex);
+                if (ParentIndex == INDEX_NONE)
+                    break;
+
+                CurrentBone = Skeleton->GetReferenceSkeleton().GetBoneName(ParentIndex);
+            }
+
+            TSet<FName> BonesToKeepWithDescendants = BonesToKeep;
+            {
+                const FReferenceSkeleton& RefSkeleton = Skeleton->GetReferenceSkeleton();
+                TArray<int32> ToProcess;
+                int32 HitBoneIndex = RefSkeleton.FindBoneIndex(BoneName);
+                ToProcess.Add(HitBoneIndex);
+
+                while (ToProcess.Num() > 0)
                 {
-                    SkeletalComp->HideBoneByName(CurrentBone, EPhysBodyOp::PBO_Term);
+                    int32 CurrentIndex = ToProcess.Pop();
+                    FName CurrentBoneName = RefSkeleton.GetBoneName(CurrentIndex);
+                    BonesToKeepWithDescendants.Add(CurrentBoneName);
+
+                    for (int32 i = 0; i < RefSkeleton.GetNum(); ++i)
+                    {
+                        if (RefSkeleton.GetParentIndex(i) == CurrentIndex)
+                        {
+                            ToProcess.Add(i);
+                        }
+                    }
                 }
             }
 
-            // Setup physics for ragdoll fragment
+            int32 NumBones = SkeletalComp->GetNumBones();
+            for (int32 i = 0; i < NumBones; ++i)
+            {
+                FName Bone = SkeletalComp->GetBoneName(i);
+
+                if (!BonesToKeepWithDescendants.Contains(Bone))
+                {
+                    SkeletalComp->HideBoneByName(Bone, EPhysBodyOp::PBO_Term);
+                }
+                else if (BonesToKeep.Contains(Bone) && !BonesToKeepWithDescendants.Contains(Bone))
+                {
+                    SkeletalComp->HideBoneByName(Bone, EPhysBodyOp::PBO_None);
+                    SkeletalComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+                    SkeletalComp->SetAllBodiesBelowSimulatePhysics(Bone, false, true);
+                    SkeletalComp->SetAllBodiesBelowPhysicsBlendWeight(Bone, 0.0f, false, true);
+                }
+                else
+                {
+                    SkeletalComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+                    SkeletalComp->SetAllBodiesBelowSimulatePhysics(Bone, true, true);
+                    SkeletalComp->SetAllBodiesBelowPhysicsBlendWeight(Bone, 1.0f, false, true);
+                }
+            }
+
             SkeletalComp->SetCollisionProfileName(TEXT("Ragdoll"));
-            SkeletalComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-            SkeletalComp->SetSimulatePhysics(true);
-            SkeletalComp->SetAllBodiesSimulatePhysics(true);
             SkeletalComp->WakeAllRigidBodies();
             SkeletalComp->bBlendPhysics = true;
 
             FVector ImpulseDir = (HitLocation - GetActorLocation()).GetSafeNormal();
             SkeletalComp->AddImpulseAtLocation(ImpulseDir * DamageAmount * 150.f, HitLocation);
 
-            // Make sure SkeletalComp is root if none
-            if (!RagdollFragment->GetRootComponent())
-            {
-                RagdollFragment->SetRootComponent(SkeletalComp);
-            }
-
-            // Store reference to manage fragments (optional)
             AttachedFracturedLimbs.Add(BoneName, RagdollFragment);
         }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Failed to spawn fractured limb actor"));
-        }
 
-        // Hide and disable physics on original mesh below fractured bone
         MeshComp->HideBoneByName(BoneName, EPhysBodyOp::PBO_Term);
         MeshComp->SetAllBodiesBelowSimulatePhysics(BoneName, false, true);
         MeshComp->SetAllBodiesBelowPhysicsBlendWeight(BoneName, 0.0f, false, true);
     }
     else
     {
-        // Just apply impulse if below threshold
         FVector Direction = (HitLocation - GetActorLocation()).GetSafeNormal();
         MeshComp->AddImpulseAtLocation(Direction * DamageAmount * 10.f, HitLocation, BoneName);
     }
 }
-
-
-
 
 
 

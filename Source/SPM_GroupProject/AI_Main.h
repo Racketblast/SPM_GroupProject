@@ -5,6 +5,10 @@
 #include "CoreMinimal.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "GameFramework/Character.h"
+#include "Rendering/SkeletalMeshRenderData.h"
+#include "Rendering/SkinWeightVertexBuffer.h"
+#include "Rendering/ColorVertexBuffer.h"
+#include "ProceduralMeshComponent.h"
 
 #include "AI_Main.generated.h"
 
@@ -20,7 +24,13 @@ public:
 	AAI_Main();
 	// Handles limb damage and removal while ragdolled
 	void HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float DamageAmount);
+	// AI_Main.cpp
+	// AI_Main.h
+	void SetInvisibleMaterialOnBoneSections(USkeletalMeshComponent* MeshComp, FName HitBoneName, UMaterialInterface* InvisibleMaterial);
 
+	
+
+void HideParentBonesOnMesh(USkeletalMeshComponent* SkeletalComp, FName BoneName);
 	UBehaviorTree* GetBehaviorTree() const;
 
 	UPROPERTY(BlueprintReadWrite)
@@ -50,7 +60,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
+	UMaterialInterface* InvisibleMaterial;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
 	UBehaviorTree* BehaviorTree;
 

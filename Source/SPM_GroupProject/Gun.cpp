@@ -183,7 +183,7 @@ void AGun::ApplyBloodDecal(const FHitResult& Hit)
 	// === Bone-attached blood decal cluster ===
 	const int32 ClusterCount = 4;
 	const float ClusterRadius = 3.0f;
-	const float ClusterDecalScale = decalSize * 0.5f;
+	const float ClusterDecalScale = decalSize * 0.9f;
 
 	FRotator DecalRotation = Hit.Normal.Rotation();
 	FName BoneName = Hit.BoneName != NAME_None ? Hit.BoneName : NAME_None;
@@ -213,8 +213,8 @@ void AGun::ApplyBloodDecal(const FHitResult& Hit)
 	}
 
 	// === Spawn Nearby Blood Splatter on Environment ===
-	const int32 NumSplatterDecals = 2;
-	const float MaxDistance = 125.f;
+	const int32 NumSplatterDecals = 4;
+	const float MaxDistance = 145.f;
 	const float SurfaceOffset = 0.5f;
 
 	for (int32 i = 0; i < NumSplatterDecals; ++i)
@@ -243,7 +243,7 @@ void AGun::ApplyBloodDecal(const FHitResult& Hit)
 			UDecalComponent* Splatter = UGameplayStatics::SpawnDecalAtLocation(
 				GetWorld(),
 				BloodDecalMaterial,
-				FVector(decalSize * 1.5f),
+				FVector(decalSize * 2.0f),
 				AdjustedLocation,
 				SurfaceRotation,
 				20.0f
