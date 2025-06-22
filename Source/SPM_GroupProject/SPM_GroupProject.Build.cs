@@ -8,6 +8,7 @@ public class SPM_GroupProject : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "ProceduralMeshComponent", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "MovieScene", "MovieSceneTracks", "LevelSequence", "UMG", "Niagara", "AIModule", "GameplayTasks","NavigationSystem", "GeometryCollectionEngine","ProceduralMeshComponent"});
+		PublicDependencyModuleNames.AddRange(new string[] { "Chaos","Core", "ProceduralMeshComponent",  "GeometryCollectionEngine",
+			"CoreUObject", "Engine", "InputCore", "EnhancedInput", "MovieScene", "MovieSceneTracks", "LevelSequence", "UMG", "Niagara", "AIModule", "GameplayTasks","NavigationSystem", "GeometryCollectionEngine","ProceduralMeshComponent","ChaosSolverEngine"});
 	}
 }

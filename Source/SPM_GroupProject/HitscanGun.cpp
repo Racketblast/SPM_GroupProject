@@ -130,6 +130,7 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
             }
 
 
+
             if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
             {
                 if (APlayerCharacter* Player = Cast<APlayerCharacter>(OwnerCharacter))

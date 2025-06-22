@@ -4,6 +4,10 @@
 #include "WaveManager.h"
 #include "AI_Controller.h"
 #include "ChallengeSubsystem.h"
+#include "PhysicsField/PhysicsFieldComponent.h"
+#include "Field/FieldSystemObjects.h"
+#include "Field/FieldSystemComponent.h"
+#include "Chaos/ChaosSolverActor.h"
 
 #include "BehaviorTree/BlackboardComponent.h"
 #include "NavigationSystem.h"
@@ -275,7 +279,7 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 		    }
         	
         	// Optional: Destroy after some delay
-        	SetLifeSpan(25.0f); // Character will be auto-destroyed after 10 seconds
+        	SetLifeSpan(60.0f); // Character will be auto-destroyed after 10 seconds
 			}
         }
     
@@ -284,192 +288,177 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 }
 // Minor tweak in HandleRagdollBoneHit for physics blend weight:
 
+void AAI_Main::SetInvisibleMaterialOnBoneSections(USkeletalMeshComponent* SkeletalComp, FName BoneName, UMaterialInterface* InvisibleMat)
+{
+	if (!SkeletalComp || !InvisibleMat) return;
+
+	const USkeletalMesh* SkelMesh = SkeletalComp->GetSkeletalMeshAsset();
+	if (!SkelMesh) return;
+
+	const FSkeletalMeshRenderData* RenderData = SkelMesh->GetResourceForRendering();
+	if (!RenderData || RenderData->LODRenderData.Num() == 0) return;
+
+	const FSkeletalMeshLODRenderData& LODData = RenderData->LODRenderData[0];
+
+	const TArray<FSkelMeshRenderSection>& Sections = LODData.RenderSections;
+	for (int32 SectionIdx = 0; SectionIdx < Sections.Num(); ++SectionIdx)
+	{
+		const FSkelMeshRenderSection& Section = Sections[SectionIdx];
+		if (Section.BoneMap.Contains(SkeletalComp->GetBoneIndex(BoneName)))
+		{
+			SkeletalComp->SetMaterial(SectionIdx, InvisibleMat);
+		}
+	}
+}
 
 void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float DamageAmount)
 {
-    if (IsProtectedBone(BoneName)) return;
-    if (IsA(AFlyingEnemyAI::StaticClass())) return;
+    if (IsProtectedBone(BoneName) || IsA(AFlyingEnemyAI::StaticClass())) return;
 
     USkeletalMeshComponent* MeshComp = GetMesh();
     if (!MeshComp || !MeshComp->DoesSocketExist(BoneName)) return;
 
     const float DismemberThreshold = 30.0f;
-    const FName HeadBoneName = TEXT("head");
+    const FName HeadBoneName = TEXT("Head");
 
-    // If head has been destroyed, prevent spawning fractured limbs that include head
-    if (bIsHeadDestroyed)
+    if (bIsHeadDestroyed && (BoneName == HeadBoneName || MeshComp->BoneIsChildOf(BoneName, HeadBoneName)))
+        return;
+
+    if (DamageAmount < DismemberThreshold)
     {
-        if (BoneName == HeadBoneName || MeshComp->BoneIsChildOf(HeadBoneName, BoneName))
-        {
+        FVector Impulse = (HitLocation - GetActorLocation()).GetSafeNormal() * DamageAmount * 10.f;
+        MeshComp->AddImpulseAtLocation(Impulse, HitLocation, BoneName);
+        return;
+    }
+
+    if (AttachedFracturedLimbs.Contains(BoneName)) return;
+
+    if (BoneName == HeadBoneName)
+    {
+        if (AIHealth > 0) return;
+        bIsHeadDestroyed = true;
+    }
+    else if (AIHealth > 0)
+    {
+        int32 HeadIndex = MeshComp->GetBoneIndex(HeadBoneName);
+        if (HeadIndex != INDEX_NONE && (MeshComp->BoneIsChildOf(HeadBoneName, BoneName) || BoneName == HeadBoneName))
             return;
-        }
     }
 
-    if (DamageAmount >= DismemberThreshold)
+    int32 BoneIndex = MeshComp->GetBoneIndex(BoneName);
+    if (BoneIndex == INDEX_NONE) return;
+
+    FTransform BoneTransform = MeshComp->GetBoneTransform(BoneIndex);
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+    AFracturedLimbActor* Fragment = GetWorld()->SpawnActor<AFracturedLimbActor>(AFracturedLimbActor::StaticClass(), BoneTransform, SpawnParams);
+    if (!Fragment) return;
+
+    Fragment->SetLifeSpan(25.f);
+
+    USkeletalMeshComponent* FragMesh = NewObject<USkeletalMeshComponent>(Fragment);
+    FragMesh->RegisterComponent();
+    Fragment->SetRootComponent(FragMesh);
+
+    FragMesh->SetSkeletalMeshAsset(MeshComp->GetSkeletalMeshAsset());
+    FragMesh->SetWorldTransform(BoneTransform);
+    SetInvisibleMaterialOnBoneSections(FragMesh, BoneName, InvisibleMaterial); // optional: hide shared material section
+
+    FragMesh->SetCollisionProfileName(TEXT("Ragdoll"));
+    FragMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    FragMesh->SetCollisionResponseToAllChannels(ECR_Block);
+    FragMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+    FragMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+
+    TArray<USceneComponent*> ChildComps;
+    Fragment->GetRootComponent()->GetChildrenComponents(true, ChildComps);
+    for (USceneComponent* ChildComp : ChildComps)
     {
-        if (BoneName == HeadBoneName)
+        if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(ChildComp))
         {
-            bIsHeadDestroyed = true;
-            MeshComp->HideBoneByName(HeadBoneName, EPhysBodyOp::PBO_Term);
-            MeshComp->SetAllBodiesBelowSimulatePhysics(HeadBoneName, false, true);
-            MeshComp->SetAllBodiesBelowPhysicsBlendWeight(HeadBoneName, 0.0f, false, true);
-            return;
+            PrimComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            PrimComp->SetCollisionResponseToAllChannels(ECR_Block);
+            PrimComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+            PrimComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
         }
-
-        if (AttachedFracturedLimbs.Contains(BoneName)) return;
-
-        int32 BoneIndex = MeshComp->GetBoneIndex(BoneName);
-        if (BoneIndex == INDEX_NONE) return;
-
-        if (AIHealth > 0.f)
-        {
-            int32 HeadIndex = MeshComp->GetBoneIndex(HeadBoneName);
-            if (HeadIndex != INDEX_NONE && (MeshComp->BoneIsChildOf(HeadBoneName, BoneName) || BoneName == HeadBoneName))
-            {
-                return;
-            }
-        }
-
-        FTransform BoneTransform = MeshComp->GetBoneTransform(BoneIndex);
-        FActorSpawnParameters SpawnParams;
-        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-        AFracturedLimbActor* RagdollFragment = GetWorld()->SpawnActor<AFracturedLimbActor>(
-            AFracturedLimbActor::StaticClass(), BoneTransform, SpawnParams);
-
-        if (RagdollFragment)
-        {
-            RagdollFragment->SetLifeSpan(25.f);
-
-            USkeletalMeshComponent* SkeletalComp = RagdollFragment->FindComponentByClass<USkeletalMeshComponent>();
-            if (!SkeletalComp)
-            {
-                SkeletalComp = NewObject<USkeletalMeshComponent>(RagdollFragment);
-                SkeletalComp->RegisterComponent();
-                RagdollFragment->SetRootComponent(SkeletalComp);
-            }
-
-            SkeletalComp->SetSkeletalMeshAsset(MeshComp->GetSkeletalMeshAsset());
-            SkeletalComp->SetWorldTransform(BoneTransform);
-
-            // Hide hit bone sections with invisible material
-            SetInvisibleMaterialOnBoneSections(SkeletalComp, BoneName, InvisibleMaterial);
-
-            // --- BEGIN COLLISION SETUP FOR HITS CAN WORK ---
-            SkeletalComp->SetCollisionProfileName(TEXT("Ragdoll"));
-            SkeletalComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-            SkeletalComp->SetCollisionResponseToAllChannels(ECR_Block);
-            SkeletalComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
-            SkeletalComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block); // Adjust if your hitscan uses a different channel
-
-            // Also apply collision setup to all child components of fractured limb actor
-            TArray<USceneComponent*> ChildComps;
-            RagdollFragment->GetRootComponent()->GetChildrenComponents(true, ChildComps);
-            for (USceneComponent* ChildComp : ChildComps)
-            {
-                if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(ChildComp))
-                {
-                    PrimComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-                    PrimComp->SetCollisionResponseToAllChannels(ECR_Block);
-                    PrimComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
-                    PrimComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
-                }
-            }
-            // --- END COLLISION SETUP ---
-
-            const USkeletalMesh* SkelMesh = SkeletalComp->GetSkeletalMeshAsset();
-            const USkeleton* Skeleton = SkelMesh ? SkelMesh->GetSkeleton() : nullptr;
-            if (!Skeleton)
-            {
-                UE_LOG(LogTemp, Warning, TEXT("No valid Skeleton found for fractured limb"));
-                return;
-            }
-
-            TSet<FName> BonesToKeep;
-            FName CurrentBone = BoneName;
-            while (true)
-            {
-                BonesToKeep.Add(CurrentBone);
-
-                int32 CurrIndex = Skeleton->GetReferenceSkeleton().FindBoneIndex(CurrentBone);
-                int32 ParentIndex = Skeleton->GetReferenceSkeleton().GetParentIndex(CurrIndex);
-                if (ParentIndex == INDEX_NONE)
-                    break;
-
-                CurrentBone = Skeleton->GetReferenceSkeleton().GetBoneName(ParentIndex);
-            }
-
-            TSet<FName> BonesToKeepWithDescendants = BonesToKeep;
-            {
-                const FReferenceSkeleton& RefSkeleton = Skeleton->GetReferenceSkeleton();
-                TArray<int32> ToProcess;
-                int32 HitBoneIndex = RefSkeleton.FindBoneIndex(BoneName);
-                ToProcess.Add(HitBoneIndex);
-
-                while (ToProcess.Num() > 0)
-                {
-                    int32 CurrentIndex = ToProcess.Pop();
-                    FName CurrentBoneName = RefSkeleton.GetBoneName(CurrentIndex);
-
-                    if (bIsHeadDestroyed && (CurrentBoneName == HeadBoneName || SkeletalComp->BoneIsChildOf(CurrentBoneName, HeadBoneName)))
-                    {
-                        continue;
-                    }
-
-                    BonesToKeepWithDescendants.Add(CurrentBoneName);
-
-                    for (int32 i = 0; i < RefSkeleton.GetNum(); ++i)
-                    {
-                        if (RefSkeleton.GetParentIndex(i) == CurrentIndex)
-                        {
-                            ToProcess.Add(i);
-                        }
-                    }
-                }
-            }
-
-            int32 NumBones = SkeletalComp->GetNumBones();
-            for (int32 i = 0; i < NumBones; ++i)
-            {
-                FName Bone = SkeletalComp->GetBoneName(i);
-
-                if (!BonesToKeepWithDescendants.Contains(Bone))
-                {
-                    SkeletalComp->HideBoneByName(Bone, EPhysBodyOp::PBO_Term);
-                }
-                else if (BonesToKeep.Contains(Bone) && !BonesToKeepWithDescendants.Contains(Bone))
-                {
-                    SkeletalComp->HideBoneByName(Bone, EPhysBodyOp::PBO_None);
-                    SkeletalComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-                    SkeletalComp->SetAllBodiesBelowSimulatePhysics(Bone, false, true);
-                    SkeletalComp->SetAllBodiesBelowPhysicsBlendWeight(Bone, 0.0f, false, true);
-                }
-                else
-                {
-                    SkeletalComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-                    SkeletalComp->SetAllBodiesBelowSimulatePhysics(Bone, true, true);
-                    SkeletalComp->SetAllBodiesBelowPhysicsBlendWeight(Bone, 1.0f, false, true);
-                }
-            }
-
-            SkeletalComp->WakeAllRigidBodies();
-            SkeletalComp->bBlendPhysics = true;
-
-            FVector ImpulseDir = (HitLocation - GetActorLocation()).GetSafeNormal();
-            SkeletalComp->AddImpulseAtLocation(ImpulseDir * DamageAmount * 150.f, HitLocation);
-
-            AttachedFracturedLimbs.Add(BoneName, RagdollFragment);
-        }
-
-        MeshComp->HideBoneByName(BoneName, EPhysBodyOp::PBO_Term);
-        MeshComp->SetAllBodiesBelowSimulatePhysics(BoneName, false, true);
-        MeshComp->SetAllBodiesBelowPhysicsBlendWeight(BoneName, 0.0f, false, true);
     }
-    else
+
+    const USkeletalMesh* SkelMesh = FragMesh->GetSkeletalMeshAsset();
+    const USkeleton* Skeleton = SkelMesh ? SkelMesh->GetSkeleton() : nullptr;
+    if (!Skeleton) return;
+
+    TSet<FName> BonesToKeep;
+    FName CurrentBone = BoneName;
+    while (true)
     {
-        FVector Direction = (HitLocation - GetActorLocation()).GetSafeNormal();
-        MeshComp->AddImpulseAtLocation(Direction * DamageAmount * 10.f, HitLocation, BoneName);
+        BonesToKeep.Add(CurrentBone);
+        int32 CurrIndex = Skeleton->GetReferenceSkeleton().FindBoneIndex(CurrentBone);
+        int32 ParentIndex = Skeleton->GetReferenceSkeleton().GetParentIndex(CurrIndex);
+        if (ParentIndex == INDEX_NONE) break;
+        CurrentBone = Skeleton->GetReferenceSkeleton().GetBoneName(ParentIndex);
     }
+
+    TSet<FName> BonesToKeepWithDescendants = BonesToKeep;
+    {
+        const FReferenceSkeleton& RefSkeleton = Skeleton->GetReferenceSkeleton();
+        TArray<int32> ToProcess;
+        int32 HitBoneIndex = RefSkeleton.FindBoneIndex(BoneName);
+        ToProcess.Add(HitBoneIndex);
+
+        while (ToProcess.Num() > 0)
+        {
+            int32 CurrentIndex = ToProcess.Pop();
+            FName CurrentBoneName = RefSkeleton.GetBoneName(CurrentIndex);
+
+            if (bIsHeadDestroyed && (CurrentBoneName == HeadBoneName || FragMesh->BoneIsChildOf(CurrentBoneName, HeadBoneName)))
+                continue;
+
+            BonesToKeepWithDescendants.Add(CurrentBoneName);
+
+            for (int32 i = 0; i < RefSkeleton.GetNum(); ++i)
+            {
+                if (RefSkeleton.GetParentIndex(i) == CurrentIndex)
+                    ToProcess.Add(i);
+            }
+        }
+    }
+
+    int32 NumBones = FragMesh->GetNumBones();
+    for (int32 i = 0; i < NumBones; ++i)
+    {
+        FName Bone = FragMesh->GetBoneName(i);
+        if (!BonesToKeepWithDescendants.Contains(Bone))
+        {
+            FragMesh->HideBoneByName(Bone, EPhysBodyOp::PBO_Term);
+        }
+        else if (BonesToKeep.Contains(Bone) && !BonesToKeepWithDescendants.Contains(Bone))
+        {
+            FragMesh->HideBoneByName(Bone, EPhysBodyOp::PBO_None);
+            FragMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            FragMesh->SetAllBodiesBelowSimulatePhysics(Bone, false, true);
+            FragMesh->SetAllBodiesBelowPhysicsBlendWeight(Bone, 0.f, false, true);
+        }
+        else
+        {
+            FragMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            FragMesh->SetAllBodiesBelowSimulatePhysics(Bone, true, true);
+            FragMesh->SetAllBodiesBelowPhysicsBlendWeight(Bone, 1.f, false, true);
+        }
+    }
+
+    FragMesh->WakeAllRigidBodies();
+    FragMesh->bBlendPhysics = true;
+
+    FVector Impulse = (HitLocation - GetActorLocation()).GetSafeNormal() * DamageAmount * 150.f;
+    FragMesh->AddImpulseAtLocation(Impulse, HitLocation);
+
+    AttachedFracturedLimbs.Add(BoneName, Fragment);
+
+    // Final: disable bone on original mesh
+    MeshComp->HideBoneByName(BoneName, EPhysBodyOp::PBO_Term);
+    MeshComp->SetAllBodiesBelowSimulatePhysics(BoneName, false, true);
+    MeshComp->SetAllBodiesBelowPhysicsBlendWeight(BoneName, 0.f, false, true);
 }
 
 

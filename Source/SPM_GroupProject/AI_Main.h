@@ -26,9 +26,16 @@ public:
 	void HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float DamageAmount);
 	// AI_Main.cpp
 	// AI_Main.h
-	void SetInvisibleMaterialOnBoneSections(USkeletalMeshComponent* MeshComp, FName HitBoneName, UMaterialInterface* InvisibleMaterial);
+	void SetInvisibleMaterialOnBoneSections(USkeletalMeshComponent*, FName, UMaterialInterface*);
 
-	
+
+	// In AAI_Main.h
+	UPROPERTY(EditAnywhere)
+	UMaterialInterface* InvisibleMaterial;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Ragdoll")
+	USkeletalMesh* FracturedHeadMesh;
+
 
 void HideParentBonesOnMesh(USkeletalMeshComponent* SkeletalComp, FName BoneName);
 	UBehaviorTree* GetBehaviorTree() const;
@@ -52,7 +59,8 @@ void HideParentBonesOnMesh(USkeletalMeshComponent* SkeletalComp, FName BoneName)
 
 	UPROPERTY(EditDefaultsOnly, Category = "Fracture")
 	TSubclassOf<class AFracturedLimbActor> FracturedLimbClass;
-
+	UPROPERTY(EditDefaultsOnly, Category = "Fracture")
+	TSubclassOf<class AFracturedLimbActor> FracturedHeadClass;
 	UPROPERTY()
 	TSet<FName> DestroyedBones;
 	void InitializeLimbHealth();
@@ -60,8 +68,8 @@ void HideParentBonesOnMesh(USkeletalMeshComponent* SkeletalComp, FName BoneName)
 
 protected:
 	virtual void BeginPlay() override;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
-	UMaterialInterface* InvisibleMaterial;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Materials")
+//	UMaterialInterface* InvisibleMaterial;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
 	UBehaviorTree* BehaviorTree;
 

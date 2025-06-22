@@ -15,7 +15,7 @@ class SPM_GROUPPROJECT_API AFracturedLimbActor : public AActor
     
 public:    
 	AFracturedLimbActor();
-
+	void HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float DamageAmount);
 protected:
 	virtual void BeginPlay() override;
 
@@ -27,5 +27,6 @@ public:
 	// The fracture asset to use
 	UPROPERTY(EditDefaultsOnly, Category = "Fracture")
 	UGeometryCollection* FractureAsset;
-	
+	UPROPERTY()
+	TMap<FName, AFracturedLimbActor*> AttachedFracturedLimbs;
 };
