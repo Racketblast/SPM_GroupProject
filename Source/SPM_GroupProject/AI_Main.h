@@ -97,4 +97,5 @@ private:
 	float MinMoveDistance = 10.0f;
 
 	bool IsOutsideNavMesh() const;
+	bool bIsHeadDestroyed = false;
 };

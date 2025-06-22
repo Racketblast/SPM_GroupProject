@@ -322,8 +322,29 @@ void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float D
     const float DismemberThreshold = 30.0f;
     const FName HeadBoneName = TEXT("head");
 
+    // If head has been destroyed, prevent spawning fractured limbs that include head
+    if (bIsHeadDestroyed)
+    {
+        // If this hit is on the head bone or any bone that contains the head, ignore spawning fractured limb
+        if (BoneName == HeadBoneName || MeshComp->BoneIsChildOf(HeadBoneName, BoneName))
+        {
+            return;
+        }
+    }
+
     if (DamageAmount >= DismemberThreshold)
     {
+        // If the hit bone is the head, do NOT spawn fractured limb, but mark head destroyed
+        if (BoneName == HeadBoneName)
+        {
+            bIsHeadDestroyed = true;
+            // Hide head bones on original mesh to simulate removal
+            MeshComp->HideBoneByName(HeadBoneName, EPhysBodyOp::PBO_Term);
+            MeshComp->SetAllBodiesBelowSimulatePhysics(HeadBoneName, false, true);
+            MeshComp->SetAllBodiesBelowPhysicsBlendWeight(HeadBoneName, 0.0f, false, true);
+            return; // Exit early: no fractured limb spawned
+        }
+
         if (AttachedFracturedLimbs.Contains(BoneName)) return;
 
         int32 BoneIndex = MeshComp->GetBoneIndex(BoneName);
@@ -358,11 +379,9 @@ void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float D
             SkeletalComp->SetSkeletalMeshAsset(MeshComp->GetSkeletalMeshAsset());
             SkeletalComp->SetWorldTransform(BoneTransform);
 
-        	
             // Hide hit bone sections with invisible material
             SetInvisibleMaterialOnBoneSections(SkeletalComp, BoneName, InvisibleMaterial);
 
-            // Your existing bone collection and visibility logic (unchanged)
             const USkeletalMesh* SkelMesh = SkeletalComp->GetSkeletalMeshAsset();
             const USkeleton* Skeleton = SkelMesh ? SkelMesh->GetSkeleton() : nullptr;
             if (!Skeleton)
@@ -396,6 +415,13 @@ void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float D
                 {
                     int32 CurrentIndex = ToProcess.Pop();
                     FName CurrentBoneName = RefSkeleton.GetBoneName(CurrentIndex);
+
+                    // **Skip adding the head bone or its descendants if head destroyed**
+                    if (bIsHeadDestroyed && (CurrentBoneName == HeadBoneName || SkeletalComp->BoneIsChildOf(CurrentBoneName, HeadBoneName)))
+                    {
+                        continue;
+                    }
+
                     BonesToKeepWithDescendants.Add(CurrentBoneName);
 
                     for (int32 i = 0; i < RefSkeleton.GetNum(); ++i)
@@ -455,6 +481,7 @@ void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float D
 
 
 
+
 /* ─────────────────────────────────────────────── */
 void AAI_Main::BeginPlay()
 {
@@ -494,15 +521,7 @@ bool AAI_Main::IsProtectedBone(FName BoneName) const
 		return true;
 	}
 
-	// First child of root bone
-	if (GetMesh()->GetNumBones() > 1)
-	{
-		FName FirstChild = GetMesh()->GetBoneName(1); // This assumes child index is 1, which is typical
-		if (BoneName == FirstChild)
-		{
-			return true;
-		}
-	}
+
 
 	return false;
 }
