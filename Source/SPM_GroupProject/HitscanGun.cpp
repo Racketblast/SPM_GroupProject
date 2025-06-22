@@ -18,7 +18,7 @@
 #include "Engine/EngineTypes.h"
 #include "Components/DecalComponent.h"
 #include "AI_MAIN.h"
-
+#include "FracturedLimbActor.h"
 
 
 void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
@@ -114,6 +114,21 @@ void AHitscanGun::Fire(FVector FireLocation, FRotator FireRotation)
 
 
             }
+            if (AFracturedLimbActor* Limb = Cast<AFracturedLimbActor>(HitActor))
+            {
+                // Apply impulse and blood decal, but no damage
+                if (Hit.Component.IsValid() && Hit.Component->IsSimulatingPhysics(Hit.BoneName))
+                {
+                    ApplyBloodDecal(Hit);
+
+                    const float ImpulseStrength = 10000.0f;
+                    FVector ImpulseDirection = (Hit.ImpactPoint - FireLocation).GetSafeNormal();
+                    FVector Impulse = ImpulseDirection * ImpulseStrength;
+
+                    Hit.Component->AddImpulseAtLocation(Impulse, Hit.ImpactPoint, Hit.BoneName);
+                }
+            }
+
 
             if (ACharacter* HitCharacter = Cast<ACharacter>(HitActor))
             {

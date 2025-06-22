@@ -1,3 +1,4 @@
+#include "AI_Main.h"
 #include "MoneyBox.h"
 #include "Components/AudioComponent.h"
 #include "WaveManager.h"
@@ -282,33 +283,6 @@ float AAI_Main::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
     return DamageAmount;
 }
 // Minor tweak in HandleRagdollBoneHit for physics blend weight:
-void AAI_Main::SetInvisibleMaterialOnBoneSections(USkeletalMeshComponent* MeshComp, FName HitBoneName, UMaterialInterface* MaterialToSet)
-{
-	if (!MeshComp || !MaterialToSet) return;
-
-	int32 HitBoneIndex = MeshComp->GetBoneIndex(HitBoneName);
-	if (HitBoneIndex == INDEX_NONE) return;
-
-	const FSkeletalMeshRenderData* RenderData = MeshComp->GetSkeletalMeshRenderData();
-	if (!RenderData || RenderData->LODRenderData.Num() == 0) return;
-
-	const FSkeletalMeshLODRenderData& LODData = RenderData->LODRenderData[0]; // LOD 0
-
-	for (int32 SectionIndex = 0; SectionIndex < LODData.RenderSections.Num(); ++SectionIndex)
-	{
-		const FSkelMeshRenderSection& Section = LODData.RenderSections[SectionIndex];
-
-		if (Section.BoneMap.Contains(static_cast<uint16>(HitBoneIndex)))
-		{
-			MeshComp->SetMaterial(SectionIndex, MaterialToSet);
-		}
-		else
-		{
-			// Optionally reset other sections to default material if you want only the hit bone section to have the invisible material.
-			// MeshComp->SetMaterial(SectionIndex, DefaultMaterial);
-		}
-	}
-}
 
 
 void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float DamageAmount)
@@ -325,7 +299,6 @@ void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float D
     // If head has been destroyed, prevent spawning fractured limbs that include head
     if (bIsHeadDestroyed)
     {
-        // If this hit is on the head bone or any bone that contains the head, ignore spawning fractured limb
         if (BoneName == HeadBoneName || MeshComp->BoneIsChildOf(HeadBoneName, BoneName))
         {
             return;
@@ -334,15 +307,13 @@ void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float D
 
     if (DamageAmount >= DismemberThreshold)
     {
-        // If the hit bone is the head, do NOT spawn fractured limb, but mark head destroyed
         if (BoneName == HeadBoneName)
         {
             bIsHeadDestroyed = true;
-            // Hide head bones on original mesh to simulate removal
             MeshComp->HideBoneByName(HeadBoneName, EPhysBodyOp::PBO_Term);
             MeshComp->SetAllBodiesBelowSimulatePhysics(HeadBoneName, false, true);
             MeshComp->SetAllBodiesBelowPhysicsBlendWeight(HeadBoneName, 0.0f, false, true);
-            return; // Exit early: no fractured limb spawned
+            return;
         }
 
         if (AttachedFracturedLimbs.Contains(BoneName)) return;
@@ -368,6 +339,8 @@ void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float D
 
         if (RagdollFragment)
         {
+            RagdollFragment->SetLifeSpan(25.f);
+
             USkeletalMeshComponent* SkeletalComp = RagdollFragment->FindComponentByClass<USkeletalMeshComponent>();
             if (!SkeletalComp)
             {
@@ -381,6 +354,28 @@ void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float D
 
             // Hide hit bone sections with invisible material
             SetInvisibleMaterialOnBoneSections(SkeletalComp, BoneName, InvisibleMaterial);
+
+            // --- BEGIN COLLISION SETUP FOR HITS CAN WORK ---
+            SkeletalComp->SetCollisionProfileName(TEXT("Ragdoll"));
+            SkeletalComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            SkeletalComp->SetCollisionResponseToAllChannels(ECR_Block);
+            SkeletalComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+            SkeletalComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block); // Adjust if your hitscan uses a different channel
+
+            // Also apply collision setup to all child components of fractured limb actor
+            TArray<USceneComponent*> ChildComps;
+            RagdollFragment->GetRootComponent()->GetChildrenComponents(true, ChildComps);
+            for (USceneComponent* ChildComp : ChildComps)
+            {
+                if (UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(ChildComp))
+                {
+                    PrimComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+                    PrimComp->SetCollisionResponseToAllChannels(ECR_Block);
+                    PrimComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+                    PrimComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+                }
+            }
+            // --- END COLLISION SETUP ---
 
             const USkeletalMesh* SkelMesh = SkeletalComp->GetSkeletalMeshAsset();
             const USkeleton* Skeleton = SkelMesh ? SkelMesh->GetSkeleton() : nullptr;
@@ -416,7 +411,6 @@ void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float D
                     int32 CurrentIndex = ToProcess.Pop();
                     FName CurrentBoneName = RefSkeleton.GetBoneName(CurrentIndex);
 
-                    // **Skip adding the head bone or its descendants if head destroyed**
                     if (bIsHeadDestroyed && (CurrentBoneName == HeadBoneName || SkeletalComp->BoneIsChildOf(CurrentBoneName, HeadBoneName)))
                     {
                         continue;
@@ -458,7 +452,6 @@ void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float D
                 }
             }
 
-            SkeletalComp->SetCollisionProfileName(TEXT("Ragdoll"));
             SkeletalComp->WakeAllRigidBodies();
             SkeletalComp->bBlendPhysics = true;
 
@@ -478,7 +471,6 @@ void AAI_Main::HandleRagdollBoneHit(FName BoneName, FVector HitLocation, float D
         MeshComp->AddImpulseAtLocation(Direction * DamageAmount * 10.f, HitLocation, BoneName);
     }
 }
-
 
 
 
